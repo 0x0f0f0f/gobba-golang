@@ -1,0 +1,9 @@
+- [] Parser 
+- [] Lex floats (https://github.com/abs-lang/abs/blob/master/lexer/lexer.go) 
+- [] Lex complex numbers (4.1232 + 3i) !!
+- [] Parser tests
+- [] Interpretation over execution
+- [] BNF
+- [] Formalize operational semantics
+- [] Type system
+- [] Effect system: allow/deny effects

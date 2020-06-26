@@ -4,18 +4,26 @@ type TokenType string
 
 type Token struct {
 	Type    TokenType
+	Line    int
+	Column  int
 	Literal string
 }
+
+// func (t Token) String() string {
+// 	return t.Literal
+// }
 
 const (
 	ILLEGAL = "ILLEGAL"
 	EOF     = "EOF"
 
 	// Identifiers and literals
-	IDENT = "IDENT"
-	UNIT  = "UNIT"
-	INT   = "INT"
-	FLOAT = "FLOAT"
+	IDENT  = "IDENT"
+	UNIT   = "UNIT"
+	INT    = "INT"
+	FLOAT  = "FLOAT"
+	IMAG   = "IMAG" // Imaginary part
+	STRING = "STRING"
 
 	// Operators
 	PLUS      = "+"
@@ -34,7 +42,6 @@ const (
 	PIPE      = ">=>"
 	MODULO    = "%"
 	CONCAT    = "++"
-	COMPLEX   = ":+"
 	AT        = "@"
 	DOLLAR    = "$"
 	CONS      = "::"
