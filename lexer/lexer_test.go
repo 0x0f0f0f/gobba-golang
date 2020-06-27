@@ -2,6 +2,7 @@ package lexer
 
 import (
 	"github.com/0x0f0f0f/gobba-golang/token"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
@@ -41,18 +42,10 @@ lambda x y -> x + y in add five ten ;`
 	// Create a new Lexer
 	l := New(input)
 
-	for i, tt := range tests {
+	for _, tt := range tests {
 		tok := l.NextToken()
 
-		t.Logf("%+v\n", tok)
-
-		if tok.Type != tt.expectedType {
-			t.Fatalf("tests[%d] - tokentype wrong, expected=%q, got=%q",
-				i, tt.expectedType, tok.Type)
-		}
-		if tok.Literal != tt.expectedLiteral {
-			t.Fatalf("tests[%d] - literal wrong, expected=%q, got=%q",
-				i, tt.expectedLiteral, tok.Literal)
-		}
+		assert.Equal(t, tok.Type, tt.expectedType)
+		assert.Equal(t, tok.Literal, tt.expectedLiteral)
 	}
 }

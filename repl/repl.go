@@ -7,46 +7,58 @@ import (
 	"github.com/0x0f0f0f/gobba-golang/token"
 	"github.com/alecthomas/repr"
 	"github.com/c-bata/go-prompt"
+	"os"
 )
 
 // TODO: configurable
 const PROMPT = "> "
 
-type Repl struct {
-	promptString string
-	prompt       *prompt.Prompt
+type ReplOptions struct {
+	ShowAST      bool
+	ShowTok      bool
+	PromptString string
 }
 
-func executor(line string) {
-	l := lexer.New(line)
-	for tok := l.NextToken(); tok.Type != token.EOF; tok = l.NextToken() {
-		fmt.Printf("%+v\n", tok)
+type Repl struct {
+	Options *ReplOptions
+	prompt  *prompt.Prompt
+}
+
+func (r *Repl) executor(line string) {
+	if r.Options.ShowTok {
+		l := lexer.New(line)
+		for tok := l.NextToken(); tok.Type != token.EOF; tok = l.NextToken() {
+			fmt.Printf("%+v\n", tok)
+		}
 	}
-	l = lexer.New(line)
+
+	l := lexer.New(line)
 	p := parser.New(l)
-	repr.Println(p)
+
+	pri := repr.New(os.Stdout, repr.Hide(token.Token{}))
 	program := p.ParseProgram()
-	repr.Println(p)
-	repr.Println(program)
+
+	if r.Options.ShowAST {
+		pri.Println(program)
+	}
 
 	for _, err := range p.Errors() {
 		fmt.Printf("%s\n", err)
 	}
 
-	for _, stmt := range program.Statements {
-		fmt.Printf("%#v\n", stmt)
-	}
 }
 
-func completer(t prompt.Document) []prompt.Suggest {
+func (r *Repl) completer(t prompt.Document) []prompt.Suggest {
 	return []prompt.Suggest{}
 }
 
-func New() *Repl {
-	return &Repl{
-		promptString: "> ",
-		prompt:       prompt.New(executor, completer),
-	}
+func New(o *ReplOptions) *Repl {
+	r := &Repl{}
+	p := prompt.New(r.executor, r.completer)
+	r.prompt = p
+	r.Options = o
+
+	return r
 }
 
 func (r *Repl) Start() {

@@ -68,7 +68,6 @@ func (l *Lexer) skipComment() {
 }
 
 // Checks if a character is a letter
-// TODO alphanumeric identifiers
 func isIdentifier(ch byte) bool {
 	return 'a' <= ch && ch <= 'z' || 'A' <= ch && ch <= 'Z' || ch == '_'
 }
@@ -223,6 +222,8 @@ func (l *Lexer) NextToken() token.Token {
 		tok = l.newToken(token.RPAREN, string(l.ch))
 	case '*':
 		tok = l.newToken(token.TIMES, string(l.ch))
+	case '/':
+		tok = l.newToken(token.DIVIDE, string(l.ch))
 	case '^':
 		tok = l.newToken(token.TOPOW, string(l.ch))
 	case '=':
@@ -288,11 +289,13 @@ func (l *Lexer) NextToken() token.Token {
 				ch2 := l.ch
 				l.readChar()
 				tok = l.newToken(token.PIPE, string(ch)+string(ch2)+string(l.ch))
-			} else if l.peekChar() == '>' {
-				tok = l.newToken(token.BIND, string(ch)+string(l.ch))
 			} else {
 				tok = l.newToken(token.GREATEREQ, string(ch)+string(l.ch))
 			}
+		} else if l.peekChar() == '>' {
+			ch := l.ch
+			l.readChar()
+			tok = l.newToken(token.SEQUENCE, string(ch)+string(l.ch))
 		} else {
 			tok = l.newToken(token.GREATER, string(l.ch))
 

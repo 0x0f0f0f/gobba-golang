@@ -1,4 +1,5 @@
-// Describes the structure of gobba's AST
+// Describes the structure of gobba's AST. Contains definitions
+// of interfaces and Node types
 package ast
 
 import (
@@ -17,17 +18,10 @@ type Statement interface {
 	Node
 	statementNode()
 }
-
-type Directive interface {
-	Node
-	directiveNode()
-}
-
 type Expression interface {
 	Node
 	expressionNode()
 }
-
 type Program struct {
 	Statements []Statement
 }
@@ -41,7 +35,6 @@ func (p *Program) TokenLiteral() string {
 		return ""
 	}
 }
-
 func (p *Program) String() string {
 	var b bytes.Buffer
 
@@ -66,7 +59,7 @@ func (es *ExpressionStatement) statementNode()       {}
 func (es *ExpressionStatement) TokenLiteral() string { return es.Token.Literal }
 func (es *ExpressionStatement) String() string {
 	if es.Expression != nil {
-		return es.Expression.String() + ";"
+		return es.Expression.String()
 	}
 	return ""
 }
@@ -137,6 +130,44 @@ func (le *LetExpression) String() string {
 	return b.String()
 }
 
+// Represents a prefix Expression
+type PrefixExpression struct {
+	Token    token.Token
+	Operator string
+	Right    Expression
+}
+
+func (p *PrefixExpression) expressionNode()      {}
+func (p *PrefixExpression) TokenLiteral() string { return p.Token.Literal }
+func (p *PrefixExpression) String() string {
+	var b bytes.Buffer
+	b.WriteString("(")
+	b.WriteString(p.Operator)
+	b.WriteString(p.Right.String())
+	b.WriteString(")")
+	return b.String()
+}
+
+// Represents an infix expression
+type InfixExpression struct {
+	Token    token.Token
+	Left     Expression
+	Operator string
+	Right    Expression
+}
+
+func (p *InfixExpression) expressionNode()      {}
+func (p *InfixExpression) TokenLiteral() string { return p.Token.Literal }
+func (p *InfixExpression) String() string {
+	var b bytes.Buffer
+	b.WriteString("(")
+	b.WriteString(p.Left.String())
+	b.WriteString(" " + p.Operator + " ")
+	b.WriteString(p.Right.String())
+	b.WriteString(")")
+	return b.String()
+}
+
 // Represents a symbol or an identifier
 type Identifier struct {
 	Token token.Token
@@ -145,6 +176,44 @@ type Identifier struct {
 
 func (i *Identifier) expressionNode()      {}
 func (i *Identifier) TokenLiteral() string { return i.Token.Literal }
-func (i *Identifier) String() string {
-	return i.Value
+func (i *Identifier) String() string       { return i.Value }
+
+// Represents an integer literal
+type IntegerLiteral struct {
+	Token token.Token
+	Value int64
 }
+
+func (i *IntegerLiteral) expressionNode()      {}
+func (i *IntegerLiteral) TokenLiteral() string { return i.Token.Literal }
+func (i *IntegerLiteral) String() string       { return i.Token.Literal }
+
+// Represents a floating point literal
+type FloatLiteral struct {
+	Token token.Token
+	Value float64
+}
+
+func (f *FloatLiteral) expressionNode()      {}
+func (f *FloatLiteral) TokenLiteral() string { return f.Token.Literal }
+func (f *FloatLiteral) String() string       { return f.Token.Literal }
+
+// Represents a complex number literal
+type ComplexLiteral struct {
+	Token token.Token
+	Value complex128
+}
+
+func (c *ComplexLiteral) expressionNode()      {}
+func (c *ComplexLiteral) TokenLiteral() string { return c.Token.Literal }
+func (c *ComplexLiteral) String() string       { return c.Token.Literal }
+
+// Represents an imaginary part number literal
+type ImagLiteral struct {
+	Token token.Token
+	Value float64
+}
+
+func (c *ImagLiteral) expressionNode()      {}
+func (c *ImagLiteral) TokenLiteral() string { return c.Token.Literal }
+func (c *ImagLiteral) String() string       { return c.Token.Literal }

@@ -1,10 +1,17 @@
 package main
 
 import (
-    "github.com/0x0f0f0f/gobba-golang/repl"
+	"flag"
+	"github.com/0x0f0f0f/gobba-golang/repl"
 )
 
 func main() {
-    r := repl.New()
-    r.Start()
+	opts := &repl.ReplOptions{}
+
+	flag.BoolVar(&opts.ShowAST, "ast", false, "print the AST before evaluation")
+	flag.BoolVar(&opts.ShowTok, "tok", false, "print lexed tokens before parsing")
+
+	flag.Parse()
+	r := repl.New(opts)
+	r.Start()
 }
