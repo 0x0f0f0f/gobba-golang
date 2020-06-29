@@ -232,6 +232,8 @@ func (l *Lexer) NextToken() token.Token {
 		tok = l.newToken(token.MODULO, string(l.ch))
 	case '@':
 		tok = l.newToken(token.AT, string(l.ch))
+	case '.':
+		tok = l.newToken(token.ACCESS, string(l.ch))
 	case '$':
 		tok = l.newToken(token.DOLLAR, string(l.ch))
 	case '!':
@@ -264,7 +266,7 @@ func (l *Lexer) NextToken() token.Token {
 			l.readChar()
 			tok = l.newToken(token.CONS, string(ch)+string(l.ch))
 		} else {
-			tok = l.newToken(token.ACCESS, string(l.ch))
+			tok = l.newToken(token.ILLEGAL, string(l.ch))
 		}
 	case '<':
 		if l.peekChar() == '=' {

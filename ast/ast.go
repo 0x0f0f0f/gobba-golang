@@ -118,7 +118,7 @@ func (le *LetExpression) TokenLiteral() string { return le.Token.Literal }
 func (le *LetExpression) String() string {
 	var b bytes.Buffer
 
-	b.WriteString(le.TokenLiteral() + " ")
+	b.WriteString("(" + le.TokenLiteral() + " ")
 	for i, ass := range le.Assignments {
 		b.WriteString(ass.String())
 		if i < len(le.Assignments)-1 {
@@ -127,6 +127,7 @@ func (le *LetExpression) String() string {
 	}
 	b.WriteString(" in ")
 	b.WriteString(le.Body.String())
+	b.WriteString(")")
 
 	return b.String()
 }

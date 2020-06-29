@@ -49,7 +49,7 @@ const (
 	CONS      = "::"
 	LAND      = "&&"
 	OR        = "||"
-	ACCESS    = ":"
+	ACCESS    = "."
 
 	// Delimiters
 	SEMI        = ";"

@@ -95,7 +95,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.DOLLAR, p.parseDollarExpression)
 	p.registerPrefix(token.IF, p.parseIfExpression)
 	p.registerPrefix(token.LAMBDA, p.parseFunctionLiteral)
-	// TODO p.registerPrefix(token.LET, p.parseLetExpression)
+	p.registerPrefix(token.LET, p.parseLetExpression)
 
 	// Registration of infix operators
 	p.infixParseFns = make(map[token.TokenType]infixParseFn)
@@ -287,11 +287,14 @@ func (p *Parser) parseLetStatement() ast.Statement {
 				Token:      exp.Token,
 				Expression: exp,
 			}
-		} else if p.peekTokenIs(token.AND) {
-			p.nextToken()
 		}
 
+		p.expectPeek(token.AND)
+
 		ass := p.parseAssignment()
+		if ass == nil {
+			return nil
+		}
 		stmt.Assignments = append(stmt.Assignments, ass)
 	}
 
@@ -315,4 +318,41 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 		return nil
 	}
 	return stmt
+}
+
+// Parse a let statement (not a let expression)
+func (p *Parser) parseLetExpression() ast.Expression {
+	exp := &ast.LetExpression{Token: p.curToken}
+
+	exp.Assignments = make([]*ast.Assignment, 0)
+
+	// Parse the first assignment
+	ass := p.parseAssignment()
+	if ass == nil {
+		return nil
+	}
+	exp.Assignments = append(exp.Assignments, ass)
+
+	for !p.peekTokenIs(token.IN) {
+		p.expectPeek(token.AND)
+
+		ass := p.parseAssignment()
+		if ass == nil {
+			return nil
+		}
+		exp.Assignments = append(exp.Assignments, ass)
+	}
+
+	if !p.expectPeek(token.IN) {
+		return nil
+	}
+	p.nextToken()
+
+	exp.Body = p.parseExpression(LOWEST)
+
+	if len(exp.Assignments) == 0 {
+		return nil
+	}
+
+	return exp
 }
