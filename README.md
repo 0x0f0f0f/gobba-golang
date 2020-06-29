@@ -21,7 +21,7 @@ ease of learning and the ability to express ideas quickly in the language.
   abstracting away the physical representation
 - [] Built-in support for probability distributions
 - [] Aggressive static optimization of chains of linear algebraic operations
-- [] Built-in data visualization
+- [] Built-in data visualization for interpreted programs
 - [] Optimizing compiler
 
 ## Installation

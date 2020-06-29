@@ -7,17 +7,6 @@ import (
 	"strconv"
 )
 
-// Parse a single expression statement
-func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
-	stmt := &ast.ExpressionStatement{Token: p.curToken}
-	stmt.Expression = p.parseExpression(LOWEST)
-
-	if p.peekTokenIs(token.SEMI) {
-		p.nextToken()
-	}
-	return stmt
-}
-
 func (p *Parser) parseExpression(prec int) ast.Expression {
 	prefix := p.prefixParseFns[p.curToken.Type]
 	if prefix == nil {
@@ -92,6 +81,14 @@ func (p *Parser) parseImagLiteral() ast.Expression {
 	return lit
 }
 
+// Parse a boolean literal
+func (p *Parser) parseBoolean() ast.Expression {
+	return &ast.BooleanLiteral{
+		Token: p.curToken,
+		Value: p.curTokenIs(token.TRUE),
+	}
+}
+
 // Parse an expression with a prefix operator
 func (p *Parser) parsePrefixExpression() ast.Expression {
 	exp := &ast.PrefixExpression{
@@ -137,4 +134,86 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 	}
 
 	return exp
+}
+
+func (p *Parser) parseGroupedExpression() ast.Expression {
+	p.nextToken()
+
+	exp := p.parseExpression(LOWEST)
+
+	if !p.expectPeek(token.RPAREN) {
+		return nil
+	}
+
+	return exp
+}
+
+func (p *Parser) parseDollarExpression() ast.Expression {
+	p.nextToken()
+	exp := p.parseExpression(LOWEST)
+	return exp
+}
+
+func (p *Parser) parseIfExpression() ast.Expression {
+	exp := &ast.IfExpression{Token: p.curToken}
+
+	p.nextToken()
+
+	exp.Condition = p.parseExpression(LOWEST)
+
+	fmt.Printf("WAHOO %+v\n", p.curToken)
+
+	if !p.expectPeek(token.THEN) {
+		return nil
+	}
+
+	p.nextToken()
+
+	exp.Consequence = p.parseExpression(LOWEST)
+
+	if !p.expectPeek(token.ELSE) {
+		return nil
+	}
+
+	p.nextToken()
+
+	exp.Alternative = p.parseExpression(LOWEST)
+	return exp
+}
+
+// NOTE: Function literals hold a single parameter. Multi-parameter
+// functions are composed of nested single parameter functions in the AST
+// because this eases currying during evaluation
+func (p *Parser) parseFunctionLiteral() ast.Expression {
+	parent_fun := &ast.FunctionLiteral{Token: p.curToken}
+
+	if !p.expectPeek(token.IDENT) {
+		return nil
+	}
+
+	first_param := p.parseIdentifier().(*ast.Identifier)
+	parent_fun.Param = *first_param
+
+	// Parameter list unrolling is done with a iterative loop
+	cur_fun := parent_fun
+	for p.peekTokenIs(token.IDENT) {
+		p.nextToken()
+		cur_param := p.parseIdentifier().(*ast.Identifier)
+
+		child_fun := &ast.FunctionLiteral{
+			Token: parent_fun.Token,
+			Param: *cur_param,
+		}
+
+		cur_fun.Body = child_fun
+		cur_fun = child_fun
+	}
+
+	if !p.expectPeek(token.RARROW) {
+		return nil
+	}
+	p.nextToken()
+	cur_fun.Body = p.parseExpression(LOWEST)
+
+	return parent_fun
 }

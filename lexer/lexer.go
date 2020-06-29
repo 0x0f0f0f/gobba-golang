@@ -212,7 +212,7 @@ func (l *Lexer) NextToken() token.Token {
 		if l.peekChar() == '>' {
 			ch := l.ch
 			l.readChar()
-			tok = l.newToken(token.LARROW, string(ch)+string(l.ch))
+			tok = l.newToken(token.RARROW, string(ch)+string(l.ch))
 		} else {
 			tok = l.newToken(token.MINUS, string(l.ch))
 		}
@@ -240,7 +240,7 @@ func (l *Lexer) NextToken() token.Token {
 			l.readChar()
 			tok = l.newToken(token.DIFFERS, string(ch)+string(l.ch))
 		} else {
-			tok = l.newToken(token.ILLEGAL, string(l.ch))
+			tok = l.newToken(token.NOT, string(l.ch))
 		}
 	case '&':
 		if l.peekChar() == '&' {
@@ -306,7 +306,7 @@ func (l *Lexer) NextToken() token.Token {
 		tok.Literal = ""
 		tok.Type = token.EOF
 
-	// Now the next token must either be and identifier
+	// Now the next token must either be and identifier, a number
 	// Or an invalid token
 	default:
 		if isIdentifier(l.ch) {

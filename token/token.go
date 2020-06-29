@@ -18,12 +18,12 @@ const (
 	EOF     = "EOF"
 
 	// Identifiers and literals
-	IDENT  = "IDENT"
-	UNIT   = "UNIT"
-	INT    = "INT"
-	FLOAT  = "FLOAT"
-	IMAG   = "IMAG" // Imaginary part
-	STRING = "STRING"
+	IDENT  = "identifier"
+	UNIT   = "()"
+	INT    = "integer"
+	FLOAT  = "float"
+	IMAG   = "imaginary number" // Imaginary part
+	STRING = "string"
 
 	// Operators
 	PLUS      = "+"
@@ -33,11 +33,12 @@ const (
 	DIVIDE    = "/"
 	EQUALS    = "="
 	DIFFERS   = "!="
+	NOT       = "!"
 	LESS      = "<"
 	GREATER   = ">"
 	LESSEQ    = "<="
 	GREATEREQ = ">="
-	LARROW    = "->"
+	RARROW    = "->"
 	SEQUENCE  = ">>"
 	COMPOSE   = "<=<"
 	PIPE      = ">=>"
@@ -59,16 +60,15 @@ const (
 	RCOMMENT    = "*/"
 
 	// Keywords
-	LAMBDA = "LAMBDA"
-	LET    = "LET"
-	IN     = "IN"
-	AND    = "AND"
-	TRUE   = "TRUE"
-	FALSE  = "FALSE"
-	NOT    = "NOT"
-	IF     = "IF"
-	THEN   = "THEN"
-	ELSE   = "ELSE"
+	LAMBDA = "lambda"
+	LET    = "let"
+	IN     = "in"
+	AND    = "and"
+	TRUE   = "true"
+	FALSE  = "false"
+	IF     = "if"
+	THEN   = "then"
+	ELSE   = "else"
 )
 
 // Table of internal keywords
@@ -78,7 +78,6 @@ var keywords = map[string]TokenType{
 	"let":    LET,
 	"in":     IN,
 	"and":    AND,
-	"not":    NOT,
 	"if":     IF,
 	"then":   THEN,
 	"else":   ELSE,

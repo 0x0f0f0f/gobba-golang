@@ -4,6 +4,7 @@ package ast
 
 import (
 	"bytes"
+	"fmt"
 	"github.com/0x0f0f0f/gobba-golang/token"
 )
 
@@ -59,7 +60,7 @@ func (es *ExpressionStatement) statementNode()       {}
 func (es *ExpressionStatement) TokenLiteral() string { return es.Token.Literal }
 func (es *ExpressionStatement) String() string {
 	if es.Expression != nil {
-		return es.Expression.String()
+		return es.Expression.String() + ";"
 	}
 	return ""
 }
@@ -108,7 +109,7 @@ func (ls *LetStatement) String() string {
 // Represents `let var = val in body`
 type LetExpression struct {
 	Token       token.Token
-	Assignments []Assignment
+	Assignments []*Assignment
 	Body        Expression
 }
 
@@ -126,6 +127,51 @@ func (le *LetExpression) String() string {
 	}
 	b.WriteString(" in ")
 	b.WriteString(le.Body.String())
+
+	return b.String()
+}
+
+// Represents an if-then-else expression
+type IfExpression struct {
+	Token       token.Token
+	Condition   Expression
+	Consequence Expression
+	Alternative Expression
+}
+
+func (i *IfExpression) expressionNode()      {}
+func (i *IfExpression) TokenLiteral() string { return i.Token.Literal }
+func (i *IfExpression) String() string {
+	var b bytes.Buffer
+
+	b.WriteString("(if ")
+	b.WriteString(i.Condition.String())
+	b.WriteString(" then ")
+	b.WriteString(i.Consequence.String())
+	b.WriteString(" else ")
+	b.WriteString(i.Alternative.String())
+	b.WriteString(")")
+
+	return b.String()
+}
+
+// Represents an if-then-else expression
+type FunctionLiteral struct {
+	Token token.Token
+	Param Identifier
+	Body  Expression
+}
+
+func (f *FunctionLiteral) expressionNode()      {}
+func (f *FunctionLiteral) TokenLiteral() string { return f.Token.Literal }
+func (f *FunctionLiteral) String() string {
+	var b bytes.Buffer
+
+	b.WriteString("(lambda ")
+	b.WriteString(f.Param.String())
+	b.WriteString(" -> ")
+	b.WriteString(f.Body.String())
+	b.WriteString(")")
 
 	return b.String()
 }
@@ -206,7 +252,9 @@ type ComplexLiteral struct {
 
 func (c *ComplexLiteral) expressionNode()      {}
 func (c *ComplexLiteral) TokenLiteral() string { return c.Token.Literal }
-func (c *ComplexLiteral) String() string       { return c.Token.Literal }
+func (c *ComplexLiteral) String() string {
+	return fmt.Sprintf("%g", c.Value)
+}
 
 // Represents an imaginary part number literal
 type ImagLiteral struct {
@@ -217,3 +265,13 @@ type ImagLiteral struct {
 func (c *ImagLiteral) expressionNode()      {}
 func (c *ImagLiteral) TokenLiteral() string { return c.Token.Literal }
 func (c *ImagLiteral) String() string       { return c.Token.Literal }
+
+// Represents a boolean value
+type BooleanLiteral struct {
+	Token token.Token
+	Value bool
+}
+
+func (c *BooleanLiteral) expressionNode()      {}
+func (c *BooleanLiteral) TokenLiteral() string { return c.Token.Literal }
+func (c *BooleanLiteral) String() string       { return c.Token.Literal }

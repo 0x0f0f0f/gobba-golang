@@ -1,5 +1,5 @@
 // Contains the Parser class, which builds an AST out of
-// a program. TODO: specialize errors with line and column number
+// a lexer. TODO: specialize errors with line and column number
 package parser
 
 import (
@@ -7,6 +7,7 @@ import (
 	"github.com/0x0f0f0f/gobba-golang/ast"
 	"github.com/0x0f0f0f/gobba-golang/lexer"
 	"github.com/0x0f0f0f/gobba-golang/token"
+	"runtime/debug"
 )
 
 // Precedence levels for operators
@@ -15,7 +16,8 @@ const (
 	LOWEST          // Terminal expression
 	COMPOSITION     // >=> or <=<
 	SEQUENCING      // >>
-	LOGICAL         // && and ||
+	OR              // ||
+	AND             // &&
 	EQUALS          // = or !=
 	COMPARISON      // > or < or <= or >=
 	CONS            // ::
@@ -25,15 +27,15 @@ const (
 	MODULO          // %
 	POWER           // ^
 	ACCESS          // @ and :
-	PREFIX          // -X (and function call?)
+	PREFIX          // -X or !X (and function call?)
 )
 
 var precedences = map[token.TokenType]int{
 	token.COMPOSE:   COMPOSITION,
 	token.PIPE:      COMPOSITION,
 	token.SEQUENCE:  SEQUENCING,
-	token.LAND:      LOGICAL,
-	token.OR:        LOGICAL,
+	token.OR:        OR,
+	token.LAND:      AND,
 	token.EQUALS:    EQUALS,
 	token.DIFFERS:   EQUALS,
 	token.LESS:      COMPARISON,
@@ -69,6 +71,7 @@ type Parser struct {
 	// operators either found in prefix or infix position
 	prefixParseFns map[token.TokenType]prefixParseFn
 	infixParseFns  map[token.TokenType]infixParseFn
+	TraceOnError   bool // Debug option to print a stack trace on error
 }
 
 // Create a new parser from a given Lexer
@@ -81,10 +84,18 @@ func New(l *lexer.Lexer) *Parser {
 	// Registration of prefix operators
 	p.prefixParseFns = make(map[token.TokenType]prefixParseFn)
 	p.registerPrefix(token.IDENT, p.parseIdentifier)
+	p.registerPrefix(token.TRUE, p.parseBoolean)
+	p.registerPrefix(token.FALSE, p.parseBoolean)
 	p.registerPrefix(token.INT, p.parseIntegerLiteral)
 	p.registerPrefix(token.FLOAT, p.parseFloatLiteral)
 	p.registerPrefix(token.IMAG, p.parseImagLiteral)
 	p.registerPrefix(token.MINUS, p.parsePrefixExpression)
+	p.registerPrefix(token.NOT, p.parsePrefixExpression)
+	p.registerPrefix(token.LPAREN, p.parseGroupedExpression)
+	p.registerPrefix(token.DOLLAR, p.parseDollarExpression)
+	p.registerPrefix(token.IF, p.parseIfExpression)
+	p.registerPrefix(token.LAMBDA, p.parseFunctionLiteral)
+	// TODO p.registerPrefix(token.LET, p.parseLetExpression)
 
 	// Registration of infix operators
 	p.infixParseFns = make(map[token.TokenType]infixParseFn)
@@ -136,12 +147,20 @@ func (p *Parser) peekError(tt token.TokenType, t token.Token) {
 	msg := fmt.Sprintf("syntax error at line %d column %d: expected '%s'. got '%s' instead",
 		t.Line, t.Column,
 		tt, p.peekToken.Literal)
+	if p.TraceOnError {
+		fmt.Printf("ERRORING HERE: %s\n", msg)
+		debug.PrintStack()
+	}
 	p.errors = append(p.errors, msg)
 }
 
 func (p *Parser) noPrefixParseFnError(t token.Token) {
-	msg := fmt.Sprintf("syntax error at line %d column %d: no prefix parser for token %s",
+	msg := fmt.Sprintf("syntax error at line %d column %d: unexpected token %s (no prefix parser)",
 		t.Line, t.Column, t.Literal)
+	if p.TraceOnError {
+		fmt.Printf("ERRORING HERE: %s\n", msg)
+		debug.PrintStack()
+	}
 	p.errors = append(p.errors, msg)
 }
 
@@ -190,8 +209,23 @@ func (p *Parser) curPrecedence() int {
 	return LOWEST
 }
 
+func (p *Parser) ParseProgram() *ast.Program {
+	// Allocate AST root
+	program := &ast.Program{}
+	program.Statements = []ast.Statement{}
+
+	for !p.curTokenIs(token.EOF) {
+		stmt := p.parseStatement()
+		if stmt != nil {
+			program.Statements = append(program.Statements, stmt)
+		}
+		p.nextToken()
+	}
+	return program
+}
+
 // ======================================================================
-// Auxiliary parsing functions
+// Actual parsing functions
 // ======================================================================
 
 // Parse an assignment
@@ -207,9 +241,78 @@ func (p *Parser) parseAssignment() *ast.Assignment {
 		return nil
 	}
 
-	// TODO: skipping value expression until end of the statement
-	for !p.curTokenIs(token.SEMI) && !p.curTokenIs(token.AND) && !p.curTokenIs(token.EOF) {
-		p.nextToken()
-	}
+	p.nextToken()
+	ass.Value = p.parseExpression(LOWEST)
 	return ass
+}
+
+// Parse a toplevel statement
+func (p *Parser) parseStatement() ast.Statement {
+	switch p.curToken.Type {
+	case token.LET:
+		return p.parseLetStatement()
+	// TODO parse directives
+	default:
+		return p.parseExpressionStatement()
+	}
+}
+
+// Parse a let statement (not a let expression)
+func (p *Parser) parseLetStatement() ast.Statement {
+	stmt := &ast.LetStatement{Token: p.curToken}
+
+	stmt.Assignments = make([]*ast.Assignment, 0)
+
+	// Parse the first assignment
+	ass := p.parseAssignment()
+	if ass == nil {
+		return nil
+	}
+	stmt.Assignments = append(stmt.Assignments, ass)
+
+	for !p.peekTokenIs(token.SEMI) {
+		if p.peekTokenIs(token.IN) {
+			// This is not a let statement but a let expression
+			p.nextToken()
+			p.nextToken()
+			exp := &ast.LetExpression{
+				Token:       stmt.Token,
+				Assignments: stmt.Assignments,
+			}
+			exp.Body = p.parseExpression(LOWEST)
+			if p.peekTokenIs(token.SEMI) {
+				p.nextToken()
+			}
+			return &ast.ExpressionStatement{
+				Token:      exp.Token,
+				Expression: exp,
+			}
+		} else if p.peekTokenIs(token.AND) {
+			p.nextToken()
+		}
+
+		ass := p.parseAssignment()
+		stmt.Assignments = append(stmt.Assignments, ass)
+	}
+
+	if !p.expectPeek(token.SEMI) {
+		return nil
+	}
+
+	if len(stmt.Assignments) == 0 {
+		return nil
+	}
+
+	return stmt
+}
+
+// Parse a single expression statement
+func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
+	stmt := &ast.ExpressionStatement{Token: p.curToken}
+	stmt.Expression = p.parseExpression(LOWEST)
+
+	if !p.expectPeek(token.SEMI) {
+		return nil
+	}
+	return stmt
 }

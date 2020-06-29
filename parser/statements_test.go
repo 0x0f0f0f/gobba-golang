@@ -3,76 +3,54 @@ package parser
 import (
 	"github.com/0x0f0f0f/gobba-golang/ast"
 	"github.com/0x0f0f0f/gobba-golang/lexer"
-	"strings"
+	"github.com/stretchr/testify/assert"
 	"testing"
 )
 
 func TestLetStatements(t *testing.T) {
-	input := `
-let x = 5;
-let y = 10 and z = 3; 
-`
-	l := lexer.New(input)
-	p := New(l)
-
-	program := p.ParseProgram()
-	checkParserErrors(t, p)
-	if program == nil {
-		t.Fatalf("ParseProgram() returned nil")
-	}
-
-	numStat := len(strings.Split(input, ";")) - 1
-	if len(program.Statements) != numStat {
-		t.Fatalf("program.Statements does not contain %d statements, got=%d",
-			numStat, len(program.Statements))
-
-	}
-
 	tests := []struct {
+		input               string
 		expectedIdentifiers []string
+		expectedValues      []interface{}
 	}{
-		{[]string{"x"}},
-		{[]string{"y", "z"}},
+		{"let x = 5;", []string{"x"}, []interface{}{5}},
+		{"let x = 5 and y = 4;", []string{"x", "y"}, []interface{}{5, 4}},
+		{"let y = true;", []string{"y"}, []interface{}{true}},
+		{"let foobar = y;", []string{"foobar"}, []interface{}{"y"}},
 	}
 
-	for i, tt := range tests {
-		stmt := program.Statements[i]
-		if !testLetStatement(t, stmt, tt.expectedIdentifiers) {
-			return
-		}
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+
+		program := p.ParseProgram()
+		checkParserErrors(t, p)
+
+		assert.Len(t, program.Statements, 1)
+
+		stmt := program.Statements[0]
+		testLetStatement(t, stmt, tt.expectedIdentifiers, tt.expectedValues)
+
 	}
 }
 
-func testLetStatement(t *testing.T, s ast.Statement, names []string) bool {
+func testLetStatement(t *testing.T, s ast.Statement, names []string, values []interface{}) bool {
 	if s.TokenLiteral() != "let" {
 		t.Errorf("s.TokenLiteral not 'let'. got=%q", s.TokenLiteral())
 		return false
 	}
 
 	letStmt, ok := s.(*ast.LetStatement)
-	if !ok {
-		t.Errorf("s not *ast.LetStatement. got=%T", s)
-		return false
-	}
+	assert.True(t, ok, "casting to *ast.LetStatement")
 
-	if len(letStmt.Assignments) < 1 {
-		t.Errorf("letStmt contains %d assignments instead of %d",
-			len(letStmt.Assignments), len(names))
-		return false
-	}
+	assert.Equal(t, len(letStmt.Assignments), len(names))
+	assert.Equal(t, len(letStmt.Assignments), len(values))
 
 	for i, ass := range letStmt.Assignments {
-		if ass.Name.Value != names[i] {
-			t.Errorf("Expected identifier '%s'. got=%s",
-				names[i], ass.Name.Value)
-			return false
-		}
+		assert.Equal(t, names[i], ass.Name.Value)
+		assert.Equal(t, names[i], ass.Name.TokenLiteral())
 
-		if ass.Name.TokenLiteral() != names[i] {
-			t.Errorf("Expected identifier '%s'. got=%s",
-				names[i], ass.Name.TokenLiteral())
-			return false
-		}
+		testLiteralExpression(t, ass.Value, values[i])
 	}
 	return true
 }

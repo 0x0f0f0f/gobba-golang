@@ -1,0 +1,84 @@
+(* This file contains the Extended Backus-Naur form grammar for the gobba 
+   programming language. Operator precedence is complicated to express through
+   an EBNF grammar, but is easier to implement by using a Pratt Parser.
+   See Pratt, Vaughan. "Top down operator precedence." Proceedings of the 1st
+   Annual ACM SIGACT-SIGPLAN Symposium on Principles of Programming Languages
+   (1973). Also, a Pratt parser produces much more compact AST representations
+   than other recursive descent parsers.
+ *)
+
+(* Statements *)
+toplevel = w, statement ;
+statement = let_statement | expr_statement ; 
+
+let_statement = "let", w, assignments, w, "=", w, expr, w, ";" ; 
+expr_statement = expr, w, ";" ;
+
+(* TODO directives *)
+(* TODO function application *)
+(* TODO )
+
+(* Expressions *):
+expr = lowest | prefixed | infix_expr | let_expr | ifthenelse ;
+
+ifthenelse = "if", w, expr, w, "then", w, expr, w, "else", w, expr ;
+
+let_expr = "let", w, assignments, w, "in", w, expr;
+assignments = assignment, {w, "and", w, assignment} ;  
+assignment = identifier, w, "=", w, expr ; 
+
+
+(* Operators. NOTE that operator precedence is not defined in the 
+grammar, but through the Pratt parser. An example of this approach 
+can be seen in the Go programming language specification document 
+https://golang.org/ref/spec  *)
+
+infix_expr = expr, w, infix_op, w, expr
+infix_op = compose_op | ">>" | "||" | "&&" | eq_op 
+    | comparison_op | "::" | sum_op | product_op | "%" | "^"
+    | access_op ;
+
+compose_op = ">=>" | "<=<" ; function composition
+eq_op = "=" | "!=" ; equality
+comparison_op = "<" | "<=" | ">" | ">=" ;
+sum_op = "+" | "-" ; 
+product_op = "*" | "/" ; 
+acces_op = "@" | ":" ;
+
+prefixed = lowest | prefix_op prefixed
+prefix_op = "!" | "-"
+lowest = literal | "(", w, expr, w, ")" | "$", w, expr;
+
+(* Literals *)
+literal = composite_literal | basic_literal ; 
+composite_literal = complex_literal | lambda_literal ; 
+
+(* The addition/subtraction operators are overloaded to correctly
+parse complex number literals without using additional operators, 
+in the form a+bi or a-bi*)
+complex_literal = (float | integer), w, sum_op,  w, imag ;
+
+(* Function literals *)
+lambda_literal = ("fun" | "lambda"), w, param_list, w, "->", expr ;
+param_list = identifier, { w, identifier }
+
+basic_literal = float | integer | imag | string | identifier ; 
+
+(* Strings and characters *)
+string = '"', ? all possible characters ?, '"';
+
+rune = "'", ? an Unicode value ?, "'"
+
+(* Numbers *)
+imag = (float | integer), "i";
+float = integer "." integer [ "e", ["+" | "-"], integer ];
+integer = digit, {digit} ;
+
+identifier = (alpha | "_"), { alpha | digit | "_" } ;
+
+alpha = ? an Unicode letter ? ;
+digit = ? an Unicode digit ? ;
+
+(* Whitespace *)
+w = wc, {wc} ; whitespace ;
+wc = ? an Unicode whitespace character ? ; 
