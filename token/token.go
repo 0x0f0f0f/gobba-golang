@@ -3,10 +3,11 @@ package token
 type TokenType string
 
 type Token struct {
-	Type    TokenType
-	Line    int
-	Column  int
-	Literal string
+	Type     TokenType
+	Line     int
+	Column   int
+	Position int
+	Literal  string
 }
 
 // func (t Token) String() string {
@@ -18,12 +19,12 @@ const (
 	EOF     = "EOF"
 
 	// Identifiers and literals
-	IDENT  = "identifier"
-	UNIT   = "()"
-	INT    = "integer"
-	FLOAT  = "float"
-	IMAG   = "imaginary number" // Imaginary part
-	STRING = "string"
+	IDENT   = "identifier"
+	UNIT    = "()"
+	INT     = "integer"
+	FLOAT   = "float"
+	COMPLEX = "complex number" // Imaginary part
+	STRING  = "string"
 
 	// Operators
 	PLUS      = "+"
@@ -52,6 +53,7 @@ const (
 	ACCESS    = "."
 
 	// Delimiters
+	COMMA       = ","
 	SEMI        = ";"
 	LPAREN      = "("
 	RPAREN      = ")"

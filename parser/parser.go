@@ -21,12 +21,12 @@ const (
 	EQUALS          // = or !=
 	COMPARISON      // > or < or <= or >=
 	CONS            // ::
-	CALL            // function application TODO sort this out
 	SUM             // + or -
 	PRODUCT         // * and /
 	MODULO          // %
 	POWER           // ^
 	ACCESS          // @ and :
+	CALL            // function application f x y
 	PREFIX          // -X or !X (and function call?)
 )
 
@@ -51,6 +51,21 @@ var precedences = map[token.TokenType]int{
 	token.TOPOW:     POWER,
 	token.ACCESS:    ACCESS,
 	token.AT:        ACCESS,
+	// function application
+	token.IDENT:   CALL,
+	token.LPAREN:  CALL,
+	token.DOLLAR:  CALL,
+	token.TRUE:    CALL,
+	token.FALSE:   CALL,
+	token.INT:     CALL,
+	token.FLOAT:   CALL,
+	token.COMPLEX: CALL,
+	// TODO string
+	// TODO rune
+	// TODO vectors
+	// TODO lists
+	// TODO records
+
 }
 
 // A Pratt parser consists in semantic code, or the association
@@ -88,7 +103,13 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.FALSE, p.parseBoolean)
 	p.registerPrefix(token.INT, p.parseIntegerLiteral)
 	p.registerPrefix(token.FLOAT, p.parseFloatLiteral)
-	p.registerPrefix(token.IMAG, p.parseImagLiteral)
+	p.registerPrefix(token.COMPLEX, p.parseComplexLiteral)
+	// TODO string
+	// TODO rune
+	// TODO vectors
+	// TODO lists
+	// TODO records
+
 	p.registerPrefix(token.MINUS, p.parsePrefixExpression)
 	p.registerPrefix(token.NOT, p.parsePrefixExpression)
 	p.registerPrefix(token.LPAREN, p.parseGroupedExpression)
@@ -119,6 +140,21 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.TOPOW, p.parseInfixExpression)
 	p.registerInfix(token.ACCESS, p.parseInfixExpression)
 	p.registerInfix(token.AT, p.parseInfixExpression)
+
+	// function application
+	p.registerInfix(token.IDENT, p.parseApplyExpression)
+	p.registerInfix(token.LPAREN, p.parseApplyExpression)
+	p.registerInfix(token.DOLLAR, p.parseApplyExpression)
+	p.registerInfix(token.TRUE, p.parseApplyExpression)
+	p.registerInfix(token.FALSE, p.parseApplyExpression)
+	p.registerInfix(token.INT, p.parseApplyExpression)
+	p.registerInfix(token.FLOAT, p.parseApplyExpression)
+	p.registerInfix(token.COMPLEX, p.parseApplyExpression)
+	// TODO string
+	// TODO rune
+	// TODO vectors
+	// TODO lists
+	// TODO records
 
 	// Read two tokens so that curToken and peekToken are both set
 	p.nextToken()
@@ -167,6 +203,12 @@ func (p *Parser) noPrefixParseFnError(t token.Token) {
 // Advance parsing by a token
 func (p *Parser) nextToken() {
 	p.curToken = p.peekToken
+	p.peekToken = p.l.NextToken()
+}
+
+func (p *Parser) resetToken(t token.Token) {
+	p.l.ResetPosition(t.Position)
+	p.curToken = t
 	p.peekToken = p.l.NextToken()
 }
 
@@ -259,7 +301,8 @@ func (p *Parser) parseStatement() ast.Statement {
 
 // Parse a let statement (not a let expression)
 func (p *Parser) parseLetStatement() ast.Statement {
-	stmt := &ast.LetStatement{Token: p.curToken}
+	start_token := p.curToken
+	stmt := &ast.LetStatement{Token: start_token}
 
 	stmt.Assignments = make([]*ast.Assignment, 0)
 
@@ -272,21 +315,9 @@ func (p *Parser) parseLetStatement() ast.Statement {
 
 	for !p.peekTokenIs(token.SEMI) {
 		if p.peekTokenIs(token.IN) {
-			// This is not a let statement but a let expression
-			p.nextToken()
-			p.nextToken()
-			exp := &ast.LetExpression{
-				Token:       stmt.Token,
-				Assignments: stmt.Assignments,
-			}
-			exp.Body = p.parseExpression(LOWEST)
-			if p.peekTokenIs(token.SEMI) {
-				p.nextToken()
-			}
-			return &ast.ExpressionStatement{
-				Token:      exp.Token,
-				Expression: exp,
-			}
+			p.resetToken(start_token)
+			stmt := p.parseExpressionStatement()
+			return stmt
 		}
 
 		p.expectPeek(token.AND)
@@ -318,41 +349,4 @@ func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
 		return nil
 	}
 	return stmt
-}
-
-// Parse a let statement (not a let expression)
-func (p *Parser) parseLetExpression() ast.Expression {
-	exp := &ast.LetExpression{Token: p.curToken}
-
-	exp.Assignments = make([]*ast.Assignment, 0)
-
-	// Parse the first assignment
-	ass := p.parseAssignment()
-	if ass == nil {
-		return nil
-	}
-	exp.Assignments = append(exp.Assignments, ass)
-
-	for !p.peekTokenIs(token.IN) {
-		p.expectPeek(token.AND)
-
-		ass := p.parseAssignment()
-		if ass == nil {
-			return nil
-		}
-		exp.Assignments = append(exp.Assignments, ass)
-	}
-
-	if !p.expectPeek(token.IN) {
-		return nil
-	}
-	p.nextToken()
-
-	exp.Body = p.parseExpression(LOWEST)
-
-	if len(exp.Assignments) == 0 {
-		return nil
-	}
-
-	return exp
 }

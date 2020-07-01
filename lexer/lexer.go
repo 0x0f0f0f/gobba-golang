@@ -23,6 +23,13 @@ func New(input string) *Lexer {
 	return l
 }
 
+// Reset the position back
+func (l *Lexer) ResetPosition(pos int) {
+	l.position = pos
+	l.readPosition = pos + 1
+	l.ch = l.input[pos]
+}
+
 // Advances the current character in input
 func (l *Lexer) readChar() {
 	if l.readPosition >= len(l.input) {
@@ -43,10 +50,11 @@ func (l *Lexer) readChar() {
 // Creates a token from a type and a character
 func (l *Lexer) newToken(tokenType token.TokenType, lit string) token.Token {
 	return token.Token{
-		Type:    tokenType,
-		Line:    l.line,
-		Column:  l.column,
-		Literal: lit,
+		Type:     tokenType,
+		Line:     l.line,
+		Column:   l.column,
+		Position: l.position,
+		Literal:  lit,
 	}
 }
 
@@ -95,27 +103,43 @@ func isCharAllowedInNumber(ch byte) bool {
 // 12e-1
 // 12e+1
 // 12e1
-// 12i
-// 12.2i
-// 12e-1i
+// 14.5+12i
+// 2.3+12.2i
+// 0+12e-1i
 // 12e+1i
 // 12e1i
-func (l *Lexer) readNumber() (token.TokenType, string) {
-	position := l.position
+func (l *Lexer) readNumber(hasReal bool) (token.TokenType, string) {
+	start_pos := l.position
 	var kind token.TokenType = token.INT
 	hasDot := false
 	hasExponent := false
 
 	for isCharAllowedInNumber(l.ch) {
-		// End of the expression. No exponent
+		// End of the expression. Lookahead for an imaginary part
+		// or reset the parser position back and return just
+		// the "real" part literal
 		if l.ch == '+' || l.ch == '-' {
-			return kind, string(l.input[position:l.position])
+			if !hasReal {
+				old_pos := l.position
+				curr_lit := l.input[start_pos:l.position]
+				op := l.ch
+				l.readChar()
+				im_kind, im_lit := l.readNumber(true)
+				// If the number ends with an 'i', it is an imaginary part number
+				if im_kind == token.COMPLEX {
+					curr_lit += string(op) + im_lit
+					kind = im_kind
+				} else {
+					l.ResetPosition(old_pos)
+				}
+			}
+			return kind, l.input[start_pos:l.position]
 		}
 
 		// If the number contains e we're in scientific notation
 		if l.ch == 'e' {
 			if hasExponent {
-				return token.ILLEGAL, string(l.input[position:l.position])
+				return token.ILLEGAL, l.input[start_pos:l.position]
 			}
 
 			hasExponent = true
@@ -125,27 +149,31 @@ func (l *Lexer) readNumber() (token.TokenType, string) {
 				peeked = l.peekChar()
 			}
 			if !isDigit(peeked) {
-				return token.ILLEGAL, string(l.input[position:l.position])
+				return token.ILLEGAL, l.input[start_pos:l.position]
 			}
 			kind = token.FLOAT
 		}
 
 		// If the number ends with an 'i', it is an imaginary part number
 		if l.ch == 'i' {
-			kind = token.IMAG
 			l.readChar()
-			return kind, string(l.input[position:l.position])
+			if hasReal {
+				kind = token.COMPLEX
+			} else {
+				kind = token.ILLEGAL
+			}
+			return kind, string(l.input[start_pos:l.position])
 		}
 
 		// If the number contains two dots, that's a problem
 		// Floating point exponents are not allowed.
 		if l.ch == '.' {
 			if !isDigit(l.peekChar()) {
-				return token.ILLEGAL, string(l.input[position:l.position])
+				return token.ILLEGAL, l.input[start_pos:l.position]
 			}
 
 			if hasDot || hasExponent {
-				return token.ILLEGAL, string(l.input[position:l.position])
+				return token.ILLEGAL, l.input[start_pos:l.position]
 			}
 			hasDot = true
 			kind = token.FLOAT
@@ -155,10 +183,10 @@ func (l *Lexer) readNumber() (token.TokenType, string) {
 
 	// The number should not end with the exponent character
 	if l.input[l.position-1] == 'e' {
-		return token.ILLEGAL, string(l.input[position:l.position])
+		return token.ILLEGAL, l.input[start_pos:l.position]
 	}
 
-	return kind, l.input[position:l.position]
+	return kind, l.input[start_pos:l.position]
 }
 
 // Read the next character without incrementing position
@@ -234,6 +262,8 @@ func (l *Lexer) NextToken() token.Token {
 		tok = l.newToken(token.AT, string(l.ch))
 	case '.':
 		tok = l.newToken(token.ACCESS, string(l.ch))
+	case ',':
+		tok = l.newToken(token.COMMA, string(l.ch))
 	case '$':
 		tok = l.newToken(token.DOLLAR, string(l.ch))
 	case '!':
@@ -316,7 +346,7 @@ func (l *Lexer) NextToken() token.Token {
 			tok = l.newToken(token.LookupIdent(lit), lit)
 			return tok
 		} else if isDigit(l.ch) {
-			kind, value := l.readNumber()
+			kind, value := l.readNumber(false)
 			tok = l.newToken(kind, value)
 			return tok
 		} else {

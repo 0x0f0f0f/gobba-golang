@@ -98,6 +98,7 @@ func TestParsingInfixExpressions(t *testing.T) {
 	}{
 		{"5 + 5;", 5, "+", 5},
 		{"5 - 5;", 5, "-", 5},
+		{"5.243 - 2.23e2;", 5.243, "-", 2.23e2},
 		{"5 * 5;", 5, "*", 5},
 		{"5 / 5;", 5, "/", 5},
 		{"5 > 5;", 5, ">", 5},
@@ -132,6 +133,8 @@ func testLiteralExpression(
 		return testIntegerLiteral(t, exp, int64(v))
 	case int64:
 		return testIntegerLiteral(t, exp, v)
+	case float64:
+		return testFloatLiteral(t, exp, v)
 	case string:
 		return testIdentifier(t, exp, v)
 	case bool:
@@ -159,6 +162,20 @@ func testIntegerLiteral(t *testing.T, il ast.Expression, value int64) bool {
 	return true
 }
 
+func testFloatLiteral(t *testing.T, il ast.Expression, value float64) bool {
+	integ, ok := il.(*ast.FloatLiteral)
+	assert.True(t, ok, "is *ast.IntegerLiteral")
+	assert.Equal(t, integ.Value, value)
+	return true
+}
+
+func testComplexLiteral(t *testing.T, il ast.Expression, value complex128) bool {
+	integ, ok := il.(*ast.ComplexLiteral)
+	assert.True(t, ok, "is *ast.IntegerLiteral")
+	assert.Equal(t, integ.Value, value)
+	return true
+}
+
 func testBooleanLiteral(t *testing.T, il ast.Expression, value bool) bool {
 	integ, ok := il.(*ast.BooleanLiteral)
 	assert.True(t, ok, "is *ast.BooleanLiteral")
@@ -170,7 +187,7 @@ func testBooleanLiteral(t *testing.T, il ast.Expression, value bool) bool {
 func testIdentifier(t *testing.T, exp ast.Expression, value string) bool {
 	ident, ok := exp.(*ast.Identifier)
 	assert.True(t, ok, "casting to *ast.Identifier")
-	assert.Equal(t, ident.Value, value)
-	assert.Equal(t, ident.TokenLiteral(), value)
+	assert.Equal(t, value, ident.Value)
+	assert.Equal(t, value, ident.TokenLiteral())
 	return true
 }

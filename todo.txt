@@ -1,15 +1,18 @@
 (A) Parser 
 (A) Parse ifthenelse test
 (A) Parse function tests
+(A) Parse function application tests
 (A) AST tests 
+(A) Parse lists and vectors
 (A) EBNF
-DEFINE HOW YOU WANT TO HANDLE CLASS TYPING/ALGEBRAIC DATA TYPES
+DEFINE HOW YOU WANT TO HANDLE CLASS TYPING/ALGEBRAIC DATA TYPES: choose between structs/interfaces/typecasting or structs and sum ADTs
 DEFINE HOW YOU WANT TO HANDLE POLYMORPHISM
 DEFINE HOW YOU WANT TO HANDLE CONCURRENCY!
 Interpretation over execution
 decent error handling for parser
 Formalize operational semantics
 Type system
+Type inference
 Effect system: allow/deny effects
 OPTIONAL??? Policy (automata) based effect system based on the algebra of communicating processes. Paper degano giangi 
 x (A) Parse function literals

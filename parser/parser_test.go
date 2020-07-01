@@ -1,6 +1,7 @@
 package parser
 
 import (
+	"github.com/0x0f0f0f/gobba-golang/ast"
 	"github.com/0x0f0f0f/gobba-golang/lexer"
 	"github.com/stretchr/testify/assert"
 	"testing"
@@ -120,6 +121,18 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 			"!(true = true);",
 			"(!(true = true));",
 		},
+		{
+			"a + add (b * c) + d;",
+			"((a + add((b * c))) + d);",
+		},
+		{
+			"add a b 1 (2 * 3) (4 + 5) $ add 6 7 * 8;",
+			"add(a)(b)(1)((2 * 3))((4 + 5))((add(6)(7) * 8));",
+		},
+		{
+			"add (a + b + c * d / f + g);",
+			"add((((a + b) + ((c * d) / f)) + g));",
+		},
 	}
 
 	for _, tt := range tests {
@@ -129,5 +142,34 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 		checkParserErrors(t, p)
 		actual := program.String()
 		assert.Equal(t, tt.expected, actual)
+	}
+}
+
+func TestFunctionParameterParsing(t *testing.T) {
+	tests := []struct {
+		input          string
+		expectedParams []string
+	}{
+		{input: "fun x -> x;", expectedParams: []string{"x"}},
+		{input: "fun x y z -> x + y + z;", expectedParams: []string{"x", "y", "z"}},
+	}
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+		program := p.ParseProgram()
+		checkParserErrors(t, p)
+
+		assert.Len(t, p.Errors(), 0)
+		stmt := program.Statements[0].(*ast.ExpressionStatement)
+		f, ok := stmt.Expression.(*ast.FunctionLiteral)
+		assert.True(t, ok, "casting to *ast.FunctionLiteral")
+
+		for i, par := range tt.expectedParams {
+			testLiteralExpression(t, f.Param, par)
+			if i != len(tt.expectedParams)-1 {
+				f, ok = f.Body.(*ast.FunctionLiteral)
+				assert.True(t, ok, "casting to *ast.FunctionLiteral")
+			}
+		}
 	}
 }

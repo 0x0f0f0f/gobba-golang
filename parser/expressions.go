@@ -66,13 +66,13 @@ func (p *Parser) parseFloatLiteral() ast.Expression {
 }
 
 // Parse a floating point literal
-func (p *Parser) parseImagLiteral() ast.Expression {
-	lit := &ast.ImagLiteral{Token: p.curToken}
+func (p *Parser) parseComplexLiteral() ast.Expression {
+	lit := &ast.ComplexLiteral{Token: p.curToken}
 
-	l := len(p.curToken.Literal)
-	value, err := strconv.ParseFloat(p.curToken.Literal[:l-1], 64)
+	value := 0 + 0i
+	_, err := fmt.Sscanf(p.curToken.Literal, "%f", &value)
 	if err != nil {
-		msg := fmt.Sprintf("could not parse %q as float", p.curToken.Literal)
+		msg := fmt.Sprintf("could not parse %q as complex", p.curToken.Literal)
 		p.errors = append(p.errors, msg)
 		return nil
 	}
@@ -112,27 +112,6 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 	p.nextToken()
 	exp.Right = p.parseExpression(precedence)
 
-	if exp.Operator == "+" || exp.Operator == "-" {
-		r, ok := exp.Right.(*ast.ImagLiteral)
-		if !ok {
-			return exp
-		}
-		lf, ok := exp.Left.(*ast.FloatLiteral)
-		if ok {
-			nexp := &ast.ComplexLiteral{}
-			nexp.Token = exp.Token
-			nexp.Value = complex(lf.Value, r.Value)
-			return nexp
-		}
-		li, ok := exp.Left.(*ast.IntegerLiteral)
-		if ok {
-			nexp := &ast.ComplexLiteral{}
-			nexp.Token = exp.Token
-			nexp.Value = complex(float64(li.Value), r.Value)
-			return nexp
-		}
-	}
-
 	return exp
 }
 
@@ -160,8 +139,6 @@ func (p *Parser) parseIfExpression() ast.Expression {
 	p.nextToken()
 
 	exp.Condition = p.parseExpression(LOWEST)
-
-	fmt.Printf("WAHOO %+v\n", p.curToken)
 
 	if !p.expectPeek(token.THEN) {
 		return nil
@@ -192,7 +169,7 @@ func (p *Parser) parseFunctionLiteral() ast.Expression {
 	}
 
 	first_param := p.parseIdentifier().(*ast.Identifier)
-	parent_fun.Param = *first_param
+	parent_fun.Param = first_param
 
 	// Parameter list unrolling is done with a iterative loop
 	cur_fun := parent_fun
@@ -202,7 +179,7 @@ func (p *Parser) parseFunctionLiteral() ast.Expression {
 
 		child_fun := &ast.FunctionLiteral{
 			Token: parent_fun.Token,
-			Param: *cur_param,
+			Param: cur_param,
 		}
 
 		cur_fun.Body = child_fun
@@ -216,4 +193,48 @@ func (p *Parser) parseFunctionLiteral() ast.Expression {
 	cur_fun.Body = p.parseExpression(LOWEST)
 
 	return parent_fun
+}
+
+func (p *Parser) parseApplyExpression(f ast.Expression) ast.Expression {
+	exp := &ast.ApplyExpr{Token: p.curToken, Function: f}
+
+	precedence := p.curPrecedence()
+
+	exp.Arg = p.parseExpression(precedence)
+
+	return exp
+}
+
+// Parse a let expression
+func (p *Parser) parseLetExpression() ast.Expression {
+	exp := &ast.LetExpression{Token: p.curToken}
+
+	// Parse the first assignment
+	ass := p.parseAssignment()
+	if ass == nil {
+		return nil
+	}
+	exp.Assignment = *ass
+
+	curr_expr := exp
+	for !p.peekTokenIs(token.IN) {
+		p.expectPeek(token.AND)
+
+		ass := p.parseAssignment()
+		if ass == nil {
+			return nil
+		}
+		curr_expr.Body = &ast.LetExpression{Token: p.curToken}
+		curr_expr = curr_expr.Body.(*ast.LetExpression)
+		curr_expr.Assignment = *ass
+	}
+
+	if !p.expectPeek(token.IN) {
+		return nil
+	}
+	p.nextToken()
+
+	curr_expr.Body = p.parseExpression(LOWEST)
+
+	return exp
 }

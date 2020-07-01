@@ -30,7 +30,6 @@ go get -u -v github.com/0x0f0f0f/gobba-golang
 ```
 
 ## Changes from 0.4, or the last OCaml version
-- Function application syntax: `fun(a1, a2, a3)` instead of `fun a1 a2 a3`.
 - Hand written Top Down Operator Precedence (Pratt) parser
 - Complex numbers literals are created during parsing instead of evaluation
 - Introduced allow/deny for effects, including purity

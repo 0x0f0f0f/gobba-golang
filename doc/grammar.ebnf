@@ -7,26 +7,29 @@
    than other recursive descent parsers.
  *)
 
-(* Statements *)
-toplevel = w, statement ;
-statement = let_statement | expr_statement ; 
+program = w, package_statement, {statement}
+statement = w, (let_statement | expr_statement), w, ";" ; 
 
-let_statement = "let", w, assignments, w, "=", w, expr, w, ";" ; 
-expr_statement = expr, w, ";" ;
+package_statement = "package", w, identifier, w, ";";
+let_statement = "let", w, assignments, w, "=", w, expr; 
+expr_statement = expr ;
 
 (* TODO directives *)
-(* TODO function application *)
-(* TODO )
+(* TODO type annotation )
+primitive_type = identifier | "int" | "float" | "complex" | "rune" | "string" 
+    | density, w, "matrix" | density, w, "cmatrix" (* float64 and complex128 matrices*)
+    | "[", w, integer, w, "]", type (* Arrays *)
+    | "[]", type (* List *)
+
+density = "sparse" | "dense"
 
 (* Expressions *):
-expr = lowest | prefixed | infix_expr | let_expr | ifthenelse ;
-
+expr = lowest | prefixed | infix_expr | let_expr | ifthenelse | application;
 ifthenelse = "if", w, expr, w, "then", w, expr, w, "else", w, expr ;
-
+application = expr, w, literal |  ; function application, left associative
 let_expr = "let", w, assignments, w, "in", w, expr;
 assignments = assignment, {w, "and", w, assignment} ;  
 assignment = identifier, w, "=", w, expr ; 
-
 
 (* Operators. NOTE that operator precedence is not defined in the 
 grammar, but through the Pratt parser. An example of this approach 
@@ -50,32 +53,29 @@ prefix_op = "!" | "-"
 lowest = literal | "(", w, expr, w, ")" | "$", w, expr;
 
 (* Literals *)
+(* TODO vectors *)
 literal = composite_literal | basic_literal ; 
-composite_literal = complex_literal | lambda_literal ; 
+composite_literal = complex_literal | lambda_literal | record_literal ; 
+basic_literal = float | integer | imag | string | identifier ; 
+record_literal = "{", w, [ assignment, w, {",", w, assignments, w} ], w, "}" 
 
 (* The addition/subtraction operators are overloaded to correctly
 parse complex number literals without using additional operators, 
 in the form a+bi or a-bi*)
-complex_literal = (float | integer), w, sum_op,  w, imag ;
+complex_literal = (float | integer), sum_op, (float | integer), "i";
 
 (* Function literals *)
 lambda_literal = ("fun" | "lambda"), w, param_list, w, "->", expr ;
 param_list = identifier, { w, identifier }
 
-basic_literal = float | integer | imag | string | identifier ; 
 
-(* Strings and characters *)
+(* Basic literals *)
 string = '"', ? all possible characters ?, '"';
-
 rune = "'", ? an Unicode value ?, "'"
-
-(* Numbers *)
 imag = (float | integer), "i";
-float = integer "." integer [ "e", ["+" | "-"], integer ];
+float = integer, ".", integer, [ "e", ["+" | "-"], integer ];
 integer = digit, {digit} ;
-
 identifier = (alpha | "_"), { alpha | digit | "_" } ;
-
 alpha = ? an Unicode letter ? ;
 digit = ? an Unicode digit ? ;
 

@@ -108,9 +108,9 @@ func (ls *LetStatement) String() string {
 
 // Represents `let var = val in body`
 type LetExpression struct {
-	Token       token.Token
-	Assignments []*Assignment
-	Body        Expression
+	Token      token.Token
+	Assignment Assignment
+	Body       Expression
 }
 
 func (le *LetExpression) expressionNode()      {}
@@ -118,13 +118,8 @@ func (le *LetExpression) TokenLiteral() string { return le.Token.Literal }
 func (le *LetExpression) String() string {
 	var b bytes.Buffer
 
-	b.WriteString("(" + le.TokenLiteral() + " ")
-	for i, ass := range le.Assignments {
-		b.WriteString(ass.String())
-		if i < len(le.Assignments)-1 {
-			b.WriteString(" and ")
-		}
-	}
+	b.WriteString("(let ")
+	b.WriteString(le.Assignment.String())
 	b.WriteString(" in ")
 	b.WriteString(le.Body.String())
 	b.WriteString(")")
@@ -156,10 +151,10 @@ func (i *IfExpression) String() string {
 	return b.String()
 }
 
-// Represents an if-then-else expression
+// Represents a function definition literal
 type FunctionLiteral struct {
 	Token token.Token
-	Param Identifier
+	Param *Identifier
 	Body  Expression
 }
 
@@ -172,6 +167,26 @@ func (f *FunctionLiteral) String() string {
 	b.WriteString(f.Param.String())
 	b.WriteString(" -> ")
 	b.WriteString(f.Body.String())
+	b.WriteString(")")
+
+	return b.String()
+}
+
+// Represent a function application
+type ApplyExpr struct {
+	Token    token.Token
+	Function Expression
+	Arg      Expression
+}
+
+func (f *ApplyExpr) expressionNode()      {}
+func (f *ApplyExpr) TokenLiteral() string { return f.Token.Literal }
+func (f *ApplyExpr) String() string {
+	var b bytes.Buffer
+
+	b.WriteString(f.Function.String())
+	b.WriteString("(")
+	b.WriteString(f.Arg.String())
 	b.WriteString(")")
 
 	return b.String()
@@ -225,6 +240,10 @@ func (i *Identifier) expressionNode()      {}
 func (i *Identifier) TokenLiteral() string { return i.Token.Literal }
 func (i *Identifier) String() string       { return i.Value }
 
+// ======================================================================
+// Terminal values: literals
+// ======================================================================
+
 // Represents an integer literal
 type IntegerLiteral struct {
 	Token token.Token
@@ -256,16 +275,6 @@ func (c *ComplexLiteral) TokenLiteral() string { return c.Token.Literal }
 func (c *ComplexLiteral) String() string {
 	return fmt.Sprintf("%g", c.Value)
 }
-
-// Represents an imaginary part number literal
-type ImagLiteral struct {
-	Token token.Token
-	Value float64
-}
-
-func (c *ImagLiteral) expressionNode()      {}
-func (c *ImagLiteral) TokenLiteral() string { return c.Token.Literal }
-func (c *ImagLiteral) String() string       { return c.Token.Literal }
 
 // Represents a boolean value
 type BooleanLiteral struct {

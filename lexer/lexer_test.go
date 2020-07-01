@@ -28,7 +28,7 @@ lambda x y -> x + y in add five ten ;`
 		{token.LAMBDA, "lambda"},
 		{token.IDENT, "x"},
 		{token.IDENT, "y"},
-		{token.LARROW, "->"},
+		{token.RARROW, "->"},
 		{token.IDENT, "x"},
 		{token.PLUS, "+"},
 		{token.IDENT, "y"},
