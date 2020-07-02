@@ -37,14 +37,14 @@ func (u *RuneType) typeValue() {}
 
 // Denoted with α in the paper
 type VariableType struct {
-	Identifier Identifier
+	Identifier UniqueIdentifier
 }
 
 func (u *VariableType) typeValue() {}
 
 // Denoted with ∀α. A in the paper
 type ForAllType struct {
-	Identifier Identifier
+	Identifier UniqueIdentifier
 	Type       TypeValue
 }
 
@@ -57,5 +57,12 @@ type LambdaType struct {
 }
 
 func (u *LambdaType) typeValue() {}
+
+// Denoted with ∀α. A in the paper
+type ExistsType struct {
+	Identifier UniqueIdentifier
+}
+
+func (u *ExistsType) typeValue() {}
 
 // TODO record types

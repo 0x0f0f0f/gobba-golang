@@ -68,7 +68,7 @@ func (es *ExpressionStatement) String() string {
 // Represents a symbol-value pair in the AST.
 type Assignment struct {
 	Token token.Token
-	Name  *Identifier
+	Name  *IdentifierExpr
 	Value Expression
 }
 
@@ -154,7 +154,7 @@ func (i *IfExpression) String() string {
 // Represents a function definition literal
 type FunctionLiteral struct {
 	Token token.Token
-	Param *Identifier
+	Param *IdentifierExpr
 	Body  Expression
 }
 
@@ -231,14 +231,14 @@ func (p *InfixExpression) String() string {
 }
 
 // Represents a symbol or an identifier
-type Identifier struct {
+type IdentifierExpr struct {
 	Token token.Token
-	Value string
+	Value UniqueIdentifier
 }
 
-func (i *Identifier) expressionNode()      {}
-func (i *Identifier) TokenLiteral() string { return i.Token.Literal }
-func (i *Identifier) String() string       { return i.Value }
+func (i *IdentifierExpr) expressionNode()      {}
+func (i *IdentifierExpr) TokenLiteral() string { return i.Token.Literal }
+func (i *IdentifierExpr) String() string       { return i.Value.Value }
 
 // ======================================================================
 // Terminal values: literals

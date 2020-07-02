@@ -29,9 +29,9 @@ func (p *Parser) parseExpression(prec int) ast.Expression {
 
 // Parse a simple terminal symbol
 func (p *Parser) parseIdentifier() ast.Expression {
-	return &ast.Identifier{
+	return &ast.IdentifierExpr{
 		Token: p.curToken,
-		Value: p.curToken.Literal,
+		Value: ast.UniqueIdentifier{Value: p.curToken.Literal},
 	}
 }
 
@@ -168,14 +168,14 @@ func (p *Parser) parseFunctionLiteral() ast.Expression {
 		return nil
 	}
 
-	first_param := p.parseIdentifier().(*ast.Identifier)
+	first_param := p.parseIdentifier().(*ast.IdentifierExpr)
 	parent_fun.Param = first_param
 
 	// Parameter list unrolling is done with a iterative loop
 	cur_fun := parent_fun
 	for p.peekTokenIs(token.IDENT) {
 		p.nextToken()
-		cur_param := p.parseIdentifier().(*ast.Identifier)
+		cur_param := p.parseIdentifier().(*ast.IdentifierExpr)
 
 		child_fun := &ast.FunctionLiteral{
 			Token: parent_fun.Token,

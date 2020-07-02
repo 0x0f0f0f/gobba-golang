@@ -277,7 +277,12 @@ func (p *Parser) parseAssignment() *ast.Assignment {
 	}
 
 	ass := &ast.Assignment{Token: p.curToken}
-	ass.Name = &ast.Identifier{Token: p.curToken, Value: p.curToken.Literal}
+	ass.Name = &ast.IdentifierExpr{
+		Token: p.curToken,
+		Value: ast.UniqueIdentifier{
+			Value: p.curToken.Literal,
+		},
+	}
 
 	if !p.expectPeek(token.EQUALS) {
 		return nil
