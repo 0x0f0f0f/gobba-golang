@@ -28,6 +28,7 @@ func (c Context) SynthStatement(st ast.Statement) ast.TypeValue {
 }
 
 func (c Context) SynthProgram(p *ast.Program) []ast.TypeValue {
+	// TODO errors, everything else
 	types := make([]ast.TypeValue, 0)
 	for _, st := range p.Statements {
 		types = append(types, c.SynthStatement(st))

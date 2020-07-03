@@ -69,7 +69,7 @@ func NewContext() *Context {
 
 // Sorted insertion after element el in the context
 // Return a new context after insertion
-func (c Context) Insert(el ContextValue, values []ContextValue) *Context {
+func (c Context) Insert(el ContextValue, values []ContextValue) Context {
 	nc := NewContext()
 
 	i := len(c.Contents)
@@ -84,26 +84,26 @@ func (c Context) Insert(el ContextValue, values []ContextValue) *Context {
 	nc.Contents = append(nc.Contents, values...)
 	nc.Contents = append(nc.Contents, c.Contents[i:]...)
 
-	return nc
+	return *nc
 }
 
 // Insert at head and return a new context
-func (c Context) InsertHead(el ContextValue) *Context {
+func (c Context) InsertHead(el ContextValue) Context {
 	nc := NewContext()
 	nc.Contents = append(nc.Contents, el)
 	nc.Contents = append(nc.Contents, c.Contents...)
-	return nc
+	return *nc
 }
 
 // Remove an element from a context and return a new one
-func (c Context) Drop(el ContextValue) *Context {
+func (c Context) Drop(el ContextValue) Context {
 	nc := NewContext()
 	for _, old := range c.Contents {
 		if old != el {
 			nc.Contents = append(nc.Contents, old)
 		}
 	}
-	return nc
+	return *nc
 }
 
 // True if the context contain the universal variable with the given identifier
@@ -144,7 +144,7 @@ func (c Context) GetSolvedVariable(alpha ast.UniqueIdentifier) *ast.TypeValue {
 }
 
 // Split a context in two left and right context when a value is encountered
-func (c Context) SplitAt(el ContextValue) (*Context, *Context) {
+func (c Context) SplitAt(el ContextValue) (Context, Context) {
 	left := NewContext()
 	right := NewContext()
 	found := false
@@ -159,5 +159,5 @@ func (c Context) SplitAt(el ContextValue) (*Context, *Context) {
 			found = true
 		}
 	}
-	return left, right
+	return *left, *right
 }
