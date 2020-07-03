@@ -69,7 +69,7 @@ func NewContext() *Context {
 
 // Sorted insertion after element el in the context
 // Return a new context after insertion
-func (c *Context) Insert(el ContextValue, values []ContextValue) *Context {
+func (c Context) Insert(el ContextValue, values []ContextValue) *Context {
 	nc := NewContext()
 
 	i := len(c.Contents)
@@ -88,7 +88,7 @@ func (c *Context) Insert(el ContextValue, values []ContextValue) *Context {
 }
 
 // Insert at head and return a new context
-func (c *Context) InsertHead(el ContextValue) *Context {
+func (c Context) InsertHead(el ContextValue) *Context {
 	nc := NewContext()
 	nc.Contents = append(nc.Contents, el)
 	nc.Contents = append(nc.Contents, c.Contents...)
@@ -96,7 +96,7 @@ func (c *Context) InsertHead(el ContextValue) *Context {
 }
 
 // Remove an element from a context and return a new one
-func (c *Context) Drop(el ContextValue) *Context {
+func (c Context) Drop(el ContextValue) *Context {
 	nc := NewContext()
 	for _, old := range c.Contents {
 		if old != el {
@@ -107,7 +107,7 @@ func (c *Context) Drop(el ContextValue) *Context {
 }
 
 // True if the context contain the universal variable with the given identifier
-func (c *Context) HasUniversalVariable(alpha ast.UniqueIdentifier) bool {
+func (c Context) HasUniversalVariable(alpha ast.UniqueIdentifier) bool {
 	for _, c := range c.Contents {
 		if v, ok := c.(*UniversalVariable); ok {
 			if v.Identifier.Value == alpha.Value {
@@ -119,7 +119,7 @@ func (c *Context) HasUniversalVariable(alpha ast.UniqueIdentifier) bool {
 }
 
 // True if the context contains an unsolved universal variable with the given identifier
-func (c *Context) HasExistentialVariable(alpha ast.UniqueIdentifier) bool {
+func (c Context) HasExistentialVariable(alpha ast.UniqueIdentifier) bool {
 	for _, c := range c.Contents {
 		if v, ok := c.(*ExistentialVariable); ok {
 			if v.Identifier == alpha {
@@ -132,7 +132,7 @@ func (c *Context) HasExistentialVariable(alpha ast.UniqueIdentifier) bool {
 
 // If the context contains a solved universal variable with the given identifier
 // just return the corresponding monotype
-func (c *Context) GetSolvedVariable(alpha ast.UniqueIdentifier) *ast.TypeValue {
+func (c Context) GetSolvedVariable(alpha ast.UniqueIdentifier) *ast.TypeValue {
 	for _, c := range c.Contents {
 		if v, ok := c.(*ExistentialVariable); ok {
 			if v.Identifier == alpha && v.solved() {
@@ -143,4 +143,21 @@ func (c *Context) GetSolvedVariable(alpha ast.UniqueIdentifier) *ast.TypeValue {
 	return nil
 }
 
-// Apply a context as a substitution to a value
+// Split a context in two left and right context when a value is encountered
+func (c Context) SplitAt(el ContextValue) (*Context, *Context) {
+	left := NewContext()
+	right := NewContext()
+	found := false
+	for _, old := range c.Contents {
+		if found {
+			right.Contents = append(right.Contents, old)
+			continue
+		}
+
+		left.Contents = append(left.Contents, old)
+		if old == el {
+			found = true
+		}
+	}
+	return left, right
+}

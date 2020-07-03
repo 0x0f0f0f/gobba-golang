@@ -30,7 +30,10 @@ func (c *Context) Subtype(a, b ast.TypeValue) (*Context, *TypeError) {
 			// Rule <:∀R
 			return c.ruleSubtypeForAllRight(a, vb)
 		case *ast.ExistsType:
-			// TODO Rule <:InstantiateR
+			// Rule <:InstantiateR
+			if OccursIn(vb.Identifier, a) {
+				return c.InstantiateR(a, vb.Identifier), nil
+			}
 
 		}
 
@@ -41,13 +44,21 @@ func (c *Context) Subtype(a, b ast.TypeValue) (*Context, *TypeError) {
 				// Rule <: Exvar
 				return c, nil
 			} else {
-				// TODO Rule <:InstantiateL
+				// Rule <:InstantiateL
+				if OccursIn(va.Identifier, b) {
+					return c.InstantiateL(va.Identifier, b), nil
+				}
+
 			}
 		case *ast.ForAllType:
 			// Rule <:∀R
 			return c.ruleSubtypeForAllRight(a, vb)
 		default:
-			// TODO Rule <:InstantiateR
+			// Rule <:InstantiateL
+			if OccursIn(va.Identifier, b) {
+				return c.InstantiateL(va.Identifier, b), nil
+			}
+
 		}
 
 	case *ast.LambdaType:
@@ -58,14 +69,16 @@ func (c *Context) Subtype(a, b ast.TypeValue) (*Context, *TypeError) {
 			if err != nil {
 				return nil, err
 			}
-			// TODO apply_context
-			return theta.Subtype(theta.ApplyContext(va.Codomain),
-				theta.ApplyContext(vb.Codomain))
+			return theta.Subtype(theta.Apply(va.Codomain),
+				theta.Apply(vb.Codomain))
 		case *ast.ForAllType:
 			// Rule <:∀R
 			return c.ruleSubtypeForAllRight(a, vb)
 		case *ast.ExistsType:
-			// TODO Rule <:InstantiateR
+			// Rule <:InstantiateR
+			if OccursIn(vb.Identifier, a) {
+				return c.InstantiateR(a, vb.Identifier), nil
+			}
 
 		}
 
@@ -73,8 +86,10 @@ func (c *Context) Subtype(a, b ast.TypeValue) (*Context, *TypeError) {
 		// Rule <:∀L
 		return c.ruleSubtypeForAllLeft(va, b)
 	default:
-		return nil, c.subtypeError(a, b)
+
 	}
+
+	return nil, c.subtypeError(a, b)
 
 }
 
@@ -94,7 +109,7 @@ func (c *Context) ruleSubtypeForAllLeft(a *ast.ForAllType, b ast.TypeValue) (*Co
 	r1 := ast.GenUID("alpha")
 	marker := &Marker{r1}
 	exv := &ExistentialVariable{r1, nil}
-	ext := &ast.ExistsType{r1}
+	ext := &ast.ExistsType{Identifier: r1}
 	gamma := c.InsertHead(exv).InsertHead(marker)
 	sub_a := Substitution(a.Type, ext, a.Identifier)
 	delta, err := gamma.Subtype(sub_a, b)

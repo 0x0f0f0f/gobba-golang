@@ -5,6 +5,7 @@ import (
 	"github.com/0x0f0f0f/gobba-golang/lexer"
 	"github.com/0x0f0f0f/gobba-golang/parser"
 	"github.com/0x0f0f0f/gobba-golang/token"
+	"github.com/0x0f0f0f/gobba-golang/typecheck"
 	"github.com/alecthomas/repr"
 	"github.com/c-bata/go-prompt"
 	"os"
@@ -65,6 +66,14 @@ func (r *Repl) executor(line string) {
 	}
 
 	fmt.Println(program.String())
+
+	// Typecheck
+	// TODO default context with primitives
+	ctx := typecheck.NewContext()
+	types := ctx.SynthProgram(program)
+	for i, t := range types {
+		fmt.Printf("statement %d has type %s\n", i, t)
+	}
 
 }
 

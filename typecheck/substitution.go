@@ -69,6 +69,15 @@ func (c *Context) Apply(a ast.TypeValue) ast.TypeValue {
 			c.Apply(*tau)
 		}
 	case *ast.LambdaType:
-
+		return &ast.LambdaType{
+			Domain:   c.Apply(va.Domain),
+			Codomain: c.Apply(va.Codomain),
+		}
+	case *ast.ForAllType:
+		return &ast.ForAllType{
+			Identifier: va.Identifier,
+			Type:       c.Apply(va.Type),
+		}
 	}
+	return a
 }
