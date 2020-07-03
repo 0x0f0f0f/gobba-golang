@@ -1,13 +1,11 @@
 // Contains the Parser class, which builds an AST out of
-// a lexer. TODO: specialize errors with line and column number
+// a lexer.
 package parser
 
 import (
-	"fmt"
 	"github.com/0x0f0f0f/gobba-golang/ast"
 	"github.com/0x0f0f0f/gobba-golang/lexer"
 	"github.com/0x0f0f0f/gobba-golang/token"
-	"runtime/debug"
 )
 
 // Precedence levels for operators
@@ -68,6 +66,8 @@ var precedences = map[token.TokenType]int{
 
 }
 
+// ======================================================================
+
 // A Pratt parser consists in semantic code, or the association
 // of parsing functions with token types. There can be two types
 // of parsing functions, either for infix or prefix operators
@@ -81,7 +81,7 @@ type Parser struct {
 	l         *lexer.Lexer
 	curToken  token.Token
 	peekToken token.Token
-	errors    []string
+	errors    []ParserError
 	// These two maps are needed as lookup table for
 	// operators either found in prefix or infix position
 	prefixParseFns map[token.TokenType]prefixParseFn
@@ -93,7 +93,7 @@ type Parser struct {
 func New(l *lexer.Lexer) *Parser {
 	p := &Parser{
 		l:      l,
-		errors: []string{},
+		errors: []ParserError{},
 	}
 
 	// Registration of prefix operators
@@ -163,11 +163,6 @@ func New(l *lexer.Lexer) *Parser {
 	return p
 }
 
-// Simply get the list of parsing errors
-func (p *Parser) Errors() []string {
-	return p.errors
-}
-
 // Register a prefix parse function
 func (p *Parser) registerPrefix(tt token.TokenType, fn prefixParseFn) {
 	p.prefixParseFns[tt] = fn
@@ -176,28 +171,6 @@ func (p *Parser) registerPrefix(tt token.TokenType, fn prefixParseFn) {
 // Register a infix parse function
 func (p *Parser) registerInfix(tt token.TokenType, fn infixParseFn) {
 	p.infixParseFns[tt] = fn
-}
-
-// Add an error when a peekToken is not the expected one
-func (p *Parser) peekError(tt token.TokenType, t token.Token) {
-	msg := fmt.Sprintf("syntax error at line %d column %d: expected '%s'. got '%s' instead",
-		t.Line, t.Column,
-		tt, p.peekToken.Literal)
-	if p.TraceOnError {
-		fmt.Printf("ERRORING HERE: %s\n", msg)
-		debug.PrintStack()
-	}
-	p.errors = append(p.errors, msg)
-}
-
-func (p *Parser) noPrefixParseFnError(t token.Token) {
-	msg := fmt.Sprintf("syntax error at line %d column %d: unexpected token %s (no prefix parser)",
-		t.Line, t.Column, t.Literal)
-	if p.TraceOnError {
-		fmt.Printf("ERRORING HERE: %s\n", msg)
-		debug.PrintStack()
-	}
-	p.errors = append(p.errors, msg)
 }
 
 // Advance parsing by a token

@@ -8,4 +8,10 @@ type UniqueIdentifier struct {
 }
 
 // To increment every time an UID is generated
-var global_counter *int
+var global_counter int = 1
+
+func GenUID(name string) UniqueIdentifier {
+	uid := UniqueIdentifier{name, global_counter}
+	global_counter++
+	return uid
+}

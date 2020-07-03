@@ -95,6 +95,17 @@ func (c *Context) InsertHead(el ContextValue) *Context {
 	return nc
 }
 
+// Remove an element from a context and return a new one
+func (c *Context) Drop(el ContextValue) *Context {
+	nc := NewContext()
+	for _, old := range c.Contents {
+		if old != el {
+			nc.Contents = append(nc.Contents, old)
+		}
+	}
+	return nc
+}
+
 // True if the context contain the universal variable with the given identifier
 func (c *Context) HasUniversalVariable(alpha ast.UniqueIdentifier) bool {
 	for _, c := range c.Contents {
@@ -111,8 +122,8 @@ func (c *Context) HasUniversalVariable(alpha ast.UniqueIdentifier) bool {
 func (c *Context) HasExistentialVariable(alpha ast.UniqueIdentifier) bool {
 	for _, c := range c.Contents {
 		if v, ok := c.(*ExistentialVariable); ok {
-			if v.Identifier.Value == alpha.Value && !v.solved() {
-				return true
+			if v.Identifier == alpha {
+				return !v.solved()
 			}
 		}
 	}
@@ -124,10 +135,12 @@ func (c *Context) HasExistentialVariable(alpha ast.UniqueIdentifier) bool {
 func (c *Context) GetSolvedVariable(alpha ast.UniqueIdentifier) *ast.TypeValue {
 	for _, c := range c.Contents {
 		if v, ok := c.(*ExistentialVariable); ok {
-			if v.Identifier.Value == alpha.Value && v.solved() {
+			if v.Identifier == alpha && v.solved() {
 				return v.Value
 			}
 		}
 	}
 	return nil
 }
+
+// Apply a context as a substitution to a value
