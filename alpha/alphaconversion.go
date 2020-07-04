@@ -1,5 +1,6 @@
 // Contains data structures and method definitions for α-conversion
 // of gobba programs and expressions. De-Brujin notation is used
+// TODO fix not working!!!
 package alpha
 
 import (
@@ -38,12 +39,6 @@ func NewAlphaEnvironment() *AlphaEnvironment {
 	return &AlphaEnvironment{store: s}
 }
 
-// Create a new empty α environment for α-conversion, enclosed in another α environment
-func NewEnclosedAlphaEnvironment(outer *AlphaEnvironment) *AlphaEnvironment {
-	env := NewAlphaEnvironment()
-	return env
-}
-
 // Search for an identifier in the environment or return an error
 func (a *AlphaEnvironment) Get(name string) (ast.UniqueIdentifier, error) {
 	uid, ok := a.store[name]
@@ -54,15 +49,14 @@ func (a *AlphaEnvironment) Get(name string) (ast.UniqueIdentifier, error) {
 }
 
 func (a *AlphaEnvironment) IdentifierAlphaConversion(uid ast.UniqueIdentifier) ast.UniqueIdentifier {
-	nuid, err := a.Get(uid.Value)
-	if err != nil {
+	nuid, ok := a.store[uid.Value]
+	if !ok {
 		a.store[uid.Value] = 0
 		return ast.UniqueIdentifier{Value: uid.Value, Id: 0}
 	}
 
-	a.store[nuid.Value] = nuid.Id + 1
-	nuid.Id += 1
-	return nuid
+	a.store[uid.Value] = nuid + 1
+	return ast.UniqueIdentifier{Value: uid.Value, Id: nuid + 1}
 }
 
 func (a *AlphaEnvironment) ExpressionAlphaConversion(exp ast.Expression) (ast.Expression, error) {

@@ -238,7 +238,9 @@ type IdentifierExpr struct {
 
 func (i *IdentifierExpr) expressionNode()      {}
 func (i *IdentifierExpr) TokenLiteral() string { return i.Token.Literal }
-func (i *IdentifierExpr) String() string       { return i.Identifier.Value }
+func (i *IdentifierExpr) String() string {
+	return i.Identifier.String()
+}
 
 // ======================================================================
 // Terminal values: literals
