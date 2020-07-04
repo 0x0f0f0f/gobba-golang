@@ -67,9 +67,20 @@ func (r *Repl) executor(line string) {
 
 	fmt.Println(program.String())
 
+	// Do alpha conversion on the program (generate unique identifiers)
+	alphaconv_program, err := ast.ProgramAlphaConversion(program)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
+	if r.Options.ShowAST {
+		pri.Println(alphaconv_program)
+	}
+
 	// Typecheck
 	// TODO default context with primitives
-	// TODO preserve context between statements
+	// TODO preserve context between statements in the repl
 	ctx := typecheck.NewContext()
 	ast.ResetUIDCounter()
 	types := ctx.SynthProgram(program)

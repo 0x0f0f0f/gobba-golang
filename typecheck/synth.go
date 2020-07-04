@@ -34,6 +34,7 @@ func (c Context) SynthesizesTo(exp ast.Expression) (ast.TypeValue, Context, *Typ
 		}
 		return *annot, c, nil
 	case *ast.IfExpression:
+		// Rule ifthenelse=>
 		nc, err := c.CheckAgainst(ve.Condition, &ast.BoolType{})
 		if err != nil {
 			return nil, c, err

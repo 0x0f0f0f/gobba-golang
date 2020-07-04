@@ -230,7 +230,7 @@ func (p *Parser) curPrecedence() int {
 func (p *Parser) ParseProgram() *ast.Program {
 	// Allocate AST root
 	program := &ast.Program{}
-	program.Statements = []ast.Statement{}
+	program.Statements = make([]ast.Statement, 0)
 
 	for !p.curTokenIs(token.EOF) {
 		stmt := p.parseStatement()
