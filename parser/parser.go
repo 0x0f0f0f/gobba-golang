@@ -23,8 +23,8 @@ const (
 	PRODUCT         // * and /
 	MODULO          // %
 	POWER           // ^
-	ACCESS          // @ and :
 	CALL            // function application f x y
+	ACCESS          // @ and .
 	PREFIX          // -X or !X (and function call?)
 )
 
@@ -41,6 +41,7 @@ var precedences = map[token.TokenType]int{
 	token.GREATER:   COMPARISON,
 	token.GREATEREQ: COMPARISON,
 	token.CONS:      CONS,
+	token.CONCAT:    CONS,
 	token.PLUS:      SUM,
 	token.MINUS:     SUM,
 	token.TIMES:     PRODUCT,
@@ -104,9 +105,9 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.INT, p.parseIntegerLiteral)
 	p.registerPrefix(token.FLOAT, p.parseFloatLiteral)
 	p.registerPrefix(token.COMPLEX, p.parseComplexLiteral)
-	// TODO string
+	p.registerPrefix(token.STRING, p.parseStringLiteral)
 	// TODO rune
-	// TODO vectors
+	// TODO vectors ???
 	// TODO lists
 	// TODO records
 
@@ -131,7 +132,9 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.LESSEQ, p.parseInfixExpression)
 	p.registerInfix(token.GREATER, p.parseInfixExpression)
 	p.registerInfix(token.GREATEREQ, p.parseInfixExpression)
+	// TODO make CONS right associative
 	p.registerInfix(token.CONS, p.parseInfixExpression)
+	p.registerInfix(token.CONCAT, p.parseInfixExpression)
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
 	p.registerInfix(token.MINUS, p.parseInfixExpression)
 	p.registerInfix(token.TIMES, p.parseInfixExpression)
@@ -150,7 +153,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.INT, p.parseApplyExpression)
 	p.registerInfix(token.FLOAT, p.parseApplyExpression)
 	p.registerInfix(token.COMPLEX, p.parseApplyExpression)
-	// TODO string
+	p.registerInfix(token.STRING, p.parseApplyExpression)
 	// TODO rune
 	// TODO vectors
 	// TODO lists
@@ -252,7 +255,7 @@ func (p *Parser) parseAssignment() *ast.Assignment {
 	ass := &ast.Assignment{Token: p.curToken}
 	ass.Name = &ast.IdentifierExpr{
 		Token: p.curToken,
-		Value: ast.UniqueIdentifier{
+		Identifier: ast.UniqueIdentifier{
 			Value: p.curToken.Literal,
 		},
 	}

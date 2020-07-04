@@ -9,12 +9,14 @@ DEFINE HOW YOU WANT TO HANDLE CLASS TYPING/ALGEBRAIC DATA TYPES: choose between 
 DEFINE HOW YOU WANT TO HANDLE POLYMORPHISM
 DEFINE HOW YOU WANT TO HANDLE CONCURRENCY!
 Interpretation over execution
-decent error handling for parser
 Formalize operational semantics
-Type system
+formalize type system numerical tower 
+implement type system numerical tower 
 Type inference
 Effect system: allow/deny effects
 OPTIONAL??? Policy (automata) based effect system based on the algebra of communicating processes. Paper degano giangi 
+x implement Type system
+x decent error handling for parser
 x (A) Parse function literals
 x Lex floats (https://github.com/abs-lang/abs/blob/master/lexer/lexer.go) 
 x Lex complex numbers (4.1232 + 3i) !!

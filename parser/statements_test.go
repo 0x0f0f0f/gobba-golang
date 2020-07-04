@@ -24,7 +24,7 @@ func TestLetStatements(t *testing.T) {
 		p := New(l)
 
 		program := p.ParseProgram()
-		checkParserErrors(t, p)
+		CheckParserErrors(t, p)
 
 		assert.Len(t, program.Statements, 1)
 
@@ -47,7 +47,7 @@ func testLetStatement(t *testing.T, s ast.Statement, names []string, values []in
 	assert.Equal(t, len(letStmt.Assignments), len(values))
 
 	for i, ass := range letStmt.Assignments {
-		assert.Equal(t, names[i], ass.Name.Value)
+		assert.Equal(t, names[i], ass.Name.Identifier.Value)
 		assert.Equal(t, names[i], ass.Name.TokenLiteral())
 
 		testLiteralExpression(t, ass.Value, values[i])

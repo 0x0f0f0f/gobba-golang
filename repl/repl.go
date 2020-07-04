@@ -34,8 +34,7 @@ func New(o *ReplOptions) *Repl {
 
 	return r
 }
-
-func (r *Repl) Start() {
+tfunc (r *Repl) Start() {
 	r.prompt.Run()
 }
 
@@ -70,6 +69,7 @@ func (r *Repl) executor(line string) {
 	// Typecheck
 	// TODO default context with primitives
 	ctx := typecheck.NewContext()
+	ast.ResetUIDCounter()
 	types := ctx.SynthProgram(program)
 	for i, t := range types {
 		fmt.Printf("statement %d has type %s\n", i, t)

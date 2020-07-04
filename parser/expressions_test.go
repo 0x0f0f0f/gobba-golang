@@ -14,13 +14,13 @@ func TestIdentifierExpression(t *testing.T) {
 	l := lexer.New(input)
 	p := New(l)
 	program := p.ParseProgram()
-	checkParserErrors(t, p)
+	CheckParserErrors(t, p)
 
 	assert.Equal(t, len(program.Statements), 1)
 	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
 	assert.True(t, ok, "casting to *ast.ExpressionStatement")
 
-	testIdentifier(t, stmt.Expression, "foobar")
+	testUniqueIdentifier(t, stmt.Expression, ast.UniqueIdentifier{"foobar", 0})
 }
 
 func TestBooleanExpression(t *testing.T) {
@@ -29,16 +29,16 @@ func TestBooleanExpression(t *testing.T) {
 	l := lexer.New(input)
 	p := New(l)
 	program := p.ParseProgram()
-	checkParserErrors(t, p)
+	CheckParserErrors(t, p)
 
 	assert.Equal(t, len(program.Statements), 2)
 	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
 	assert.True(t, ok, "casting to *ast.ExpressionStatement")
-	testBooleanLiteral(t, stmt.Expression, true)
+	testBoolLiteral(t, stmt.Expression, true)
 
 	stmt, ok = program.Statements[1].(*ast.ExpressionStatement)
 	assert.True(t, ok, "casting to *ast.ExpressionStatement")
-	testBooleanLiteral(t, stmt.Expression, false)
+	testBoolLiteral(t, stmt.Expression, false)
 }
 
 func TestIntegerLiteralExpression(t *testing.T) {
@@ -47,7 +47,7 @@ func TestIntegerLiteralExpression(t *testing.T) {
 	l := lexer.New(input)
 	p := New(l)
 	program := p.ParseProgram()
-	checkParserErrors(t, p)
+	CheckParserErrors(t, p)
 
 	assert.Equal(t, len(program.Statements), 1)
 
@@ -73,7 +73,7 @@ func TestParsingPrefixExpressions(t *testing.T) {
 		l := lexer.New(tt.input)
 		p := New(l)
 		program := p.ParseProgram()
-		checkParserErrors(t, p)
+		CheckParserErrors(t, p)
 
 		assert.Equal(t, len(program.Statements), 1)
 
@@ -114,7 +114,7 @@ func TestParsingInfixExpressions(t *testing.T) {
 		l := lexer.New(tt.input)
 		p := New(l)
 		program := p.ParseProgram()
-		checkParserErrors(t, p)
+		CheckParserErrors(t, p)
 
 		assert.Equal(t, len(program.Statements), 1)
 		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
@@ -138,7 +138,7 @@ func testLiteralExpression(
 	case string:
 		return testIdentifier(t, exp, v)
 	case bool:
-		return testBooleanLiteral(t, exp, v)
+		return testBoolLiteral(t, exp, v)
 	}
 	t.Errorf("type of exp not handled. got=%T", exp)
 	return false
@@ -176,18 +176,26 @@ func testComplexLiteral(t *testing.T, il ast.Expression, value complex128) bool 
 	return true
 }
 
-func testBooleanLiteral(t *testing.T, il ast.Expression, value bool) bool {
-	integ, ok := il.(*ast.BooleanLiteral)
-	assert.True(t, ok, "is *ast.BooleanLiteral")
+func testBoolLiteral(t *testing.T, il ast.Expression, value bool) bool {
+	integ, ok := il.(*ast.BoolLiteral)
+	assert.True(t, ok, "is *ast.BoolLiteral")
 	assert.Equal(t, integ.Value, value)
 	assert.Equal(t, integ.TokenLiteral(), fmt.Sprintf("%t", value))
 	return true
 }
 
 func testIdentifier(t *testing.T, exp ast.Expression, value string) bool {
-	ident, ok := exp.(*ast.Identifier)
+	ident, ok := exp.(*ast.IdentifierExpr)
 	assert.True(t, ok, "casting to *ast.Identifier")
-	assert.Equal(t, value, ident.Value)
+	assert.Equal(t, value, ident.Identifier.Value)
 	assert.Equal(t, value, ident.TokenLiteral())
+	return true
+}
+
+func testUniqueIdentifier(t *testing.T, exp ast.Expression, value ast.UniqueIdentifier) bool {
+	ident, ok := exp.(*ast.IdentifierExpr)
+	assert.True(t, ok, "casting to *ast.Identifier")
+	assert.Equal(t, value, ident.Identifier)
+	assert.Equal(t, value.Value, ident.TokenLiteral())
 	return true
 }

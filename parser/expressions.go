@@ -30,8 +30,8 @@ func (p *Parser) parseExpression(prec int) ast.Expression {
 // Parse a simple terminal symbol
 func (p *Parser) parseIdentifier() ast.Expression {
 	return &ast.IdentifierExpr{
-		Token: p.curToken,
-		Value: ast.UniqueIdentifier{Value: p.curToken.Literal},
+		Token:      p.curToken,
+		Identifier: ast.UniqueIdentifier{Value: p.curToken.Literal},
 	}
 }
 
@@ -78,9 +78,14 @@ func (p *Parser) parseComplexLiteral() ast.Expression {
 	return lit
 }
 
+// Parse a string literal
+func (p *Parser) parseStringLiteral() ast.Expression {
+	return &ast.StringLiteral{Token: p.curToken, Value: p.curToken.Literal}
+}
+
 // Parse a boolean literal
 func (p *Parser) parseBoolean() ast.Expression {
-	return &ast.BooleanLiteral{
+	return &ast.BoolLiteral{
 		Token: p.curToken,
 		Value: p.curTokenIs(token.TRUE),
 	}
@@ -114,6 +119,10 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 
 func (p *Parser) parseGroupedExpression() ast.Expression {
 	p.nextToken()
+
+	if p.curTokenIs(token.RPAREN) {
+		return &ast.UnitLiteral{Token: p.curToken}
+	}
 
 	exp := p.parseExpression(LOWEST)
 
@@ -203,17 +212,25 @@ func (p *Parser) parseApplyExpression(f ast.Expression) ast.Expression {
 }
 
 // Parse a let expression
+// Use the let over lambda principle TODO review
+// let x = 1 in x + 2 === (lambda x -> x + 2) 1
+// let x = 1 and y = 2 in x + y === (lambda y -> (lambda x -> x + y)(1))(2)
 func (p *Parser) parseLetExpression() ast.Expression {
-	exp := &ast.LetExpression{Token: p.curToken}
+	// exp := &ast.LetExpression{Token: p.curToken}
+	inner_app := &ast.ApplyExpr{Token: p.curToken}
+	inner_fun := &ast.FunctionLiteral{Token: p.curToken}
+	inner_app.Function = inner_fun
 
 	// Parse the first assignment
 	ass := p.parseAssignment()
 	if ass == nil {
 		return nil
 	}
-	exp.Assignment = *ass
 
-	curr_expr := exp
+	inner_fun.Param = ass.Name
+	inner_app.Arg = ass.Value
+
+	curr_app := inner_app
 	for !p.peekTokenIs(token.IN) {
 		p.expectPeek(token.AND)
 
@@ -221,9 +238,15 @@ func (p *Parser) parseLetExpression() ast.Expression {
 		if ass == nil {
 			return nil
 		}
-		curr_expr.Body = &ast.LetExpression{Token: p.curToken}
-		curr_expr = curr_expr.Body.(*ast.LetExpression)
-		curr_expr.Assignment = *ass
+		curr_fun := &ast.FunctionLiteral{Token: p.curToken}
+		curr_fun.Param = ass.Name
+		curr_fun.Body = curr_app
+
+		// Replace
+		curr_app = &ast.ApplyExpr{Token: p.curToken}
+		curr_app.Function = curr_fun
+		curr_app.Arg = ass.Value
+
 	}
 
 	if !p.expectPeek(token.IN) {
@@ -231,7 +254,7 @@ func (p *Parser) parseLetExpression() ast.Expression {
 	}
 	p.nextToken()
 
-	curr_expr.Body = p.parseExpression(LOWEST)
+	inner_fun.Body = p.parseExpression(LOWEST)
 
-	return exp
+	return curr_app
 }

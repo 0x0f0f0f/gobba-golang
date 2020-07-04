@@ -7,7 +7,7 @@ import (
 	"testing"
 )
 
-func checkParserErrors(t *testing.T, p *Parser) {
+func CheckParserErrors(t *testing.T, p *Parser) {
 	errors := p.Errors()
 	if len(errors) == 0 {
 		return
@@ -133,13 +133,17 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 			"add (a + b + c * d / f + g);",
 			"add((((a + b) + ((c * d) / f)) + g));",
 		},
+		{
+			"h.f :: a :: b ++ c;",
+			"((h . f) :: (a :: (b ++ c)));",
+		},
 	}
 
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
 		p := New(l)
 		program := p.ParseProgram()
-		checkParserErrors(t, p)
+		CheckParserErrors(t, p)
 		actual := program.String()
 		assert.Equal(t, tt.expected, actual)
 	}
@@ -157,7 +161,7 @@ func TestFunctionParameterParsing(t *testing.T) {
 		l := lexer.New(tt.input)
 		p := New(l)
 		program := p.ParseProgram()
-		checkParserErrors(t, p)
+		CheckParserErrors(t, p)
 
 		assert.Len(t, p.Errors(), 0)
 		stmt := program.Statements[0].(*ast.ExpressionStatement)

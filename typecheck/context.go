@@ -5,8 +5,7 @@ import (
 )
 
 // This file contains definition for algorithmic type contexts
-// defined in "Complete and Easy Bidirectional Typechecking
-// for Higher-Rank Polymorphism"
+// defined in "Complete and Easy Bidirectional Typechecking for Higher-Rank Polymorphism"
 // https://www.cl.cam.ac.uk/~nk480/bidir.pdf
 // https://github.com/chrisnevers/bidirectional-typechecking/blob/master/lib/ast/context.ml
 
@@ -44,13 +43,13 @@ type Marker struct {
 
 func (v *Marker) contextValue() {}
 
-// Denoted with |>α^ in the paper
-type TypedVariable struct {
+// Denoted with x : A in the paper
+type TypeAnnotation struct {
 	Identifier ast.UniqueIdentifier
 	Value      ast.TypeValue
 }
 
-func (v *TypedVariable) contextValue() {}
+func (v *TypeAnnotation) contextValue() {}
 
 // ======================================================================
 // Algorithmic Context Type: Γ, ∆, Θ
@@ -106,6 +105,14 @@ func (c Context) Drop(el ContextValue) Context {
 	return *nc
 }
 
+func (c Context) Concat(rc Context) Context {
+	nc := NewContext()
+	copy(nc.Contents, c.Contents)
+	nc.Contents = append(nc.Contents, rc.Contents...)
+
+	return *nc
+}
+
 // True if the context contain the universal variable with the given identifier
 func (c Context) HasUniversalVariable(alpha ast.UniqueIdentifier) bool {
 	for _, c := range c.Contents {
@@ -137,6 +144,18 @@ func (c Context) GetSolvedVariable(alpha ast.UniqueIdentifier) *ast.TypeValue {
 		if v, ok := c.(*ExistentialVariable); ok {
 			if v.Identifier == alpha && v.solved() {
 				return v.Value
+			}
+		}
+	}
+	return nil
+}
+
+// Return the type of a type annotation.
+func (c Context) GetAnnotation(alpha ast.UniqueIdentifier) *ast.TypeValue {
+	for _, c := range c.Contents {
+		if v, ok := c.(*TypeAnnotation); ok {
+			if v.Identifier == alpha {
+				return &v.Value
 			}
 		}
 	}

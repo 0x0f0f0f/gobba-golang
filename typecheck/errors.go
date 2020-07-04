@@ -25,3 +25,11 @@ func (c *Context) malformedError(t ast.TypeValue) *TypeError {
 func (c *Context) subtypeError(a, b ast.TypeValue) *TypeError {
 	return &TypeError{fmt.Sprintf("expected %s to be a subtype of %s", a, b)}
 }
+
+func (c *Context) synthError(expr ast.Expression) *TypeError {
+	return &TypeError{fmt.Sprintf("failed to infer type for %s", expr)}
+}
+
+func (c *Context) notInContextError(id ast.UniqueIdentifier) *TypeError {
+	return &TypeError{fmt.Sprintf("identifier %s not in context", id)}
+}

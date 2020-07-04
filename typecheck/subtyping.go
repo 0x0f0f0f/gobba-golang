@@ -9,13 +9,12 @@ import (
 // Helper function
 // func sameType
 
-// TODO precedence is fucked up
-func (c Context) Subtype(a, b ast.TypeValue) (*Context, *TypeError) {
+func (c Context) Subtype(a, b ast.TypeValue) (Context, *TypeError) {
 	if !c.IsWellFormed(a) {
-		return &c, c.malformedError(a)
+		return c, c.malformedError(a)
 	}
 	if !c.IsWellFormed(b) {
-		return &c, c.malformedError(b)
+		return c, c.malformedError(b)
 	}
 
 	switch va := a.(type) {
@@ -24,7 +23,7 @@ func (c Context) Subtype(a, b ast.TypeValue) (*Context, *TypeError) {
 		case *ast.VariableType:
 			// Rule <:Var
 			if va.Identifier == vb.Identifier {
-				return &c, nil
+				return c, nil
 			}
 		case *ast.ForAllType:
 			// Rule <:∀R
@@ -33,7 +32,7 @@ func (c Context) Subtype(a, b ast.TypeValue) (*Context, *TypeError) {
 			// Rule <:InstantiateR
 			if OccursIn(vb.Identifier, a) {
 				res := c.InstantiateR(a, vb.Identifier)
-				return &res, nil
+				return res, nil
 			}
 
 		}
@@ -43,12 +42,12 @@ func (c Context) Subtype(a, b ast.TypeValue) (*Context, *TypeError) {
 		case *ast.ExistsType:
 			if va.Identifier == vb.Identifier {
 				// Rule <: Exvar
-				return &c, nil
+				return c, nil
 			} else {
 				// Rule <:InstantiateL
 				if OccursIn(va.Identifier, b) {
 					res := c.InstantiateL(va.Identifier, b)
-					return &res, nil
+					return res, nil
 				}
 
 			}
@@ -59,7 +58,7 @@ func (c Context) Subtype(a, b ast.TypeValue) (*Context, *TypeError) {
 			// Rule <:InstantiateL
 			if OccursIn(va.Identifier, b) {
 				res := c.InstantiateL(va.Identifier, b)
-				return &res, nil
+				return res, nil
 			}
 
 		}
@@ -70,7 +69,7 @@ func (c Context) Subtype(a, b ast.TypeValue) (*Context, *TypeError) {
 			// Rule <:->
 			theta, err := c.Subtype(va.Domain, vb.Domain)
 			if err != nil {
-				return nil, err
+				return c, err
 			}
 			return theta.Subtype(theta.Apply(va.Codomain),
 				theta.Apply(vb.Codomain))
@@ -81,7 +80,7 @@ func (c Context) Subtype(a, b ast.TypeValue) (*Context, *TypeError) {
 			// Rule <:InstantiateR
 			if OccursIn(vb.Identifier, a) {
 				res := c.InstantiateR(a, vb.Identifier)
-				return &res, nil
+				return res, nil
 			}
 
 		}
@@ -93,24 +92,23 @@ func (c Context) Subtype(a, b ast.TypeValue) (*Context, *TypeError) {
 
 	}
 
-	return nil, c.subtypeError(a, b)
+	return c, c.subtypeError(a, b)
 
 }
 
 // Rule <:∀R
-func (c Context) ruleSubtypeForAllRight(a ast.TypeValue, b *ast.ForAllType) (*Context, *TypeError) {
+func (c Context) ruleSubtypeForAllRight(a ast.TypeValue, b *ast.ForAllType) (Context, *TypeError) {
 	u := &UniversalVariable{b.Identifier}
 	theta := c.InsertHead(u)
 	delta, err := theta.Subtype(a, b)
 	if err != nil {
-		return nil, err
+		return c, err
 	}
-	res := delta.Drop(u)
-	return &res, nil
+	return delta.Drop(u), nil
 }
 
 // Rule <:∀L
-func (c Context) ruleSubtypeForAllLeft(a *ast.ForAllType, b ast.TypeValue) (*Context, *TypeError) {
+func (c Context) ruleSubtypeForAllLeft(a *ast.ForAllType, b ast.TypeValue) (Context, *TypeError) {
 	r1 := ast.GenUID("alpha")
 	marker := &Marker{r1}
 	exv := &ExistentialVariable{r1, nil}
@@ -119,8 +117,7 @@ func (c Context) ruleSubtypeForAllLeft(a *ast.ForAllType, b ast.TypeValue) (*Con
 	sub_a := Substitution(a.Type, ext, a.Identifier)
 	delta, err := gamma.Subtype(sub_a, b)
 	if err != nil {
-		return nil, err
+		return c, err
 	}
-	res := delta.Drop(marker)
-	return &res, nil
+	return delta.Drop(marker), nil
 }

@@ -232,13 +232,13 @@ func (p *InfixExpression) String() string {
 
 // Represents a symbol or an identifier
 type IdentifierExpr struct {
-	Token token.Token
-	Value UniqueIdentifier
+	Token      token.Token
+	Identifier UniqueIdentifier
 }
 
 func (i *IdentifierExpr) expressionNode()      {}
 func (i *IdentifierExpr) TokenLiteral() string { return i.Token.Literal }
-func (i *IdentifierExpr) String() string       { return i.Value.Value }
+func (i *IdentifierExpr) String() string       { return i.Identifier.Value }
 
 // ======================================================================
 // Terminal values: literals
@@ -277,11 +277,40 @@ func (c *ComplexLiteral) String() string {
 }
 
 // Represents a boolean value
-type BooleanLiteral struct {
+type BoolLiteral struct {
 	Token token.Token
 	Value bool
 }
 
-func (c *BooleanLiteral) expressionNode()      {}
-func (c *BooleanLiteral) TokenLiteral() string { return c.Token.Literal }
-func (c *BooleanLiteral) String() string       { return c.Token.Literal }
+func (c *BoolLiteral) expressionNode()      {}
+func (c *BoolLiteral) TokenLiteral() string { return c.Token.Literal }
+func (c *BoolLiteral) String() string       { return c.Token.Literal }
+
+// Represents an unit value
+type UnitLiteral struct {
+	Token token.Token
+}
+
+func (c *UnitLiteral) expressionNode()      {}
+func (c *UnitLiteral) TokenLiteral() string { return c.Token.Literal }
+func (c *UnitLiteral) String() string       { return c.Token.Literal }
+
+// Represents a string value
+type StringLiteral struct {
+	Token token.Token
+	Value string
+}
+
+func (c *StringLiteral) expressionNode()      {}
+func (c *StringLiteral) TokenLiteral() string { return c.Token.Literal }
+func (c *StringLiteral) String() string       { return c.Token.Literal }
+
+// Represents an Unicode character value
+type RuneLiteral struct {
+	Token token.Token
+	Value string
+}
+
+func (c *RuneLiteral) expressionNode()      {}
+func (c *RuneLiteral) TokenLiteral() string { return c.Token.Literal }
+func (c *RuneLiteral) String() string       { return c.Token.Literal }

@@ -41,6 +41,14 @@ func (u *FloatType) String() string {
 	return "float"
 }
 
+type ComplexType struct{}
+
+func (u *ComplexType) typeValue()       {}
+func (u *ComplexType) IsMonotype() bool { return true }
+func (u *ComplexType) String() string {
+	return "complex"
+}
+
 type BoolType struct{}
 
 func (u *BoolType) typeValue()       {}
@@ -73,7 +81,7 @@ type VariableType struct {
 func (u *VariableType) typeValue()       {}
 func (u *VariableType) IsMonotype() bool { return true }
 func (u *VariableType) String() string {
-	return "'" + u.Identifier.Value
+	return "'" + u.Identifier.String()
 }
 
 // Denoted with ∀α. A in the paper
@@ -85,7 +93,7 @@ type ForAllType struct {
 func (u *ForAllType) typeValue()       {}
 func (u *ForAllType) IsMonotype() bool { return false }
 func (u *ForAllType) String() string {
-	return fmt.Sprintf("∀%s.%s", u.Identifier.Value, u.Type.String())
+	return fmt.Sprintf("∀%s.%s", u.Identifier.String(), u.Type.String())
 }
 
 // Denoted with A → B in the paper
@@ -110,7 +118,7 @@ type ExistsType struct {
 func (u *ExistsType) typeValue()       {}
 func (u *ExistsType) IsMonotype() bool { return true }
 func (u *ExistsType) String() string {
-	return "∃'" + u.Identifier.Value
+	return "∃'" + u.Identifier.String()
 }
 
 // TODO record types
