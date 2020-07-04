@@ -2,6 +2,7 @@ package repl
 
 import (
 	"fmt"
+	"github.com/0x0f0f0f/gobba-golang/ast"
 	"github.com/0x0f0f0f/gobba-golang/lexer"
 	"github.com/0x0f0f0f/gobba-golang/parser"
 	"github.com/0x0f0f0f/gobba-golang/token"
@@ -10,9 +11,6 @@ import (
 	"github.com/c-bata/go-prompt"
 	"os"
 )
-
-// TODO: configurable
-const PROMPT = "> "
 
 type ReplOptions struct {
 	ShowAST      bool
@@ -26,6 +24,8 @@ type Repl struct {
 	prompt  *prompt.Prompt
 }
 
+// TODO go-prompt live prefix
+
 func New(o *ReplOptions) *Repl {
 	r := &Repl{}
 	p := prompt.New(r.executor, r.completer)
@@ -34,7 +34,8 @@ func New(o *ReplOptions) *Repl {
 
 	return r
 }
-tfunc (r *Repl) Start() {
+
+func (r *Repl) Start() {
 	r.prompt.Run()
 }
 
@@ -68,6 +69,7 @@ func (r *Repl) executor(line string) {
 
 	// Typecheck
 	// TODO default context with primitives
+	// TODO preserve context between statements
 	ctx := typecheck.NewContext()
 	ast.ResetUIDCounter()
 	types := ctx.SynthProgram(program)
@@ -75,6 +77,7 @@ func (r *Repl) executor(line string) {
 		fmt.Printf("statement %d has type %s\n", i, t)
 	}
 
+	// TODO evaluation
 }
 
 func (r *Repl) completer(t prompt.Document) []prompt.Suggest {

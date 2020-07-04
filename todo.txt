@@ -12,6 +12,8 @@ Interpretation over execution
 Formalize operational semantics
 formalize type system numerical tower 
 implement type system numerical tower 
+lex/parse/typecheck explicit type annotations
+uniquify/alpha transform AST
 Type inference
 Effect system: allow/deny effects
 OPTIONAL??? Policy (automata) based effect system based on the algebra of communicating processes. Paper degano giangi 

@@ -33,3 +33,17 @@ func (c *Context) synthError(expr ast.Expression) *TypeError {
 func (c *Context) notInContextError(id ast.UniqueIdentifier) *TypeError {
 	return &TypeError{fmt.Sprintf("identifier %s not in context", id)}
 }
+
+func (c *Context) unexpectedType(expected, found ast.TypeValue) *TypeError {
+	return &TypeError{
+		fmt.Sprintf("unexpected value of type %s, expected a value of type %s", found, expected),
+	}
+}
+
+func (c *Context) expectedSameTypeIfBranches(tt, ft ast.TypeValue) *TypeError {
+	return &TypeError{
+		fmt.Sprintf("type mismatch in if expression. then branch "+
+			"has type %s while else branch has type %s", tt, ft),
+	}
+
+}

@@ -293,7 +293,7 @@ type UnitLiteral struct {
 
 func (c *UnitLiteral) expressionNode()      {}
 func (c *UnitLiteral) TokenLiteral() string { return c.Token.Literal }
-func (c *UnitLiteral) String() string       { return c.Token.Literal }
+func (c *UnitLiteral) String() string       { return "()" }
 
 // Represents a string value
 type StringLiteral struct {

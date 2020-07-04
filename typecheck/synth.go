@@ -33,7 +33,33 @@ func (c Context) SynthesizesTo(exp ast.Expression) (ast.TypeValue, Context, *Typ
 			return nil, c, c.notInContextError(ve.Identifier)
 		}
 		return *annot, c, nil
-	// TODO case IfThenElse
+	case *ast.IfExpression:
+		nc, err := c.CheckAgainst(ve.Condition, &ast.BoolType{})
+		if err != nil {
+			return nil, c, err
+		}
+		cond, nc, err := nc.SynthesizesTo(ve.Condition)
+		if err != nil {
+			return nil, c, err
+		}
+		tbrancht, nc, err := nc.SynthesizesTo(ve.Consequence)
+		if err != nil {
+			return nil, c, err
+		}
+		fbrancht, nc, err := nc.SynthesizesTo(ve.Alternative)
+		if err != nil {
+			return nil, c, err
+		}
+
+		_, ok := c.Apply(cond).(*ast.BoolType)
+		if !ok {
+			return nil, c, c.unexpectedType(&ast.BoolType{}, cond)
+		}
+		if tbrancht != fbrancht {
+			return nil, c, c.expectedSameTypeIfBranches(tbrancht, fbrancht)
+		}
+		return tbrancht, nc, nil
+
 	// TODO case Binary operators
 	// TODO case hastype
 	// TODO case Fix ???
