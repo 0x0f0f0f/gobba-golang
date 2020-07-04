@@ -79,12 +79,14 @@ func (r *Repl) executor(line string) {
 		pri.Println(alphaconv_program)
 	}
 
+	fmt.Println(program.String())
+
 	// Typecheck
 	// TODO default context with primitives
 	// TODO preserve context between statements in the repl
 	ctx := typecheck.NewContext()
 	ast.ResetUIDCounter()
-	types := ctx.SynthProgram(program)
+	types := ctx.SynthProgram(alphaconv_program)
 	for i, t := range types {
 		fmt.Printf("statement %d has type %s\n", i, t)
 	}

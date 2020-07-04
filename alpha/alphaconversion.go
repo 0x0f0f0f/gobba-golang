@@ -49,13 +49,17 @@ func (a *AlphaEnvironment) Get(name string) (ast.UniqueIdentifier, error) {
 }
 
 func (a *AlphaEnvironment) IdentifierAlphaConversion(uid ast.UniqueIdentifier) ast.UniqueIdentifier {
+	fmt.Printf("%+v\n", a.store)
 	nuid, ok := a.store[uid.Value]
 	if !ok {
 		a.store[uid.Value] = 0
+		fmt.Printf("%+v\n", a.store)
+
 		return ast.UniqueIdentifier{Value: uid.Value, Id: 0}
 	}
 
 	a.store[uid.Value] = nuid + 1
+	fmt.Printf("%+v\n", a.store)
 	return ast.UniqueIdentifier{Value: uid.Value, Id: nuid + 1}
 }
 
@@ -111,21 +115,28 @@ func (a *AlphaEnvironment) ExpressionAlphaConversion(exp ast.Expression) (ast.Ex
 		if err != nil {
 			return nil, err
 		}
-		var newexpr *ast.IdentifierExpr
-		err = copier.Copy(newexpr, ve)
+		var newexpr ast.IdentifierExpr
+		err = copier.Copy(&newexpr, ve)
 		if err != nil {
 			return nil, err
 		}
 		newexpr.Identifier = uid
-		return newexpr, nil
+		return &newexpr, nil
 	case *ast.FunctionLiteral:
 		nid := a.IdentifierAlphaConversion(ve.Param.Identifier)
+
+		nbody, err := a.ExpressionAlphaConversion(ve.Body)
+		if err != nil {
+			return nil, err
+		}
+
 		var newexpr ast.FunctionLiteral
-		err := copier.Copy(&newexpr, ve)
+		err = copier.Copy(&newexpr, ve)
 		if err != nil {
 			return nil, err
 		}
 		newexpr.Param.Identifier = nid
+		newexpr.Body = nbody
 		return &newexpr, nil
 	case *ast.ApplyExpr:
 		nfun, err := a.ExpressionAlphaConversion(ve.Function)
