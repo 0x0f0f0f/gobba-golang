@@ -87,8 +87,8 @@ func (r *Repl) executor(line string) {
 	ctx := typecheck.NewContext()
 	ast.ResetUIDCounter()
 	types := ctx.SynthProgram(alphaconv_program)
-	for i, t := range types {
-		fmt.Printf("statement %d has type %s\n", i, t)
+	for _, t := range types {
+		fmt.Printf("- : %s\n", t)
 	}
 
 	// TODO evaluation
