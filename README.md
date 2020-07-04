@@ -14,15 +14,15 @@ Javascript. A primary goal is also to offer a compromise between solidity,
 ease of learning and the ability to express ideas quickly in the language.
 
 ## Goals/Roadmap
-- [  ] Painless Go-like, VCS based package and module system
-- [  ] Formalized type and effect system and operational semantics
-- [  ] Type and Memory safety
-- [  ] First class support for linear algebra data types and operations, 
+- [ ] Painless Go-like, VCS based package and module system
+- [ ] Formalized type and effect system and operational semantics
+- [ ] Type and Memory safety
+- [ ] First class support for linear algebra data types and operations, 
   abstracting away the physical representation
-- [  ] Built-in support for probability distributions
-- [  ] Aggressive static optimization of chains of linear algebraic operations
-- [  ] Built-in data visualization for interpreted programs
-- [  ] Optimizing compiler
+- [ ] Built-in support for probability distributions
+- [ ] Aggressive static optimization of chains of linear algebraic operations
+- [ ] Built-in data visualization for interpreted programs
+- [ ] Optimizing compiler
 
 ## Installation
 ```
