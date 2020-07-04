@@ -2,6 +2,7 @@ package repl
 
 import (
 	"fmt"
+	"github.com/0x0f0f0f/gobba-golang/alpha"
 	"github.com/0x0f0f0f/gobba-golang/ast"
 	"github.com/0x0f0f0f/gobba-golang/lexer"
 	"github.com/0x0f0f0f/gobba-golang/parser"
@@ -68,7 +69,7 @@ func (r *Repl) executor(line string) {
 	fmt.Println(program.String())
 
 	// Do alpha conversion on the program (generate unique identifiers)
-	alphaconv_program, err := ast.ProgramAlphaConversion(program)
+	alphaconv_program, err := alpha.ProgramAlphaConversion(program)
 	if err != nil {
 		fmt.Println(err)
 		return
