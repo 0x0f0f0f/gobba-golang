@@ -29,6 +29,12 @@ func TestSynthExpr(t *testing.T) {
 		{"4.5;", &ast.FloatType{}},
 		{"4.5+3.2e-2i;", &ast.ComplexType{}},
 		{"fun (x) {x};", &ast.LambdaType{Domain: &alphaext, Codomain: &alphaext}},
+		{"fun (x) {x}(2);", &ast.IntegerType{}},
+		{"fun (x) {x}(2.2);", &ast.FloatType{}},
+		{"let x = 4 and y = 3.2 and f = fun(x,y) {x}; f(y)", &ast.LambdaType{
+			Domain:   &ast.ExistsType{ast.UniqueIdentifier{"α", 11}},
+			Codomain: &ast.FloatType{},
+		}},
 	}
 
 	log.SetLevel(log.DebugLevel)

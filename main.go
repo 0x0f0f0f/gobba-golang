@@ -3,6 +3,7 @@ package main
 import (
 	"flag"
 	"github.com/0x0f0f0f/gobba-golang/repl"
+	"github.com/0x0f0f0f/gobba-golang/typecheck"
 	"os"
 	"os/signal"
 	"runtime/pprof"
@@ -12,8 +13,9 @@ import (
 func main() {
 	opts := &repl.ReplOptions{}
 
-	flag.BoolVar(&opts.ShowAST, "ast", false, "print the AST before evaluation")
-	flag.BoolVar(&opts.ShowTok, "tok", false, "print lexed tokens before parsing")
+	flag.BoolVar(&opts.ShowAST, "vast", false, "print the AST before evaluation")
+	flag.BoolVar(&opts.ShowTok, "vtok", false, "print lexed tokens before parsing")
+	flag.BoolVar(&typecheck.DebugTypeCheck, "vtype", false, "print type checking algorithm steps")
 	flag.BoolVar(&opts.DebugParser, "dparser", false, "enable parser debugging")
 
 	flag.Parse()

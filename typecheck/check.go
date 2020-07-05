@@ -1,13 +1,12 @@
 package typecheck
 
 import (
-	"fmt"
 	"github.com/0x0f0f0f/gobba-golang/ast"
 )
 
 // TODO document
 func (c Context) CheckAgainst(expr ast.Expression, ty ast.TypeValue) (Context, *TypeError) {
-	fmt.Println("check", expr.String(), "<=", ty.String())
+	c.debugSection("check", expr.String(), "<=", ty.FullString())
 	if !c.IsWellFormed(ty) {
 		return c, c.malformedError(ty)
 	}
@@ -15,37 +14,57 @@ func (c Context) CheckAgainst(expr ast.Expression, ty ast.TypeValue) (Context, *
 	switch vexpr := expr.(type) {
 	case *ast.UnitLiteral:
 		// Rule 1l
-		fmt.Println("\tApplying Rule 1l", c.String())
+		c.debugRule("1l")
+
 		if _, ok := ty.(*ast.UnitType); ok {
 			return c, nil
 		}
 	case *ast.BoolLiteral:
+		// Rule booll
+		c.debugRule("booll")
+
 		if _, ok := ty.(*ast.BoolType); ok {
 			return c, nil
 		}
 	case *ast.FloatLiteral:
+		// Rule floatl
+		c.debugRule("floatl")
+
 		if _, ok := ty.(*ast.FloatType); ok {
 			return c, nil
 		}
 	case *ast.ComplexLiteral:
+		// Rule complexl
+		c.debugRule("complexl")
+
 		if _, ok := ty.(*ast.ComplexType); ok {
 			return c, nil
 		}
 	case *ast.IntegerLiteral:
+		// Rule intl
+		c.debugRule("intl")
+
 		if _, ok := ty.(*ast.IntegerType); ok {
 			return c, nil
 		}
 	case *ast.StringLiteral:
+		// Rule stringl
+		c.debugRule("stringl")
+
 		if _, ok := ty.(*ast.StringType); ok {
 			return c, nil
 		}
 	case *ast.RuneLiteral:
+		// Rule runel
+		c.debugRule("runel")
+
 		if _, ok := ty.(*ast.RuneType); ok {
 			return c, nil
 		}
 	case *ast.FunctionLiteral:
 		// Rule ->l
-		fmt.Println("\tApplying Rule ->l", c.String())
+		c.debugRule("->l")
+
 		if lty, ok := ty.(*ast.LambdaType); ok {
 			typedvar := &TypeAnnotation{
 				Identifier: vexpr.Param.Identifier,
@@ -64,7 +83,8 @@ func (c Context) CheckAgainst(expr ast.Expression, ty ast.TypeValue) (Context, *
 
 	if fty, ok := ty.(*ast.ForAllType); ok {
 		// Rule ∀l
-		fmt.Println("\tApplying Rule )∀l", c.String())
+		c.debugRule("∀l")
+
 		uv := &UniversalVariable{Identifier: fty.Identifier}
 		nc := c.InsertHead(uv)
 		subcheck, err := nc.CheckAgainst(expr, fty.Type)
@@ -74,7 +94,8 @@ func (c Context) CheckAgainst(expr ast.Expression, ty ast.TypeValue) (Context, *
 		return subcheck.Drop(uv), nil
 	}
 	// Rule Sub
-	fmt.Println("\tApplying Rule sub", c.String())
+	c.debugRule("Sub")
+
 	a, theta, err := c.SynthesizesTo(expr)
 	if err != nil {
 		return c, err

@@ -160,7 +160,7 @@ func (c Context) InsertHead(el ContextValue) Context {
 func (c Context) Drop(el ContextValue) Context {
 	nc := NewContext()
 	for _, old := range c.Contents {
-		if old != el {
+		if !CompareContextValues(old, el) {
 			nc.Contents = append(nc.Contents, old)
 		}
 	}
