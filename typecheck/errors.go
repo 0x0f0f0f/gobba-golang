@@ -23,7 +23,7 @@ func (c *Context) malformedError(t ast.TypeValue) *TypeError {
 }
 
 func (c *Context) subtypeError(a, b ast.TypeValue) *TypeError {
-	return &TypeError{fmt.Sprintf("expected %s to be a subtype of %s", a, b)}
+	return &TypeError{fmt.Sprintf("type '%s' cannot be used as type '%s'", a, b)}
 }
 
 func (c *Context) synthError(expr ast.Expression) *TypeError {

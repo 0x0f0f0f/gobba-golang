@@ -87,6 +87,11 @@ func (r *Repl) executor(line string) {
 	ctx := typecheck.NewContext()
 	ast.ResetUIDCounter()
 	ty, err := ctx.SynthExpr(*alphaconv_program)
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+
 	fmt.Printf("- : %s\n", ty)
 
 	// TODO evaluation

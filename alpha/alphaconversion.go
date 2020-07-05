@@ -147,13 +147,37 @@ func (a *AlphaEnvironment) ExpressionAlphaConversion(exp ast.Expression) (ast.Ex
 		}
 
 		var nexpr ast.ApplyExpr
-		copier.Copy(&nexpr, ve)
+		err = copier.Copy(&nexpr, ve)
 		if err != nil {
 			return nil, err
 		}
 		nexpr.Function = nfun
 		nexpr.Arg = narg
 		return &nexpr, nil
+	case *ast.IfExpression:
+		ncond, err := a.ExpressionAlphaConversion(ve.Condition)
+		if err != nil {
+			return nil, err
+		}
+		ntbr, err := a.ExpressionAlphaConversion(ve.Consequence)
+		if err != nil {
+			return nil, err
+		}
+		nfbr, err := a.ExpressionAlphaConversion(ve.Alternative)
+		if err != nil {
+			return nil, err
+		}
+		var nexpr ast.IfExpression
+		err = copier.Copy(&nexpr, ve)
+		if err != nil {
+			return nil, err
+		}
+		nexpr.Condition = ncond
+		nexpr.Consequence = ntbr
+		nexpr.Alternative = nfbr
+
+		return &nexpr, nil
+
 	// TODO other expressions
 
 	default:

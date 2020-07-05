@@ -29,6 +29,9 @@ func TestSynthExpr(t *testing.T) {
 		{"4.5;", &ast.FloatType{}},
 		{"4.5+3.2e-2i;", &ast.ComplexType{}},
 		{"fun (x) {x};", &ast.LambdaType{Domain: &alphaext, Codomain: &alphaext}},
+		{"fun (x) {if x then 3 else 4});", &ast.LambdaType{Domain: &ast.BoolType{}, Codomain: &ast.IntegerType{}}},
+		{"fun (x) {if x then x else x}(true);", &ast.BoolType{}},
+		{"fun (x) {if x then x else false}(true);", &ast.BoolType{}},
 		{"fun (x) {x}(2);", &ast.IntegerType{}},
 		{"fun (x) {x}(2.2);", &ast.FloatType{}},
 		{"let x = 4 and y = 3.2 and f = fun(x,y) {x}; f(y)", &ast.LambdaType{

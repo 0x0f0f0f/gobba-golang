@@ -48,12 +48,13 @@ func (c Context) Subtype(a, b ast.TypeValue) (Context, *TypeError) {
 				// Rule <:Exvar
 				fmt.Println("\tApplying rule <:Exvar", c.String())
 				return c, nil
-			} else if !OccursIn(va.Identifier, b) {
-				// Rule <:InstantiateL
-				fmt.Println("\tApplying rule <:InstantiateL", c.String())
-				res := c.InstantiateL(va.Identifier, b)
-				return res, nil
 			}
+		}
+		if !OccursIn(va.Identifier, b) {
+			// Rule <:InstantiateL
+			fmt.Println("\tApplying rule <:InstantiateL", c.String())
+			res := c.InstantiateL(va.Identifier, b)
+			return res, nil
 		}
 
 	case *ast.LambdaType:

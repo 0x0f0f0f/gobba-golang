@@ -40,31 +40,24 @@ func (c Context) SynthesizesTo(exp ast.Expression) (ast.TypeValue, Context, *Typ
 		// Rule ifthenelse=>
 		c.debugRule("ifthenelse=>")
 
-		nc, err := c.CheckAgainst(ve.Condition, &ast.BoolType{})
+		gamma1, err := c.CheckAgainst(ve.Condition, &ast.BoolType{})
 		if err != nil {
 			return nil, c, err
 		}
-		cond, nc, err := nc.SynthesizesTo(ve.Condition)
+		tbrancht, theta, err := gamma1.SynthesizesTo(ve.Consequence)
 		if err != nil {
 			return nil, c, err
 		}
-		tbrancht, nc, err := nc.SynthesizesTo(ve.Consequence)
-		if err != nil {
-			return nil, c, err
-		}
-		fbrancht, nc, err := nc.SynthesizesTo(ve.Alternative)
+		fbrancht, delta, err := theta.SynthesizesTo(ve.Alternative)
 		if err != nil {
 			return nil, c, err
 		}
 
-		_, ok := c.Apply(cond).(*ast.BoolType)
-		if !ok {
-			return nil, c, c.unexpectedType(&ast.BoolType{}, cond)
-		}
 		if tbrancht != fbrancht {
+			//FIXME use subtyping
 			return nil, c, c.expectedSameTypeIfBranches(tbrancht, fbrancht)
 		}
-		return tbrancht, nc, nil
+		return tbrancht, delta, nil
 
 	// TODO case Binary operators
 	// TODO case hastype
@@ -179,10 +172,11 @@ func (c Context) ApplicationSynthesizesTo(
 
 func (c Context) SynthExpr(exp ast.Expression) (ast.TypeValue, *TypeError) {
 	t, nc, err := c.SynthesizesTo(exp)
-	nc.debugSynth(exp, t, true)
 	if err != nil {
+		c.debugErr(err)
 		return nil, err
 	}
+	nc.debugSynth(exp, t, true)
 
 	t = nc.Apply(t)
 	nc.debugSynth(exp, t, false)

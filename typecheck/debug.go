@@ -15,6 +15,12 @@ func (c Context) debugRule(name string) {
 	}
 }
 
+func (c Context) debugErr(err error) {
+	if DebugTypeCheck {
+		fmt.Fprintln(os.Stderr, "Type Error: ", err, c)
+	}
+}
+
 func (c Context) debugSection(name string, rest ...string) {
 	if DebugTypeCheck {
 		fmt.Fprintln(os.Stderr, name, rest)
