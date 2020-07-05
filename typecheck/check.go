@@ -1,11 +1,13 @@
 package typecheck
 
 import (
+	"fmt"
 	"github.com/0x0f0f0f/gobba-golang/ast"
 )
 
 // TODO document
 func (c Context) CheckAgainst(expr ast.Expression, ty ast.TypeValue) (Context, *TypeError) {
+	fmt.Println("check", expr.String(), "<=", ty.String())
 	if !c.IsWellFormed(ty) {
 		return c, c.malformedError(ty)
 	}
@@ -13,6 +15,7 @@ func (c Context) CheckAgainst(expr ast.Expression, ty ast.TypeValue) (Context, *
 	switch vexpr := expr.(type) {
 	case *ast.UnitLiteral:
 		// Rule 1l
+		fmt.Println("\tApplying Rule 1l", c.String())
 		if _, ok := ty.(*ast.UnitType); ok {
 			return c, nil
 		}
@@ -42,6 +45,7 @@ func (c Context) CheckAgainst(expr ast.Expression, ty ast.TypeValue) (Context, *
 		}
 	case *ast.FunctionLiteral:
 		// Rule ->l
+		fmt.Println("\tApplying Rule ->l", c.String())
 		if lty, ok := ty.(*ast.LambdaType); ok {
 			typedvar := &TypeAnnotation{
 				Identifier: vexpr.Param.Identifier,
@@ -60,6 +64,7 @@ func (c Context) CheckAgainst(expr ast.Expression, ty ast.TypeValue) (Context, *
 
 	if fty, ok := ty.(*ast.ForAllType); ok {
 		// Rule ∀l
+		fmt.Println("\tApplying Rule )∀l", c.String())
 		uv := &UniversalVariable{Identifier: fty.Identifier}
 		nc := c.InsertHead(uv)
 		subcheck, err := nc.CheckAgainst(expr, fty.Type)
@@ -67,15 +72,13 @@ func (c Context) CheckAgainst(expr ast.Expression, ty ast.TypeValue) (Context, *
 			return c, err
 		}
 		return subcheck.Drop(uv), nil
-	} else {
-		// Rule sub
-		a, theta, err := c.SynthesizesTo(expr)
-		if err != nil {
-			return c, err
-		}
-		theta.Subtype(theta.Apply(a), theta.Apply(ty))
 	}
-
-	return c, nil
+	// Rule Sub
+	fmt.Println("\tApplying Rule sub", c.String())
+	a, theta, err := c.SynthesizesTo(expr)
+	if err != nil {
+		return c, err
+	}
+	return theta.Subtype(theta.Apply(a), theta.Apply(ty))
 
 }

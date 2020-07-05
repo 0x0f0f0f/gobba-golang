@@ -1,6 +1,7 @@
 package typecheck
 
 import (
+	// "fmt"
 	"github.com/0x0f0f0f/gobba-golang/ast"
 )
 
@@ -66,7 +67,7 @@ func (c *Context) Apply(a ast.TypeValue) ast.TypeValue {
 		if tau == nil {
 			return a
 		} else {
-			c.Apply(*tau)
+			return c.Apply(*tau)
 		}
 	case *ast.LambdaType:
 		return &ast.LambdaType{

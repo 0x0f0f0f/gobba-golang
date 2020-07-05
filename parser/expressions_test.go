@@ -13,14 +13,9 @@ func TestIdentifierExpression(t *testing.T) {
 
 	l := lexer.New(input)
 	p := New(l)
-	program := p.ParseProgram()
+	program := p.ParseExpression(LOWEST)
 	CheckParserErrors(t, p)
-
-	assert.Equal(t, len(program.Statements), 1)
-	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
-	assert.True(t, ok, "casting to *ast.ExpressionStatement")
-
-	testUniqueIdentifier(t, stmt.Expression, ast.UniqueIdentifier{"foobar", 0})
+	testUniqueIdentifier(t, program, ast.UniqueIdentifier{"foobar", 0})
 }
 
 func TestBooleanExpression(t *testing.T) {
@@ -28,17 +23,13 @@ func TestBooleanExpression(t *testing.T) {
 
 	l := lexer.New(input)
 	p := New(l)
-	program := p.ParseProgram()
+	program := p.ParseExpression(LOWEST)
 	CheckParserErrors(t, p)
 
-	assert.Equal(t, len(program.Statements), 2)
-	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
-	assert.True(t, ok, "casting to *ast.ExpressionStatement")
-	testBoolLiteral(t, stmt.Expression, true)
-
-	stmt, ok = program.Statements[1].(*ast.ExpressionStatement)
-	assert.True(t, ok, "casting to *ast.ExpressionStatement")
-	testBoolLiteral(t, stmt.Expression, false)
+	stmt, ok := program.(*ast.InfixExpression)
+	assert.True(t, ok, "casting to *ast.InfixExpression")
+	testBoolLiteral(t, stmt.Left, true)
+	testBoolLiteral(t, stmt.Right, false)
 }
 
 func TestIntegerLiteralExpression(t *testing.T) {
@@ -46,15 +37,10 @@ func TestIntegerLiteralExpression(t *testing.T) {
 
 	l := lexer.New(input)
 	p := New(l)
-	program := p.ParseProgram()
+	program := p.ParseExpression(LOWEST)
 	CheckParserErrors(t, p)
 
-	assert.Equal(t, len(program.Statements), 1)
-
-	stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
-	assert.True(t, ok, "casting to *ast.ExpressionStatement")
-
-	literal, ok := stmt.Expression.(*ast.IntegerLiteral)
+	literal, ok := program.(*ast.IntegerLiteral)
 	assert.True(t, ok, "casting to *ast.IntegerLiteral")
 
 	assert.Equal(t, literal.Value, int64(5))
@@ -63,29 +49,24 @@ func TestIntegerLiteralExpression(t *testing.T) {
 
 func TestParsingPrefixExpressions(t *testing.T) {
 	prefixTests := []struct {
-		input        string
-		operator     string
-		integerValue int64
+		input    string
+		operator string
+		value    interface{}
 	}{
+		{"-15;", "-", 15},
 		{"-15;", "-", 15},
 	}
 	for _, tt := range prefixTests {
 		l := lexer.New(tt.input)
 		p := New(l)
-		program := p.ParseProgram()
+		program := p.ParseExpression(LOWEST)
 		CheckParserErrors(t, p)
 
-		assert.Equal(t, len(program.Statements), 1)
-
-		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
-		assert.True(t, ok, "casting to *ast.ExpressionStatement")
-
-		exp, ok := stmt.Expression.(*ast.PrefixExpression)
+		exp, ok := program.(*ast.PrefixExpression)
 		assert.True(t, ok, "casting to *ast.PrefixExpression")
 
 		assert.Equal(t, exp.Operator, tt.operator)
-
-		testIntegerLiteral(t, exp.Right, tt.integerValue)
+		testLiteralExpression(t, exp.Right, tt.value)
 	}
 }
 
@@ -103,6 +84,7 @@ func TestParsingInfixExpressions(t *testing.T) {
 		{"5 / 5;", 5, "/", 5},
 		{"5 > 5;", 5, ">", 5},
 		{"5 < 5;", 5, "<", 5},
+		{"5 :: 5;", 5, "::", 5},
 		{"5 % 5;", 5, "%", 5},
 		{"5 = 5;", 5, "=", 5},
 		{"5 != 5;", 5, "!=", 5},
@@ -113,13 +95,33 @@ func TestParsingInfixExpressions(t *testing.T) {
 	for _, tt := range infixTests {
 		l := lexer.New(tt.input)
 		p := New(l)
-		program := p.ParseProgram()
+		program := p.ParseExpression(LOWEST)
 		CheckParserErrors(t, p)
 
-		assert.Equal(t, len(program.Statements), 1)
-		stmt, ok := program.Statements[0].(*ast.ExpressionStatement)
-		assert.True(t, ok, "casting to *ast.ExpressionStatement")
-		testInfixExpression(t, stmt.Expression, tt.leftValue, tt.operator, tt.rightValue)
+		testInfixExpression(t, program, tt.leftValue, tt.operator, tt.rightValue)
+	}
+}
+
+func TestLetExpression(t *testing.T) {
+	tests := []struct {
+		input    string
+		expected string
+	}{
+		{"let x = 5; x", "(λ x . x)(5)"},
+		// {"let x = 5 and y = 4;", []string{"x", "y"}, []interface{}{5, 4}},
+		// {"let y = true;", []string{"y"}, []interface{}{true}},
+		// {"let foobar = y;", []string{"foobar"}, []interface{}{"y"}},
+	}
+
+	for _, tt := range tests {
+		l := lexer.New(tt.input)
+		p := New(l)
+
+		program := p.ParseExpression(LOWEST)
+		CheckParserErrors(t, p)
+
+		actual := program.String()
+		assert.Equal(t, tt.expected, actual)
 	}
 }
 
@@ -135,6 +137,8 @@ func testLiteralExpression(
 		return testIntegerLiteral(t, exp, v)
 	case float64:
 		return testFloatLiteral(t, exp, v)
+	case complex128:
+		return testComplexLiteral(t, exp, v)
 	case string:
 		return testIdentifier(t, exp, v)
 	case bool:
@@ -188,7 +192,6 @@ func testIdentifier(t *testing.T, exp ast.Expression, value string) bool {
 	ident, ok := exp.(*ast.IdentifierExpr)
 	assert.True(t, ok, "casting to *ast.Identifier")
 	assert.Equal(t, value, ident.Identifier.Value)
-	assert.Equal(t, value, ident.TokenLiteral())
 	return true
 }
 

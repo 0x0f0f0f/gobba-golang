@@ -1,6 +1,7 @@
 package typecheck
 
 import (
+	"bytes"
 	"github.com/0x0f0f0f/gobba-golang/ast"
 )
 
@@ -11,6 +12,7 @@ import (
 
 type ContextValue interface {
 	contextValue()
+	String() string
 }
 
 // ======================================================================
@@ -23,6 +25,9 @@ type UniversalVariable struct {
 }
 
 func (v *UniversalVariable) contextValue() {}
+func (v *UniversalVariable) String() string {
+	return v.Identifier.FullString()
+}
 
 // Unsolved existential variable α^
 // solved when Value is not nil
@@ -35,6 +40,17 @@ func (v *ExistentialVariable) contextValue() {}
 func (v *ExistentialVariable) solved() bool {
 	return v.Value != nil
 }
+func (v *ExistentialVariable) String() string {
+	var b bytes.Buffer
+
+	b.WriteString(v.Identifier.FullString())
+
+	if v.Value != nil {
+		b.WriteString("=")
+		b.WriteString((*v.Value).FullString())
+	}
+	return b.String()
+}
 
 // Denoted with |>α^ in the paper
 type Marker struct {
@@ -42,6 +58,9 @@ type Marker struct {
 }
 
 func (v *Marker) contextValue() {}
+func (v *Marker) String() string {
+	return "►" + v.Identifier.FullString()
+}
 
 // Denoted with x : A in the paper
 type TypeAnnotation struct {
@@ -50,6 +69,34 @@ type TypeAnnotation struct {
 }
 
 func (v *TypeAnnotation) contextValue() {}
+func (v *TypeAnnotation) String() string {
+	return v.Identifier.FullString() + ": " + v.Value.FullString()
+}
+
+// Returns true if two values implementing ContextValue are equal
+func CompareContextValues(a, b ContextValue) bool {
+	switch va := a.(type) {
+	case *UniversalVariable:
+		if vb, ok := b.(*UniversalVariable); ok {
+			return *va == *vb
+		}
+	case *ExistentialVariable:
+		if vb, ok := b.(*ExistentialVariable); ok {
+			return *va == *vb
+		}
+	case *Marker:
+		if vb, ok := b.(*Marker); ok {
+			return *va == *vb
+		}
+	case *TypeAnnotation:
+		if vb, ok := b.(*TypeAnnotation); ok {
+			return *va == *vb
+		}
+
+	}
+
+	return false
+}
 
 // ======================================================================
 // Algorithmic Context Type: Γ, ∆, Θ
@@ -66,6 +113,19 @@ func NewContext() *Context {
 	return c
 }
 
+func (c Context) String() string {
+	var b bytes.Buffer
+
+	b.WriteString("[")
+
+	for _, v := range c.Contents {
+		b.WriteString(v.String())
+		b.WriteString(", ")
+	}
+	b.WriteString("]")
+	return b.String()
+}
+
 // Sorted insertion after element el in the context
 // Return a new context after insertion
 func (c Context) Insert(el ContextValue, values []ContextValue) Context {
@@ -73,7 +133,7 @@ func (c Context) Insert(el ContextValue, values []ContextValue) Context {
 
 	i := len(c.Contents)
 	for j, s := range c.Contents {
-		if s == el {
+		if CompareContextValues(s, el) {
 			i = j
 			break
 		}
@@ -81,7 +141,9 @@ func (c Context) Insert(el ContextValue, values []ContextValue) Context {
 
 	nc.Contents = append(nc.Contents, c.Contents[:i]...)
 	nc.Contents = append(nc.Contents, values...)
-	nc.Contents = append(nc.Contents, c.Contents[i:]...)
+	if i < len(c.Contents) {
+		nc.Contents = append(nc.Contents, c.Contents[i+1:]...)
+	}
 
 	return *nc
 }
@@ -168,15 +230,16 @@ func (c Context) SplitAt(el ContextValue) (Context, Context) {
 	right := NewContext()
 	found := false
 	for _, old := range c.Contents {
+		if CompareContextValues(old, el) {
+			found = true
+		}
+
 		if found {
 			right.Contents = append(right.Contents, old)
 			continue
 		}
 
 		left.Contents = append(left.Contents, old)
-		if old == el {
-			found = true
-		}
 	}
 	return *left, *right
 }

@@ -3,16 +3,17 @@ package typecheck
 import (
 	"fmt"
 	"github.com/0x0f0f0f/gobba-golang/ast"
-	// "github.com/alecthomas/repr"
 )
 
 // This file contains definitions for synthesization rules
 
 // TODO SynthesizesTo
 func (c Context) SynthesizesTo(exp ast.Expression) (ast.TypeValue, Context, *TypeError) {
+	fmt.Println("synth", exp.String())
 	switch ve := exp.(type) {
 	case *ast.UnitLiteral:
 		// Rule 1l=>
+		fmt.Println("\tApplying rule 1l=>", c.String())
 		return &ast.UnitType{}, c, nil
 	case *ast.IntegerLiteral:
 		return &ast.IntegerType{}, c, nil
@@ -28,6 +29,8 @@ func (c Context) SynthesizesTo(exp ast.Expression) (ast.TypeValue, Context, *Typ
 		return &ast.RuneType{}, c, nil
 	case *ast.IdentifierExpr:
 		// Rule Var
+		fmt.Println("\tApplying rule Var", c.String())
+
 		annot := c.GetAnnotation(ve.Identifier)
 		if annot == nil {
 			return nil, c, c.notInContextError(ve.Identifier)
@@ -35,6 +38,8 @@ func (c Context) SynthesizesTo(exp ast.Expression) (ast.TypeValue, Context, *Typ
 		return *annot, c, nil
 	case *ast.IfExpression:
 		// Rule ifthenelse=>
+		fmt.Println("\tApplying rule ifthenelse=>", c.String())
+
 		nc, err := c.CheckAgainst(ve.Condition, &ast.BoolType{})
 		if err != nil {
 			return nil, c, err
@@ -63,9 +68,10 @@ func (c Context) SynthesizesTo(exp ast.Expression) (ast.TypeValue, Context, *Typ
 
 	// TODO case Binary operators
 	// TODO case hastype
-	// TODO case Fix ???
 	case *ast.FunctionLiteral:
 		// Rule ->l=>
+		fmt.Println("\tApplying rule ->l=>", c.String())
+
 		alpha := ast.GenUID("α")
 		beta := ast.GenUID("β")
 		alphaext := &ast.ExistsType{
@@ -91,9 +97,12 @@ func (c Context) SynthesizesTo(exp ast.Expression) (ast.TypeValue, Context, *Typ
 		}
 
 		funtype := &ast.LambdaType{Domain: alphaext, Codomain: betaext}
-		return funtype, delta.Drop(annot), nil
+		deltadrop := delta.Drop(annot)
+		return funtype, deltadrop, nil
 	case *ast.ApplyExpr:
 		// Rule ->E
+		fmt.Println("\tApplying rule ->E", c.String())
+
 		a, theta, err := c.SynthesizesTo(ve.Function)
 		if err != nil {
 			return nil, c, err
@@ -113,6 +122,7 @@ func (c Context) ApplicationSynthesizesTo(
 	switch vty := ty.(type) {
 	case *ast.ExistsType:
 		// Rule α^App
+		fmt.Println("\tApplying rule α^App", c.String())
 		idexv := &ExistentialVariable{Identifier: vty.Identifier}
 		alpha1 := ast.GenUID("α")
 		alpha2 := ast.GenUID("α")
@@ -144,6 +154,7 @@ func (c Context) ApplicationSynthesizesTo(
 		return alpha2ext, delta, nil
 	case *ast.ForAllType:
 		// Rule ∀App
+		fmt.Println("\tApplying rule ∀App", c.String())
 		alpha := ast.GenUID("α")
 		alphaexv := &ExistentialVariable{Identifier: alpha}
 		alphaext := &ast.ExistsType{Identifier: alpha}
@@ -152,6 +163,7 @@ func (c Context) ApplicationSynthesizesTo(
 		return gamma.ApplicationSynthesizesTo(sub_a, exp)
 	case *ast.LambdaType:
 		// Rule ->App
+		fmt.Println("\tApplying rule ->App", c.String())
 		delta, err := c.CheckAgainst(exp, vty.Domain)
 		if err != nil {
 			return nil, c, err
@@ -164,32 +176,10 @@ func (c Context) ApplicationSynthesizesTo(
 
 func (c Context) SynthExpr(exp ast.Expression) (ast.TypeValue, *TypeError) {
 	t, nc, err := c.SynthesizesTo(exp)
+	fmt.Println(exp, "=>", t, "in", nc)
 	if err != nil {
 		return nil, err
 	}
-	fmt.Printf("expr %s synthesizes to type %s\n", exp, nc.Apply(t))
+	fmt.Printf("%s => %s\n", exp, nc.Apply(t))
 	return nc.Apply(t), nil
-}
-
-func (c Context) SynthStatement(st ast.Statement) (ast.TypeValue, *TypeError) {
-	switch vs := st.(type) {
-	case *ast.ExpressionStatement:
-		return c.SynthExpr(vs.Expression)
-	default:
-		panic("not implemented yet!")
-	}
-
-}
-
-func (c Context) SynthProgram(p *ast.Program) []ast.TypeValue {
-	// TODO errors, everything else
-	types := make([]ast.TypeValue, 0)
-	for _, st := range p.Statements {
-		stat_type, err := c.SynthStatement(st)
-		if err != nil {
-			fmt.Printf("%s\n", err)
-		}
-		types = append(types, stat_type)
-	}
-	return types
 }

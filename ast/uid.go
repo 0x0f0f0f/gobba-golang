@@ -11,7 +11,13 @@ type UniqueIdentifier struct {
 	Id    int
 }
 
+// Display identifier only
 func (u UniqueIdentifier) String() string {
+	return fmt.Sprintf("%s", u.Value)
+}
+
+// Also display numeric ID
+func (u UniqueIdentifier) FullString() string {
 	return fmt.Sprintf("(%s,%d)", u.Value, u.Id)
 }
 

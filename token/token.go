@@ -57,6 +57,8 @@ const (
 	SEMI        = ";"
 	LPAREN      = "("
 	RPAREN      = ")"
+	LBRACKET    = "{"
+	RBRACKET    = "}"
 	LINECOMMENT = "//"
 	LCOMMENT    = "/*"
 	RCOMMENT    = "*/"

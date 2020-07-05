@@ -1,24 +1,29 @@
 package typecheck
 
 import (
+	"fmt"
 	"github.com/0x0f0f0f/gobba-golang/ast"
 )
 
 // Defined in the Instantiation paragraph:
 // α^ :=< B, instantiate α^ such that α^ <: B
-func (c Context) InstantiateL(alpha ast.UniqueIdentifier, b ast.TypeValue) Context {
+func (c Context) InstantiateL(alpha ast.UniqueIdentifier, ty ast.TypeValue) Context {
+	fmt.Println("InstantiateL", alpha.FullString(), ":=<", ty.FullString())
 	exv := &ExistentialVariable{alpha, nil}
 	leftc, rightc := c.SplitAt(exv)
-	nc := c
-	if b.IsMonotype() && leftc.IsWellFormed(b) {
+	fmt.Println("Split in", leftc, "and", rightc)
+	if ty.IsMonotype() && leftc.IsWellFormed(ty) {
 		// Rule InstLSolve
-		solved := &ExistentialVariable{alpha, &b}
-		nc = nc.Insert(exv, []ContextValue{solved})
+		fmt.Println("\tApplying rule InstLSolve", c)
+		solved := &ExistentialVariable{alpha, &ty}
+		c = c.Insert(exv, []ContextValue{solved})
 	}
 
-	switch vb := b.(type) {
+	switch vty := ty.(type) {
 	case *ast.LambdaType:
 		// Rule InstLArr
+		fmt.Println("\tApplying rule InstLArr", c)
+
 		alpha1 := ast.GenUID("α")
 		alpha2 := ast.GenUID("α")
 
@@ -28,7 +33,8 @@ func (c Context) InstantiateL(alpha ast.UniqueIdentifier, b ast.TypeValue) Conte
 		}
 
 		// First premise
-		gamma := nc.Insert(exv, []ContextValue{
+		exv := &ExistentialVariable{alpha, nil}
+		gamma := c.Insert(exv, []ContextValue{
 			&ExistentialVariable{alpha2, nil},
 			&ExistentialVariable{alpha1, nil},
 			&ExistentialVariable{
@@ -36,33 +42,39 @@ func (c Context) InstantiateL(alpha ast.UniqueIdentifier, b ast.TypeValue) Conte
 				Value:      &arrow,
 			},
 		})
-		theta := gamma.InstantiateR(vb.Domain, alpha1)
+		theta := gamma.InstantiateR(vty.Domain, alpha1)
 
 		// Second premise, output context
-		delta := theta.InstantiateL(alpha2, theta.Apply(vb.Codomain))
+		delta := theta.InstantiateL(alpha2, theta.Apply(vty.Codomain))
 		return delta
 
 	case *ast.ForAllType:
 		// Rule InstLAllR
-		unv := &UniversalVariable{vb.Identifier}
-		delta := nc.InsertHead(unv).InstantiateL(alpha, vb.Type)
+		fmt.Println("\tApplying rule InstLAllR", c)
+
+		unv := &UniversalVariable{vty.Identifier}
+		delta := c.InsertHead(unv).InstantiateL(alpha, vty.Type)
 		return delta.Drop(unv)
 
 	case *ast.ExistsType:
 		// Rule InstLReach
-		unv := &UniversalVariable{vb.Identifier}
-		if rightc.IsWellFormed(b) {
+		fmt.Println("\tApplying rule InstLReach", c)
+
+		beta := vty.Identifier
+
+		if rightc.IsWellFormed(ty) {
+			exv := &ExistentialVariable{beta, nil}
 			var vt ast.TypeValue = &ast.ExistsType{Identifier: alpha}
-			return nc.Insert(unv, []ContextValue{
+			return c.Insert(exv, []ContextValue{
 				&ExistentialVariable{
-					Identifier: vb.Identifier,
+					Identifier: vty.Identifier,
 					Value:      &vt,
 				},
 			})
 		}
 	}
 
-	return nc
+	return c
 }
 
 // A =<: α^, instantiate α^ such that α^ <: B

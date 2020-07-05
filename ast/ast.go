@@ -15,55 +15,57 @@ type Node interface {
 
 // These interfaces contain dummy method
 // but exist so they can be identified correctly by the go compiler
-type Statement interface {
-	Node
-	statementNode()
-}
+// type Statement interface {
+// 	Node
+// 	statementNode()
+// }
+//
 type Expression interface {
 	Node
 	expressionNode()
 }
-type Program struct {
-	Statements []Statement
-}
+
+// type Program struct {
+// 	Statements []Statement
+// }
 
 // Get the first literal from a program. This is needed
 // so that the Program struct implements the Node interface
-func (p *Program) TokenLiteral() string {
-	if len(p.Statements) > 0 {
-		return p.Statements[0].TokenLiteral()
-	} else {
-		return ""
-	}
-}
-func (p *Program) String() string {
-	var b bytes.Buffer
+// func (p *Program) TokenLiteral() string {
+// 	if len(p.Statements) > 0 {
+// 		return p.Statements[0].TokenLiteral()
+// 	} else {
+// 		return ""
+// 	}
+// }
+// func (p *Program) String() string {
+// 	var b bytes.Buffer
 
-	for _, s := range p.Statements {
-		b.WriteString(s.String())
-	}
+// 	for _, s := range p.Statements {
+// 		b.WriteString(s.String())
+// 	}
 
-	return b.String()
-}
+// 	return b.String()
+// }
 
 // ======================================================================
 // AST nodes types definitions
 // ======================================================================
 
 // Contains a list of assignments without a body
-type ExpressionStatement struct {
-	Token      token.Token
-	Expression Expression
-}
+// type ExpressionStatement struct {
+// 	Token      token.Token
+// 	Expression Expression
+// }
 
-func (es *ExpressionStatement) statementNode()       {}
-func (es *ExpressionStatement) TokenLiteral() string { return es.Token.Literal }
-func (es *ExpressionStatement) String() string {
-	if es.Expression != nil {
-		return es.Expression.String() + ";"
-	}
-	return ""
-}
+// func (es *ExpressionStatement) statementNode()       {}
+// func (es *ExpressionStatement) TokenLiteral() string { return es.Token.Literal }
+// func (es *ExpressionStatement) String() string {
+// 	if es.Expression != nil {
+// 		return es.Expression.String() + ";"
+// 	}
+// 	return ""
+// }
 
 // Represents a symbol-value pair in the AST.
 type Assignment struct {
@@ -120,7 +122,7 @@ func (le *LetExpression) String() string {
 
 	b.WriteString("(let ")
 	b.WriteString(le.Assignment.String())
-	b.WriteString(" in ")
+	b.WriteString("; ")
 	b.WriteString(le.Body.String())
 	b.WriteString(")")
 
@@ -163,9 +165,9 @@ func (f *FunctionLiteral) TokenLiteral() string { return f.Token.Literal }
 func (f *FunctionLiteral) String() string {
 	var b bytes.Buffer
 
-	b.WriteString("(lambda ")
+	b.WriteString("(λ ")
 	b.WriteString(f.Param.String())
-	b.WriteString(" -> ")
+	b.WriteString(" . ")
 	b.WriteString(f.Body.String())
 	b.WriteString(")")
 

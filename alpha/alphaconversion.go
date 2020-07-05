@@ -49,11 +49,9 @@ func (a *AlphaEnvironment) Get(name string) (ast.UniqueIdentifier, error) {
 }
 
 func (a *AlphaEnvironment) IdentifierAlphaConversion(uid ast.UniqueIdentifier) ast.UniqueIdentifier {
-	fmt.Printf("%+v\n", a.store)
 	nuid, ok := a.store[uid.Value]
 	if !ok {
 		a.store[uid.Value] = 0
-		fmt.Printf("%+v\n", a.store)
 
 		return ast.UniqueIdentifier{Value: uid.Value, Id: 0}
 	}
@@ -167,44 +165,54 @@ func (a *AlphaEnvironment) ExpressionAlphaConversion(exp ast.Expression) (ast.Ex
 var default_alpha_environment = NewAlphaEnvironment()
 
 // Apply α-conversion on a statement
-func (a *AlphaEnvironment) StatementAlphaConversion(stmt ast.Statement) (ast.Statement, error) {
-	switch vs := stmt.(type) {
-	case *ast.ExpressionStatement:
-		// The new statement to return
-		var ns ast.ExpressionStatement
-		// The new expression to return
-		nexpr, err := a.ExpressionAlphaConversion(vs.Expression)
-		if err != nil {
-			return nil, err
-		}
-		err = copier.Copy(&ns, vs)
-		if err != nil {
-			panic(err)
-			// return nil, err
-		}
-		ns.Expression = nexpr
-		return &ns, nil
-	// TODO other statements
-	default:
-		panic(fmt.Sprintf("alpha conversion not implemented yet for statement of type %T", vs))
-	}
+// func (a *AlphaEnvironment) StatementAlphaConversion(stmt ast.Statement) (ast.Statement, error) {
+// 	switch vs := stmt.(type) {
+// 	case *ast.ExpressionStatement:
+// 		// The new statement to return
+// 		var ns ast.ExpressionStatement
+// 		// The new expression to return
+// 		nexpr, err := a.ExpressionAlphaConversion(vs.Expression)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		err = copier.Copy(&ns, vs)
+// 		if err != nil {
+// 			panic(err)
+// 			// return nil, err
+// 		}
+// 		ns.Expression = nexpr
+// 		return &ns, nil
+// 	// TODO other statements
+// 	default:
+// 		panic(fmt.Sprintf("alpha conversion not implemented yet for statement of type %T", vs))
+// 	}
 
-}
+// }
 
-// Apply α-conversion on a program
-func ProgramAlphaConversion(p *ast.Program) (*ast.Program, error) {
-	np := &ast.Program{}
-	np.Statements = make([]ast.Statement, 0)
+// // Apply α-conversion on a program
+// func ProgramAlphaConversion(p *ast.Program) (*ast.Program, error) {
+// 	np := &ast.Program{}
+// 	np.Statements = make([]ast.Statement, 0)
 
+// 	env := NewAlphaEnvironment()
+
+// 	for _, stmt := range p.Statements {
+// 		newstmt, err := env.StatementAlphaConversion(stmt)
+// 		if err != nil {
+// 			return nil, err
+// 		}
+// 		np.Statements = append(np.Statements, newstmt)
+// 	}
+
+// 	return np, nil
+// }
+
+func ProgramAlphaConversion(p ast.Expression) (*ast.Expression, error) {
 	env := NewAlphaEnvironment()
-
-	for _, stmt := range p.Statements {
-		newstmt, err := env.StatementAlphaConversion(stmt)
-		if err != nil {
-			return nil, err
-		}
-		np.Statements = append(np.Statements, newstmt)
+	np, err := env.ExpressionAlphaConversion(p)
+	if err != nil {
+		return nil, err
 	}
 
-	return np, nil
+	return &np, nil
 }

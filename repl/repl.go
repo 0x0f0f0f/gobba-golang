@@ -53,7 +53,7 @@ func (r *Repl) executor(line string) {
 	p.TraceOnError = r.Options.DebugParser
 
 	pri := repr.New(os.Stdout, repr.Hide(token.Token{}))
-	program := p.ParseProgram()
+	program := p.ParseExpression(parser.LOWEST)
 
 	if r.Options.ShowAST {
 		pri.Println(program)
@@ -86,10 +86,8 @@ func (r *Repl) executor(line string) {
 	// TODO preserve context between statements in the repl
 	ctx := typecheck.NewContext()
 	ast.ResetUIDCounter()
-	types := ctx.SynthProgram(alphaconv_program)
-	for _, t := range types {
-		fmt.Printf("- : %s\n", t)
-	}
+	ty, err := ctx.SynthExpr(*alphaconv_program)
+	fmt.Printf("- : %s\n", ty)
 
 	// TODO evaluation
 }

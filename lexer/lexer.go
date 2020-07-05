@@ -248,6 +248,10 @@ func (l *Lexer) NextToken() token.Token {
 		tok = l.newToken(token.LPAREN, string(l.ch))
 	case ')':
 		tok = l.newToken(token.RPAREN, string(l.ch))
+	case '{':
+		tok = l.newToken(token.LBRACKET, string(l.ch))
+	case '}':
+		tok = l.newToken(token.RBRACKET, string(l.ch))
 	case '*':
 		tok = l.newToken(token.TIMES, string(l.ch))
 	case '/':

@@ -13,7 +13,7 @@ const (
 	_           int = iota
 	LOWEST          // Terminal expression
 	COMPOSITION     // >=> or <=<
-	SEQUENCING      // >>
+	SEQUENCING      // ;
 	OR              // ||
 	AND             // &&
 	EQUALS          // = or !=
@@ -31,7 +31,7 @@ const (
 var precedences = map[token.TokenType]int{
 	token.COMPOSE:   COMPOSITION,
 	token.PIPE:      COMPOSITION,
-	token.SEQUENCE:  SEQUENCING,
+	token.SEMI:      SEQUENCING,
 	token.OR:        OR,
 	token.LAND:      AND,
 	token.EQUALS:    EQUALS,
@@ -51,20 +51,11 @@ var precedences = map[token.TokenType]int{
 	token.ACCESS:    ACCESS,
 	token.AT:        ACCESS,
 	// function application
-	token.IDENT:   CALL,
-	token.LPAREN:  CALL,
-	token.DOLLAR:  CALL,
-	token.TRUE:    CALL,
-	token.FALSE:   CALL,
-	token.INT:     CALL,
-	token.FLOAT:   CALL,
-	token.COMPLEX: CALL,
-	// TODO string
-	// TODO rune
-	// TODO vectors
-	// TODO lists
-	// TODO records
+	token.LPAREN: CALL,
+}
 
+var rightAssociative = map[token.TokenType]bool{
+	token.CONS: true,
 }
 
 // ======================================================================
@@ -123,7 +114,6 @@ func New(l *lexer.Lexer) *Parser {
 	p.infixParseFns = make(map[token.TokenType]infixParseFn)
 	p.registerInfix(token.COMPOSE, p.parseInfixExpression)
 	p.registerInfix(token.PIPE, p.parseInfixExpression)
-	p.registerInfix(token.SEQUENCE, p.parseInfixExpression)
 	p.registerInfix(token.LAND, p.parseInfixExpression)
 	p.registerInfix(token.OR, p.parseInfixExpression)
 	p.registerInfix(token.EQUALS, p.parseInfixExpression)
@@ -132,8 +122,6 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.LESSEQ, p.parseInfixExpression)
 	p.registerInfix(token.GREATER, p.parseInfixExpression)
 	p.registerInfix(token.GREATEREQ, p.parseInfixExpression)
-	// TODO make CONS right associative
-	p.registerInfix(token.CONS, p.parseInfixExpression)
 	p.registerInfix(token.CONCAT, p.parseInfixExpression)
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
 	p.registerInfix(token.MINUS, p.parseInfixExpression)
@@ -144,20 +132,12 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.ACCESS, p.parseInfixExpression)
 	p.registerInfix(token.AT, p.parseInfixExpression)
 
+	p.registerInfix(token.CONS, p.parseInfixRightAssocExpression)
+
+	p.registerInfix(token.SEMI, p.parseInfixSequence)
+
 	// function application
-	p.registerInfix(token.IDENT, p.parseApplyExpression)
 	p.registerInfix(token.LPAREN, p.parseApplyExpression)
-	p.registerInfix(token.DOLLAR, p.parseApplyExpression)
-	p.registerInfix(token.TRUE, p.parseApplyExpression)
-	p.registerInfix(token.FALSE, p.parseApplyExpression)
-	p.registerInfix(token.INT, p.parseApplyExpression)
-	p.registerInfix(token.FLOAT, p.parseApplyExpression)
-	p.registerInfix(token.COMPLEX, p.parseApplyExpression)
-	p.registerInfix(token.STRING, p.parseApplyExpression)
-	// TODO rune
-	// TODO vectors
-	// TODO lists
-	// TODO records
 
 	// Read two tokens so that curToken and peekToken are both set
 	p.nextToken()
@@ -196,6 +176,14 @@ func (p *Parser) peekTokenIs(t token.TokenType) bool {
 	return p.peekToken.Type == t
 }
 
+// Returns true if a token is right associative
+func (p *Parser) isRightAssociative(t token.Token) bool {
+	if v, ok := rightAssociative[t.Type]; ok {
+		return v
+	}
+	return false
+}
+
 // If the peek token matches with expectation, advance
 // and return true, false otherwise. Enforce correctness
 // of the order of tokens by checking the type of the next token.
@@ -227,21 +215,6 @@ func (p *Parser) curPrecedence() int {
 	return LOWEST
 }
 
-func (p *Parser) ParseProgram() *ast.Program {
-	// Allocate AST root
-	program := &ast.Program{}
-	program.Statements = make([]ast.Statement, 0)
-
-	for !p.curTokenIs(token.EOF) {
-		stmt := p.parseStatement()
-		if stmt != nil {
-			program.Statements = append(program.Statements, stmt)
-		}
-		p.nextToken()
-	}
-	return program
-}
-
 // ======================================================================
 // Actual parsing functions
 // ======================================================================
@@ -265,69 +238,11 @@ func (p *Parser) parseAssignment() *ast.Assignment {
 	}
 
 	p.nextToken()
-	ass.Value = p.parseExpression(LOWEST)
+	ass.Value = p.ParseExpression(SEQUENCING)
 	return ass
 }
 
-// Parse a toplevel statement
-func (p *Parser) parseStatement() ast.Statement {
-	switch p.curToken.Type {
-	case token.LET:
-		return p.parseLetStatement()
-	// TODO parse directives
-	default:
-		return p.parseExpressionStatement()
-	}
-}
-
-// Parse a let statement (not a let expression)
-func (p *Parser) parseLetStatement() ast.Statement {
-	start_token := p.curToken
-	stmt := &ast.LetStatement{Token: start_token}
-
-	stmt.Assignments = make([]*ast.Assignment, 0)
-
-	// Parse the first assignment
-	ass := p.parseAssignment()
-	if ass == nil {
-		return nil
-	}
-	stmt.Assignments = append(stmt.Assignments, ass)
-
-	for !p.peekTokenIs(token.SEMI) {
-		if p.peekTokenIs(token.IN) {
-			p.resetToken(start_token)
-			stmt := p.parseExpressionStatement()
-			return stmt
-		}
-
-		p.expectPeek(token.AND)
-
-		ass := p.parseAssignment()
-		if ass == nil {
-			return nil
-		}
-		stmt.Assignments = append(stmt.Assignments, ass)
-	}
-
-	if !p.expectPeek(token.SEMI) {
-		return nil
-	}
-
-	if len(stmt.Assignments) == 0 {
-		return nil
-	}
-
-	return stmt
-}
-
-// Parse a single expression statement
-func (p *Parser) parseExpressionStatement() *ast.ExpressionStatement {
-	stmt := &ast.ExpressionStatement{Token: p.curToken}
-	stmt.Expression = p.parseExpression(LOWEST)
-
-	if !p.expectPeek(token.SEMI) {
-		return nil
-	}
-	return stmt
+func (p *Parser) ParseProgram() ast.Expression {
+	ast.ResetUIDCounter()
+	return p.ParseExpression(LOWEST)
 }
