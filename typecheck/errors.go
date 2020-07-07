@@ -43,7 +43,15 @@ func (c *Context) unexpectedType(expected, found ast.TypeValue) *TypeError {
 func (c *Context) expectedSameTypeIfBranches(tt, ft ast.TypeValue) *TypeError {
 	return &TypeError{
 		fmt.Sprintf("type mismatch in if expression. then branch "+
-			"has type %s while else branch has type %s", tt, ft),
+			"has type %s. else branch has type %s", tt, ft),
+	}
+
+}
+
+func (c *Context) expectedSameTypeComparison(lt, rt ast.TypeValue) *TypeError {
+	return &TypeError{
+		fmt.Sprintf("type mismatch in comparison. "+
+			"left operand has type %s. right operand has type %s", lt, rt),
 	}
 
 }

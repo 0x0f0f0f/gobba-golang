@@ -152,6 +152,7 @@ func (p *Parser) parseInfixRightAssocExpression(left ast.Expression) ast.Express
 	return exp
 }
 
+// Parse a subexpression grouped by ()
 func (p *Parser) parseGroupedExpression() ast.Expression {
 	p.nextToken()
 
@@ -215,91 +216,11 @@ func (p *Parser) parseIfExpression() ast.Expression {
 	exp.Alternative = p.ParseExpression(LOWEST)
 	return exp
 }
-
-// NOTE: Function literals hold a single parameter. Multi-parameter
-// functions are composed of nested single parameter functions in the AST
-// because this eases currying during evaluation
-func (p *Parser) parseFunctionLiteral() ast.Expression {
-	parent_fun := &ast.FunctionLiteral{Token: p.curToken}
-	cur_fun := parent_fun
-
-	if !p.expectPeek(token.LPAREN) {
-		return nil
-	}
-
-	args := p.parseDefinitionArguments()
-
-	if len(args) == 0 {
-		parent_fun.Param = &ast.IdentifierExpr{
-			Token:      p.curToken,
-			Identifier: ast.UniqueIdentifier{"_", 0},
-		}
-
-	} else {
-		parent_fun.Param = args[0]
-
-		// Parameter list unrolling is done with a iterative loop
-		for _, arg := range args[1:] {
-			child_fun := &ast.FunctionLiteral{
-				Token: parent_fun.Token,
-				Param: arg,
-			}
-
-			cur_fun.Body = child_fun
-			cur_fun = child_fun
-		}
-	}
-
-	if !p.expectPeek(token.LBRACKET) {
-		return nil
-	}
-	cur_fun.Body = p.parseBraceGroupedExpression()
-
-	return parent_fun
-}
-
-// Parse the arguments of a function definition/literal (TODO allow type annotations)
-// and return them as a slice
-func (p *Parser) parseDefinitionArguments() []*ast.IdentifierExpr {
-	args := []*ast.IdentifierExpr{}
-
-	if p.peekTokenIs(token.RPAREN) {
-		p.nextToken()
-		return args
-	}
-
-	p.nextToken()
-	id := p.parseIdentifier()
-	iid, ok := id.(*ast.IdentifierExpr)
-	if !ok {
-		panic("fatal parsing error")
-	}
-	args = append(args, iid)
-
-	for p.peekTokenIs(token.COMMA) {
-		p.nextToken()
-		p.nextToken()
-		id := p.parseIdentifier()
-		iid, ok := id.(*ast.IdentifierExpr)
-		if !ok {
-			panic("fatal parsing error")
-		}
-		args = append(args, iid)
-	}
-
-	if !p.expectPeek(token.RPAREN) {
-		return nil
-	}
-
-	return args
-}
-
 func (p *Parser) parseApplyExpression(f ast.Expression) ast.Expression {
 	inner_expr := &ast.ApplyExpr{Token: p.curToken, Function: f}
 
 	args := p.parseApplyArguments()
 
-	// TODO unroll
 	if len(args) == 0 {
 		inner_expr.Arg = &ast.UnitLiteral{}
 		return inner_expr
@@ -312,7 +233,6 @@ func (p *Parser) parseApplyExpression(f ast.Expression) ast.Expression {
 		outer_app := &ast.ApplyExpr{Token: inner_expr.Token, Function: curr_expr}
 		outer_app.Arg = arg
 		curr_expr = outer_app
-
 	}
 
 	return curr_expr
@@ -381,12 +301,16 @@ func (p *Parser) parseLetExpression() ast.Expression {
 
 	}
 
+	if p.peekTokenIs(token.EOF) {
+		inner_fun.Body = &ast.UnitLiteral{}
+		return curr_app
+	}
+
 	if !p.expectPeek(token.SEMI) {
 		return nil
 	}
 
 	if p.peekTokenIs(token.EOF) {
-		fmt.Println("EOF")
 		inner_fun.Body = &ast.UnitLiteral{}
 		return curr_app
 	}

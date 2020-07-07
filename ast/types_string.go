@@ -36,11 +36,9 @@ func (u *VariableType) FullString() string { return "'" + u.Identifier.FullStrin
 func (u *ForAllType) FullString() string {
 	return fmt.Sprintf("∀%s.%s", u.Identifier.FullString(), u.Type.String())
 }
-
 func (u *LambdaType) FullString() string {
 	return fmt.Sprintf("%s -> %s", u.Domain.FullString(), u.Codomain.FullString())
 }
-
 func (u *ExistsType) FullString() string { return "∃'" + u.Identifier.FullString() }
 
 // helper for generating fancy names
@@ -76,11 +74,9 @@ func (u *ExistsType) FancyString(occ map[UniqueIdentifier]int) string {
 func (u *VariableType) FancyString(occ map[UniqueIdentifier]int) string {
 	return "'" + genFancy(occ, u.Identifier)
 }
-
 func (u *ForAllType) FancyString(occ map[UniqueIdentifier]int) string {
 	return fmt.Sprintf("∀%s.%s", genFancy(occ, u.Identifier), u.Type.FancyString(occ))
 }
-
 func (u *LambdaType) FancyString(occ map[UniqueIdentifier]int) string {
 	return fmt.Sprintf("%s -> %s", u.Domain.FancyString(occ), u.Codomain.FancyString(occ))
 }

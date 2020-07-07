@@ -300,7 +300,7 @@ func (l *Lexer) NextToken() token.Token {
 			l.readChar()
 			tok = l.newToken(token.CONS, string(ch)+string(l.ch))
 		} else {
-			tok = l.newToken(token.ILLEGAL, string(l.ch))
+			tok = l.newToken(token.ANNOT, string(l.ch))
 		}
 	case '<':
 		if l.peekChar() == '=' {

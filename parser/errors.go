@@ -57,6 +57,11 @@ func (p *Parser) customError(expected *token.TokenType, t token.Token, msg strin
 	p.appendError(e)
 }
 
+func (p *Parser) expectedType(t token.Token) {
+	e := ParserError{t.Line, t.Column, t, nil, "expected a type"}
+	p.appendError(e)
+}
+
 func (p *Parser) noPrefixParseFnError(t token.Token) {
 	e := ParserError{t.Line, t.Column, t, nil, ""}
 

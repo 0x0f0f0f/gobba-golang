@@ -26,6 +26,13 @@ func (c Context) Subtype(a, b ast.TypeValue) (Context, error) {
 		if _, ok := b.(*ast.UnitType); ok {
 			return c, nil
 		}
+	case *ast.BoolType:
+		// Rule <:bool
+		c.debugRule("<:bool")
+
+		if _, ok := b.(*ast.BoolType); ok {
+			return c, nil
+		}
 
 		// =============================================================
 		// Numerical Subtyping Rules

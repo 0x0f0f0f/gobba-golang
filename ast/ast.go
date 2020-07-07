@@ -244,6 +244,35 @@ func (i *IdentifierExpr) String() string {
 	return i.Identifier.String()
 }
 
+// Represents a type annotation
+type AnnotExpr struct {
+	Token token.Token
+	Body  Expression
+	Type  TypeValue
+}
+
+func (i *AnnotExpr) expressionNode()      {}
+func (i *AnnotExpr) TokenLiteral() string { return i.Token.Literal }
+func (i *AnnotExpr) String() string {
+	if i.Type == nil {
+		return i.Body.String()
+	}
+	return "(" + i.Body.String() + ": " + i.Type.String() + ")"
+}
+
+// Represents a fixed point combinator
+type FixExpr struct {
+	Token token.Token
+	Param IdentifierExpr
+	Body  Expression
+}
+
+func (i *FixExpr) expressionNode()      {}
+func (i *FixExpr) TokenLiteral() string { return i.Token.Literal }
+func (i *FixExpr) String() string {
+	return "(fix" + i.Param.String() + " . " + i.Body.String() + ")"
+}
+
 // ======================================================================
 // Terminal values: literals
 // ======================================================================

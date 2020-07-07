@@ -1,6 +1,5 @@
 // Contains data structures and method definitions for α-conversion
 // of gobba programs and expressions. De-Brujin notation is used
-// TODO fix not working!!!
 package alpha
 
 import (
@@ -30,37 +29,48 @@ func unboundError(name string) *AlphaConversionError {
 // Contains mappings to integers for unique identifiers
 type AlphaEnvironment struct {
 	store map[string]int
-	// outer *AlphaEnvironment
+	outer *AlphaEnvironment
 }
 
 // Create a new empty α environment for α-conversion
 func NewAlphaEnvironment() *AlphaEnvironment {
 	s := make(map[string]int)
-	return &AlphaEnvironment{store: s}
+	return &AlphaEnvironment{store: s, outer: nil}
+}
+
+func NewAlphaEnvironmentExtension(a *AlphaEnvironment) *AlphaEnvironment {
+	n := NewAlphaEnvironment()
+	n.outer = a
+	return n
 }
 
 // Search for an identifier in the environment or return an error
-func (a *AlphaEnvironment) Get(name string) (ast.UniqueIdentifier, error) {
+func (a AlphaEnvironment) Get(name string) (ast.UniqueIdentifier, error) {
 	uid, ok := a.store[name]
 	if !ok {
+		if a.outer != nil {
+			return a.outer.Get(name)
+		}
 		return ast.UniqueIdentifier{Value: name, Id: 0}, unboundError(name)
 	}
 	return ast.UniqueIdentifier{Value: name, Id: uid}, nil
 }
 
 func (a *AlphaEnvironment) IdentifierAlphaConversion(uid ast.UniqueIdentifier) ast.UniqueIdentifier {
-	nuid, ok := a.store[uid.Value]
-	if !ok {
+	nuid, err := a.Get(uid.Value)
+	if err != nil {
 		a.store[uid.Value] = 0
 
 		return ast.UniqueIdentifier{Value: uid.Value, Id: 0}
 	}
 
-	a.store[uid.Value] = nuid + 1
-	return ast.UniqueIdentifier{Value: uid.Value, Id: nuid + 1}
+	a.store[uid.Value] = nuid.Id + 1
+	return ast.UniqueIdentifier{Value: uid.Value, Id: nuid.Id + 1}
 }
 
 func (a *AlphaEnvironment) ExpressionAlphaConversion(exp ast.Expression) (ast.Expression, error) {
+	fmt.Println("uniquifying", exp, "in", a.store)
+
 	switch ve := exp.(type) {
 	case *ast.UnitLiteral:
 		return ve, nil
@@ -79,11 +89,13 @@ func (a *AlphaEnvironment) ExpressionAlphaConversion(exp ast.Expression) (ast.Ex
 	case *ast.PrefixExpression:
 		nright, err := a.ExpressionAlphaConversion(ve.Right)
 		if err != nil {
+			panic(err)
 			return nil, err
 		}
 		var nexpr ast.PrefixExpression
 		err = copier.Copy(&nexpr, ve)
 		if err != nil {
+			panic(err)
 			return nil, err
 		}
 
@@ -92,15 +104,18 @@ func (a *AlphaEnvironment) ExpressionAlphaConversion(exp ast.Expression) (ast.Ex
 	case *ast.InfixExpression:
 		nright, err := a.ExpressionAlphaConversion(ve.Right)
 		if err != nil {
+			panic(err)
 			return nil, err
 		}
 		nleft, err := a.ExpressionAlphaConversion(ve.Left)
 		if err != nil {
+			panic(err)
 			return nil, err
 		}
 		var nexpr ast.InfixExpression
 		err = copier.Copy(&nexpr, ve)
 		if err != nil {
+			panic(err)
 			return nil, err
 		}
 		nexpr.Left = nleft
@@ -110,26 +125,50 @@ func (a *AlphaEnvironment) ExpressionAlphaConversion(exp ast.Expression) (ast.Ex
 	case *ast.IdentifierExpr:
 		uid, err := a.Get(ve.Identifier.Value)
 		if err != nil {
+			panic(err)
 			return nil, err
 		}
 		var newexpr ast.IdentifierExpr
 		err = copier.Copy(&newexpr, ve)
 		if err != nil {
+			panic(err)
 			return nil, err
 		}
 		newexpr.Identifier = uid
 		return &newexpr, nil
 	case *ast.FunctionLiteral:
-		nid := a.IdentifierAlphaConversion(ve.Param.Identifier)
+		na := NewAlphaEnvironmentExtension(a)
+		nid := na.IdentifierAlphaConversion(ve.Param.Identifier)
 
-		nbody, err := a.ExpressionAlphaConversion(ve.Body)
+		nbody, err := na.ExpressionAlphaConversion(ve.Body)
 		if err != nil {
+			panic(err)
 			return nil, err
 		}
 
 		var newexpr ast.FunctionLiteral
 		err = copier.Copy(&newexpr, ve)
 		if err != nil {
+			panic(err)
+			return nil, err
+		}
+		newexpr.Param.Identifier = nid
+		newexpr.Body = nbody
+		return &newexpr, nil
+	case *ast.FixExpr:
+		na := NewAlphaEnvironmentExtension(a)
+		nid := na.IdentifierAlphaConversion(ve.Param.Identifier)
+
+		nbody, err := na.ExpressionAlphaConversion(ve.Body)
+		if err != nil {
+			panic(err)
+			return nil, err
+		}
+
+		var newexpr ast.FixExpr
+		err = copier.Copy(&newexpr, ve)
+		if err != nil {
+			panic(err)
 			return nil, err
 		}
 		newexpr.Param.Identifier = nid
@@ -138,16 +177,19 @@ func (a *AlphaEnvironment) ExpressionAlphaConversion(exp ast.Expression) (ast.Ex
 	case *ast.ApplyExpr:
 		nfun, err := a.ExpressionAlphaConversion(ve.Function)
 		if err != nil {
+			panic(err)
 			return nil, err
 		}
 		narg, err := a.ExpressionAlphaConversion(ve.Arg)
 		if err != nil {
+			panic(err)
 			return nil, err
 		}
 
 		var nexpr ast.ApplyExpr
 		err = copier.Copy(&nexpr, ve)
 		if err != nil {
+			panic(err)
 			return nil, err
 		}
 		nexpr.Function = nfun
@@ -156,19 +198,23 @@ func (a *AlphaEnvironment) ExpressionAlphaConversion(exp ast.Expression) (ast.Ex
 	case *ast.IfExpression:
 		ncond, err := a.ExpressionAlphaConversion(ve.Condition)
 		if err != nil {
+			panic(err)
 			return nil, err
 		}
 		ntbr, err := a.ExpressionAlphaConversion(ve.Consequence)
 		if err != nil {
+			panic(err)
 			return nil, err
 		}
 		nfbr, err := a.ExpressionAlphaConversion(ve.Alternative)
 		if err != nil {
+			panic(err)
 			return nil, err
 		}
 		var nexpr ast.IfExpression
 		err = copier.Copy(&nexpr, ve)
 		if err != nil {
+			panic(err)
 			return nil, err
 		}
 		nexpr.Condition = ncond
@@ -176,41 +222,28 @@ func (a *AlphaEnvironment) ExpressionAlphaConversion(exp ast.Expression) (ast.Ex
 		nexpr.Alternative = nfbr
 
 		return &nexpr, nil
+	case *ast.AnnotExpr:
+		nbody, err := a.ExpressionAlphaConversion(ve.Body)
+		if err != nil {
+			panic(err)
+			return nil, err
+		}
+		var nexpr ast.AnnotExpr
+		err = copier.Copy(&nexpr, ve)
+		if err != nil {
+			panic(err)
+			return nil, err
+		}
+		nexpr.Body = nbody
+		return &nexpr, nil
 
-	// TODO other expressions
-
-	default:
+	default: // TODO other expressions
 		panic(fmt.Sprintf("alpha conversion not implemented yet for expression of type %T", ve))
 	}
 }
 
 // TODO include primitives
 var default_alpha_environment = NewAlphaEnvironment()
-
-// Apply α-conversion on a statement
-// func (a *AlphaEnvironment) StatementAlphaConversion(stmt ast.Statement) (ast.Statement, error) {
-// 	switch vs := stmt.(type) {
-// 	case *ast.ExpressionStatement:
-// 		// The new statement to return
-// 		var ns ast.ExpressionStatement
-// 		// The new expression to return
-// 		nexpr, err := a.ExpressionAlphaConversion(vs.Expression)
-// 		if err != nil {
-// 			return nil, err
-// 		}
-// 		err = copier.Copy(&ns, vs)
-// 		if err != nil {
-// 			panic(err)
-// 			// return nil, err
-// 		}
-// 		ns.Expression = nexpr
-// 		return &ns, nil
-// 	// TODO other statements
-// 	default:
-// 		panic(fmt.Sprintf("alpha conversion not implemented yet for statement of type %T", vs))
-// 	}
-
-// }
 
 // // Apply α-conversion on a program
 // func ProgramAlphaConversion(p *ast.Program) (*ast.Program, error) {

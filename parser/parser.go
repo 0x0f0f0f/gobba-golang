@@ -239,6 +239,20 @@ func (p *Parser) parseAssignment() *ast.Assignment {
 
 	p.nextToken()
 	ass.Value = p.ParseExpression(SEQUENCING)
+
+	if f, ok := ass.Value.(*ast.FunctionLiteral); ok {
+		// Combinator for recursion
+		fix := &ast.FixExpr{
+			Token: f.Token,
+			Param: *ass.Name,
+			Body:  f,
+		}
+
+		ass.Value = fix
+
+		return ass
+
+	}
 	return ass
 }
 

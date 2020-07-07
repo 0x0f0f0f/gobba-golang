@@ -48,6 +48,7 @@ const (
 	AT        = "@"
 	DOLLAR    = "$"
 	CONS      = "::"
+	ANNOT     = ":"
 	LAND      = "&&"
 	OR        = "||"
 	ACCESS    = "."
@@ -73,6 +74,14 @@ const (
 	IF     = "if"
 	THEN   = "then"
 	ELSE   = "else"
+	// Keyword types
+	TBOOL    = "bool"
+	TINT     = "int"
+	TFLOAT   = "float"
+	TCOMPLEX = "complex"
+	TNUMBER  = "number"
+	TRUNE    = "rune"
+	TSTRING  = "string"
 )
 
 // Table of internal keywords
@@ -87,6 +96,14 @@ var keywords = map[string]TokenType{
 	"else":   ELSE,
 	"true":   TRUE,
 	"false":  FALSE,
+	// Keyword types
+	"bool":    TBOOL,
+	"int":     TINT,
+	"float":   TFLOAT,
+	"complex": TCOMPLEX,
+	"number":  TNUMBER,
+	"rune":    TRUNE,
+	"string":  TSTRING,
 }
 
 // Check the keywords table to see whether the given

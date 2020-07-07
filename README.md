@@ -14,14 +14,17 @@ Javascript. A primary goal is also to offer a compromise between solidity,
 ease of learning and the ability to express ideas quickly in the language.
 
 ## Goals/Roadmap
-- [ ] Painless Go-like, VCS based package and module system
-- [ ] Formalized type and effect system and operational semantics
-- [ ] Type and Memory safety
+- [x] Lexer
+- [x] Top Down Operator Precedence (Pratt) parser
+- [ ] Formalization of type system
+- [ ] Formalization of operational semantics
+- [ ] Formalization of effect system 
 - [ ] First class support for linear algebra data types and operations, 
-  abstracting away the physical representation
-- [ ] Built-in support for probability distributions
+- [ ] Go-like VCS based package/module system
+- [ ] AST optimizations
 - [ ] Aggressive static optimization of chains of linear algebraic operations
-- [ ] Built-in data visualization for interpreted programs
+- [ ] Standard library
+- [ ] Built-in data visualization in the interpreter
 - [ ] Optimizing compiler
 
 ## Installation
@@ -30,7 +33,6 @@ go get -u -v github.com/0x0f0f0f/gobba-golang
 ```
 
 ## Changes from 0.4, or the last OCaml version
-- Hand written Top Down Operator Precedence (Pratt) parser
 - Complex numbers literals are created during parsing instead of evaluation
 - Introduced allow/deny for effects, including purity
 - Comments are now in a C-like syntax

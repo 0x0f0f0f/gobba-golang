@@ -40,9 +40,12 @@ func (c Context) debugSection(name string, rest ...string) {
 }
 
 func (c Context) debugSynth(exp ast.Expression, t ast.TypeValue, printctx bool) {
-	if printctx {
-		fmt.Fprintln(os.Stderr, exp, "=>", t.FullString(), "in", c)
-	} else {
-		fmt.Fprintln(os.Stderr, exp, "=>", t.FullString())
+	if DebugTypeCheck {
+		if printctx {
+			fmt.Fprintln(os.Stderr, exp, "=>", t.FullString(), "in", c)
+		} else {
+			fmt.Fprintln(os.Stderr, exp, "=>", t.FullString())
+		}
+
 	}
 }
