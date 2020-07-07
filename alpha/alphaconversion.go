@@ -57,7 +57,6 @@ func (a *AlphaEnvironment) IdentifierAlphaConversion(uid ast.UniqueIdentifier) a
 	}
 
 	a.store[uid.Value] = nuid + 1
-	fmt.Printf("%+v\n", a.store)
 	return ast.UniqueIdentifier{Value: uid.Value, Id: nuid + 1}
 }
 

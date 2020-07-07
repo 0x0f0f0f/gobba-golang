@@ -3,6 +3,7 @@ package typecheck
 import (
 	"bytes"
 	"github.com/0x0f0f0f/gobba-golang/ast"
+	// "reflect"
 )
 
 // This file contains definition for algorithmic type contexts
@@ -107,6 +108,7 @@ type Context struct {
 	Contents []ContextValue
 }
 
+// Creates a new empty context
 func NewContext() *Context {
 	c := &Context{}
 	c.Contents = make([]ContextValue, 0)

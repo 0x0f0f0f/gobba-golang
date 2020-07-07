@@ -65,20 +65,28 @@ func (c *Context) Apply(a ast.TypeValue) ast.TypeValue {
 	case *ast.ExistsType:
 		tau := c.GetSolvedVariable(va.Identifier)
 		if tau == nil {
+			c.debugSection("apply", a.FullString(), "=", a.FullString())
 			return a
 		} else {
-			return c.Apply(*tau)
+			ret := c.Apply(*tau)
+			c.debugSection("apply", a.FullString(), "=", ret.FullString())
+			return ret
 		}
 	case *ast.LambdaType:
-		return &ast.LambdaType{
+		ret := &ast.LambdaType{
 			Domain:   c.Apply(va.Domain),
 			Codomain: c.Apply(va.Codomain),
 		}
+		c.debugSection("apply", a.FullString(), "=", ret.FullString())
+		return ret
 	case *ast.ForAllType:
-		return &ast.ForAllType{
+		ret := &ast.ForAllType{
 			Identifier: va.Identifier,
 			Type:       c.Apply(va.Type),
 		}
+		c.debugSection("apply", a.FullString(), "=", ret.FullString())
+		return ret
 	}
+	c.debugSection("apply", a.FullString(), "=", a.FullString())
 	return a
 }

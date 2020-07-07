@@ -1,69 +1,155 @@
 package typecheck
 
 import (
+	"fmt"
 	"github.com/0x0f0f0f/gobba-golang/ast"
 )
 
 // This file contains definitions for synthesization rules
 
 // TODO SynthesizesTo
-func (c Context) SynthesizesTo(exp ast.Expression) (ast.TypeValue, Context, *TypeError) {
+func (c Context) SynthesizesTo(exp ast.Expression) (ast.TypeValue, Context, error) {
 	c.debugSection("synth", exp.String())
 	switch ve := exp.(type) {
-	case *ast.UnitLiteral:
-		// Rule 1l=>
-		c.debugRule("1l=>")
-
+	case *ast.UnitLiteral: // Rule 1I=>
+		c.debugRuleOut("1I=>")
 		return &ast.UnitType{}, c, nil
-	case *ast.IntegerLiteral:
+	case *ast.IntegerLiteral: // Rule intI=>
+		c.debugRuleOut("intI=>")
 		return &ast.IntegerType{}, c, nil
-	case *ast.FloatLiteral:
+	case *ast.FloatLiteral: // Rule floatI=>
+		c.debugRuleOut("floatI=>")
 		return &ast.FloatType{}, c, nil
-	case *ast.ComplexLiteral:
+	case *ast.ComplexLiteral: // Rule complexI=>
+		c.debugRuleOut("complexI=>")
 		return &ast.ComplexType{}, c, nil
-	case *ast.BoolLiteral:
+	case *ast.BoolLiteral: // Rule boolI=>
+		c.debugRuleOut("boolI=>")
 		return &ast.BoolType{}, c, nil
-	case *ast.StringLiteral:
+	case *ast.StringLiteral: // Rule stringI=>
+		c.debugRuleOut("stringI=>")
 		return &ast.StringType{}, c, nil
-	case *ast.RuneLiteral:
+	case *ast.RuneLiteral: // Rule runeI=>
+		c.debugRuleOut("runeI=>")
 		return &ast.RuneType{}, c, nil
 	case *ast.IdentifierExpr:
 		// Rule Var
-		c.debugRule("Var")
-
+		c.debugRuleOut("Var")
 		annot := c.GetAnnotation(ve.Identifier)
 		if annot == nil {
+			c.debugRuleFail("Var")
 			return nil, c, c.notInContextError(ve.Identifier)
 		}
+		c.debugRuleOut("Var")
 		return *annot, c, nil
 	case *ast.IfExpression:
-		// Rule ifthenelse=>
-		c.debugRule("ifthenelse=>")
+		// Rules ifthen<:else=> and ifelse<:then=> share the first
+		// 3 premises
+		c.debugRule("ifthen<:else=> or ifelse<:then=>")
 
 		gamma1, err := c.CheckAgainst(ve.Condition, &ast.BoolType{})
 		if err != nil {
+			c.debugRuleFail("ifthen<:else=> or ifelse<:then=>")
 			return nil, c, err
 		}
-		tbrancht, theta, err := gamma1.SynthesizesTo(ve.Consequence)
+		thent, theta, err := gamma1.SynthesizesTo(ve.Consequence)
 		if err != nil {
+			c.debugRuleFail("ifthen<:else=> or ifelse<:then=>")
 			return nil, c, err
 		}
-		fbrancht, delta, err := theta.SynthesizesTo(ve.Alternative)
+		elset, theta1, err := theta.SynthesizesTo(ve.Alternative)
 		if err != nil {
+			c.debugRuleFail("ifthen<:else=> or ifelse<:then=>")
 			return nil, c, err
 		}
 
-		if tbrancht != fbrancht {
-			//FIXME use subtyping
-			return nil, c, c.expectedSameTypeIfBranches(tbrancht, fbrancht)
+		// Try to see if thent <: elset
+		var delta Context
+		delta, err = theta1.Subtype(thent, elset)
+		if err != nil {
+			// Try other case where elset <: thent
+			delta, err = theta1.Subtype(elset, thent)
+			if err != nil {
+				c.debugRuleFail("ifthen<:else=> or ifelse<:then=>")
+				return nil, c, c.expectedSameTypeIfBranches(thent, elset)
+			}
+			// Rule ifelse<:then=>
+			// thent is a supertype of elset
+			delta.debugRuleOut("ifelse<:then=>")
+
+			return thent, delta, nil
 		}
-		return tbrancht, delta, nil
+		// Rule ifthen<:else=>
+		// elset is a supertype of thent
+		delta.debugRuleOut("ifthen<:else=>")
+		return elset, delta, nil
 
 	// TODO case Binary operators
+	case *ast.InfixExpression:
+		switch ve.Operator {
+		case "+":
+			// FIXME
+			// Synthesize types for operands
+			leftt, gamma, err := c.SynthesizesTo(ve.Left)
+			if err != nil {
+				return nil, c, err
+			}
+			rightt, gamma1, err := gamma.SynthesizesTo(ve.Right)
+			if err != nil {
+				return nil, c, err
+			}
+
+			fmt.Println("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", leftt.FullString())
+
+			// If the left operand is an existential variable
+
+			// if leftext, ok := leftt.(*ast.ExistsType); ok {
+
+			// }
+
+			gamma1.debugRule("AAAAAAAAAAAAA" + leftt.FullString() + " " + rightt.FullString())
+
+			theta, err := gamma1.Subtype(leftt, &ast.NumberType{})
+			if err != nil {
+				return nil, c, err
+			}
+
+			theta1, err := theta.Subtype(rightt, &ast.NumberType{})
+			if err != nil {
+				return nil, c, err
+			}
+
+			var delta Context
+			leftapp := theta1.Apply(leftt)
+			rightapp := theta1.Apply(rightt)
+
+			theta1.debugRule("BBBBBBBBBBBB " + leftapp.FullString() + " " + rightapp.FullString())
+
+			// Try to see if left <: right
+			delta, err = theta1.Subtype(leftapp, rightapp)
+			if err != nil {
+				// Try the other way around
+				delta, err = theta1.Subtype(rightapp, leftapp)
+				if err != nil {
+					return nil, c, err
+				}
+				// Rule ◦RSubL=>
+				c.debugRule("◦RSubL=>")
+				return leftt, delta, nil
+			}
+			// Rule ◦LSubR=>
+			c.debugRule("◦LSubR=>")
+			return rightt, delta, nil
+
+		default:
+			// TODO
+			panic("Type synthesis Not yet implemented")
+
+		}
 	// TODO case hastype
 	case *ast.FunctionLiteral:
 		// Rule ->l=>
-		c.debugRule("->l=>")
+		c.debugRule("->I=>")
 
 		alpha := ast.GenUID("α")
 		beta := ast.GenUID("β")
@@ -86,11 +172,14 @@ func (c Context) SynthesizesTo(exp ast.Expression) (ast.TypeValue, Context, *Typ
 		gamma := c.InsertHead(annot).InsertHead(betaexv).InsertHead(alphaexv)
 		delta, err := gamma.CheckAgainst(ve.Body, betaext)
 		if err != nil {
+			c.debugRuleFail("->I=>")
 			return nil, c, err
 		}
 
 		funtype := &ast.LambdaType{Domain: alphaext, Codomain: betaext}
 		deltadrop := delta.Drop(annot)
+		deltadrop.debugRuleOut("->I=>")
+
 		return funtype, deltadrop, nil
 	case *ast.ApplyExpr:
 		// Rule ->E
@@ -100,6 +189,7 @@ func (c Context) SynthesizesTo(exp ast.Expression) (ast.TypeValue, Context, *Typ
 		if err != nil {
 			return nil, c, err
 		}
+		theta.debugRuleOut("->E")
 		return theta.ApplicationSynthesizesTo(theta.Apply(a), ve.Arg)
 		//TODO Rule Anno
 
@@ -110,7 +200,7 @@ func (c Context) SynthesizesTo(exp ast.Expression) (ast.TypeValue, Context, *Typ
 // TODO document
 func (c Context) ApplicationSynthesizesTo(
 	ty ast.TypeValue,
-	exp ast.Expression) (ast.TypeValue, Context, *TypeError) {
+	exp ast.Expression) (ast.TypeValue, Context, error) {
 
 	switch vty := ty.(type) {
 	case *ast.ExistsType:
@@ -142,9 +232,11 @@ func (c Context) ApplicationSynthesizesTo(
 
 		delta, err := gamma.CheckAgainst(exp, alpha1ext)
 		if err != nil {
+			c.debugRuleFail("α^App")
 			return nil, c, err
 		}
 
+		delta.debugRuleOut("α^App")
 		return alpha2ext, delta, nil
 	case *ast.ForAllType:
 		// Rule ∀App
@@ -155,6 +247,8 @@ func (c Context) ApplicationSynthesizesTo(
 		alphaext := &ast.ExistsType{Identifier: alpha}
 		gamma := c.InsertHead(alphaexv)
 		sub_a := Substitution(vty.Type, alphaext, vty.Identifier)
+
+		gamma.debugRuleOut("∀App")
 		return gamma.ApplicationSynthesizesTo(sub_a, exp)
 	case *ast.LambdaType:
 		// Rule ->App
@@ -162,6 +256,7 @@ func (c Context) ApplicationSynthesizesTo(
 
 		delta, err := c.CheckAgainst(exp, vty.Domain)
 		if err != nil {
+			c.debugRuleFail("->App")
 			return nil, c, err
 		}
 		return vty.Codomain, delta, nil
@@ -170,7 +265,7 @@ func (c Context) ApplicationSynthesizesTo(
 	return nil, c, c.synthError(exp)
 }
 
-func (c Context) SynthExpr(exp ast.Expression) (ast.TypeValue, *TypeError) {
+func (c Context) SynthExpr(exp ast.Expression) (ast.TypeValue, error) {
 	t, nc, err := c.SynthesizesTo(exp)
 	if err != nil {
 		c.debugErr(err)

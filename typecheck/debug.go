@@ -15,6 +15,18 @@ func (c Context) debugRule(name string) {
 	}
 }
 
+func (c Context) debugRuleOut(name string) {
+	if DebugTypeCheck {
+		fmt.Fprintln(os.Stderr, "\tSUCCESSfully applied rule", name, c)
+	}
+}
+
+func (c Context) debugRuleFail(name string) {
+	if DebugTypeCheck {
+		fmt.Fprintln(os.Stderr, "\tFAILed to apply rule", name)
+	}
+}
+
 func (c Context) debugErr(err error) {
 	if DebugTypeCheck {
 		fmt.Fprintln(os.Stderr, "Type Error: ", err, c)

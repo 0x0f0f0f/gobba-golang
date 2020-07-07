@@ -1,7 +1,6 @@
 package typecheck
 
 import (
-	"fmt"
 	"github.com/0x0f0f0f/gobba-golang/ast"
 )
 
@@ -10,8 +9,8 @@ import (
 // Helper function
 // func sameType
 
-func (c Context) Subtype(a, b ast.TypeValue) (Context, *TypeError) {
-	fmt.Println("subtype", a, "<:", b)
+func (c Context) Subtype(a, b ast.TypeValue) (Context, error) {
+	c.debugSection("subtype", a.FullString(), "<:", b.FullString())
 	if !c.IsWellFormed(a) {
 		return c, c.malformedError(a)
 	}
@@ -22,21 +21,88 @@ func (c Context) Subtype(a, b ast.TypeValue) (Context, *TypeError) {
 	switch va := a.(type) {
 	case *ast.UnitType:
 		// Rule <:Unit
-		fmt.Println("\tApplying rule <:Unit", c.String())
+		c.debugRule("<:Unit")
+
 		if _, ok := b.(*ast.UnitType); ok {
 			return c, nil
 		}
+
+		// =============================================================
+		// Numerical Subtyping Rules
+		// =============================================================
+
 	case *ast.IntegerType:
-		// Rule <:Unit
-		fmt.Println("\tApplying rule <:Int", c.String())
-		if _, ok := b.(*ast.IntegerType); ok {
+		switch b.(type) {
+		case *ast.IntegerType:
+			// Rule <:int
+			c.debugRule("<:int")
+			return c, nil
+		case *ast.FloatType:
+			// Rule int<:float
+			c.debugRule("int<:float")
+			return c, nil
+		case *ast.ComplexType:
+			// Rule int<:complex
+			c.debugRule("int<:complex")
+			return c, nil
+		case *ast.NumberType:
+			// Rule int<:number
+			c.debugRule("int<:number")
+			return c, nil
+
+		}
+	case *ast.FloatType:
+		switch b.(type) {
+		case *ast.FloatType:
+			// Rule <:float
+			c.debugRule("<:float")
+			return c, nil
+		case *ast.ComplexType:
+			// Rule float<:complex
+			c.debugRule("float<:complex")
+			return c, nil
+		case *ast.NumberType:
+			// Rule float<:number
+			c.debugRule("float<:number")
+			return c, nil
+		}
+	case *ast.ComplexType:
+		switch b.(type) {
+		case *ast.ComplexType:
+			// Rule <:complex
+			c.debugRule("<:complex")
+			return c, nil
+		case *ast.NumberType:
+			// Rule complex<:number
+			c.debugRule("complex<:number")
+			return c, nil
+
+		}
+	case *ast.NumberType:
+		switch b.(type) {
+		case *ast.NumberType:
+			// Rule <:number
+			c.debugRule("<:number")
+			return c, nil
+		}
+
+		// =============================================================
+		// Other Primitive Subtyping Rules
+		// =============================================================
+
+	case *ast.StringType:
+		switch b.(type) {
+		case *ast.StringType:
+			// Rule <:string
+			c.debugRule("<:string")
 			return c, nil
 		}
 
 	case *ast.VariableType:
 		if vb, ok := b.(*ast.VariableType); ok {
 			// Rule <:Var
-			fmt.Println("\tApplying rule <:Var", c.String())
+			c.debugRule("<:Var")
+
 			if va.Identifier == vb.Identifier {
 				return c, nil
 			}
@@ -46,13 +112,15 @@ func (c Context) Subtype(a, b ast.TypeValue) (Context, *TypeError) {
 		if vb, ok := b.(*ast.ExistsType); ok {
 			if va.Identifier == vb.Identifier {
 				// Rule <:Exvar
-				fmt.Println("\tApplying rule <:Exvar", c.String())
+				c.debugRule("<:Exvar")
+
 				return c, nil
 			}
 		}
 		if !OccursIn(va.Identifier, b) {
 			// Rule <:InstantiateL
-			fmt.Println("\tApplying rule <:InstantiateL", c.String())
+			c.debugRule("<:InstantiateL")
+
 			res := c.InstantiateL(va.Identifier, b)
 			return res, nil
 		}
@@ -60,7 +128,8 @@ func (c Context) Subtype(a, b ast.TypeValue) (Context, *TypeError) {
 	case *ast.LambdaType:
 		if vb, ok := b.(*ast.LambdaType); ok {
 			// Rule <:->
-			fmt.Println("\tApplying rule <:->", c.String())
+			c.debugRule("<:->")
+
 			theta, err := c.Subtype(va.Domain, vb.Domain)
 			if err != nil {
 				return c, err
@@ -71,7 +140,8 @@ func (c Context) Subtype(a, b ast.TypeValue) (Context, *TypeError) {
 
 	case *ast.ForAllType:
 		// Rule <:∀L
-		fmt.Println("\tApplying rule <:∀L", c.String())
+		c.debugRule("<:∀L")
+
 		r1 := ast.GenUID("α")
 		marker := &Marker{r1}
 		exv := &ExistentialVariable{r1, nil}
@@ -89,7 +159,8 @@ func (c Context) Subtype(a, b ast.TypeValue) (Context, *TypeError) {
 	if vb, ok := b.(*ast.ExistsType); ok {
 		if !OccursIn(vb.Identifier, a) {
 			// Rule <:InstantiateR
-			fmt.Println("\tApplying rule <:InstantiateR", c.String())
+			c.debugRule("<:InstantiateR")
+
 			res := c.InstantiateR(a, vb.Identifier)
 			return res, nil
 		}
@@ -98,7 +169,8 @@ func (c Context) Subtype(a, b ast.TypeValue) (Context, *TypeError) {
 
 	if vb, ok := b.(*ast.ForAllType); ok {
 		// Rule <:∀R
-		fmt.Println("\tApplying rule <:∀R", c.String())
+		c.debugRule("<:∀R")
+
 		u := &UniversalVariable{vb.Identifier}
 		theta := c.InsertHead(u)
 		delta, err := theta.Subtype(a, vb)

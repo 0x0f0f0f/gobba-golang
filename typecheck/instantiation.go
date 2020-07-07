@@ -17,6 +17,8 @@ func (c Context) InstantiateL(alpha ast.UniqueIdentifier, ty ast.TypeValue) Cont
 
 		solved := &ExistentialVariable{alpha, &ty}
 		c = c.Insert(exv, []ContextValue{solved})
+		c.debugRuleOut("InstLSolve")
+		return c
 	}
 
 	switch vty := ty.(type) {
@@ -46,6 +48,7 @@ func (c Context) InstantiateL(alpha ast.UniqueIdentifier, ty ast.TypeValue) Cont
 
 		// Second premise, output context
 		delta := theta.InstantiateL(alpha2, theta.Apply(vty.Codomain))
+		delta.debugRuleOut("InstLArr")
 		return delta
 
 	case *ast.ForAllType:
@@ -54,6 +57,8 @@ func (c Context) InstantiateL(alpha ast.UniqueIdentifier, ty ast.TypeValue) Cont
 
 		unv := &UniversalVariable{vty.Identifier}
 		delta := c.InsertHead(unv).InstantiateL(alpha, vty.Type)
+
+		delta.debugRuleOut("InstLAllR")
 		return delta.Drop(unv)
 
 	case *ast.ExistsType:
@@ -65,12 +70,15 @@ func (c Context) InstantiateL(alpha ast.UniqueIdentifier, ty ast.TypeValue) Cont
 		if rightc.IsWellFormed(ty) {
 			exv := &ExistentialVariable{beta, nil}
 			var vt ast.TypeValue = &ast.ExistsType{Identifier: alpha}
-			return c.Insert(exv, []ContextValue{
+
+			outc := c.Insert(exv, []ContextValue{
 				&ExistentialVariable{
 					Identifier: vty.Identifier,
 					Value:      &vt,
 				},
 			})
+			outc.debugRuleOut("InstLReach")
+			return outc
 		}
 	}
 
@@ -81,13 +89,14 @@ func (c Context) InstantiateL(alpha ast.UniqueIdentifier, ty ast.TypeValue) Cont
 func (c Context) InstantiateR(ty ast.TypeValue, alpha ast.UniqueIdentifier) Context {
 	exv := &ExistentialVariable{alpha, nil}
 	leftc, rightc := c.SplitAt(exv)
-	nc := c
 	if ty.IsMonotype() && leftc.IsWellFormed(ty) {
 		// Rule InstRSolve
 		c.debugRule("InstRSolve")
 
 		solved := &ExistentialVariable{alpha, &ty}
-		nc = nc.Insert(exv, []ContextValue{solved})
+		c = c.Insert(exv, []ContextValue{solved})
+		c.debugRuleOut("InstRSolve")
+		return c
 	}
 
 	switch va := ty.(type) {
@@ -103,7 +112,7 @@ func (c Context) InstantiateR(ty ast.TypeValue, alpha ast.UniqueIdentifier) Cont
 			Codomain: &ast.ExistsType{Identifier: alpha2},
 		}
 
-		gamma := nc.InsertHead(&ExistentialVariable{
+		gamma := c.InsertHead(&ExistentialVariable{
 			Identifier: alpha,
 			Value:      &arrow,
 		}).InsertHead(&ExistentialVariable{
@@ -114,7 +123,7 @@ func (c Context) InstantiateR(ty ast.TypeValue, alpha ast.UniqueIdentifier) Cont
 
 		theta := gamma.InstantiateL(alpha1, va.Domain)
 		delta := theta.InstantiateR(theta.Apply(va.Codomain), alpha2)
-
+		delta.debugRuleOut("InstRArr")
 		return delta
 	case *ast.ForAllType:
 		// Rule InstRAllL
@@ -129,8 +138,10 @@ func (c Context) InstantiateR(ty ast.TypeValue, alpha ast.UniqueIdentifier) Cont
 			Identifier: beta1,
 		}
 
-		gamma := nc.InsertHead(beta1exv).InsertHead(marker)
+		gamma := c.InsertHead(beta1exv).InsertHead(marker)
 		delta := gamma.InstantiateR(Substitution(va.Type, ext, va.Identifier), alpha)
+
+		delta.debugRuleOut("InstRAllL")
 		return delta.Drop(marker)
 
 	case *ast.ExistsType:
@@ -139,12 +150,14 @@ func (c Context) InstantiateR(ty ast.TypeValue, alpha ast.UniqueIdentifier) Cont
 
 		var exv ast.TypeValue = &ast.ExistsType{Identifier: alpha}
 		if rightc.IsWellFormed(ty) {
-			return nc.InsertHead(&ExistentialVariable{
+			outc := c.InsertHead(&ExistentialVariable{
 				Identifier: va.Identifier,
 				Value:      &exv,
 			})
+			outc.debugRuleOut("InstRReach")
+			return outc
 		}
 
 	}
-	return nc
+	return c
 }

@@ -244,5 +244,9 @@ func (p *Parser) parseAssignment() *ast.Assignment {
 
 func (p *Parser) ParseProgram() ast.Expression {
 	ast.ResetUIDCounter()
-	return p.ParseExpression(LOWEST)
+	expr := p.ParseExpression(LOWEST)
+	if !p.expectPeek(token.EOF) {
+		return nil
+	}
+	return expr
 }

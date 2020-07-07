@@ -5,7 +5,7 @@ import (
 )
 
 // TODO document
-func (c Context) CheckAgainst(expr ast.Expression, ty ast.TypeValue) (Context, *TypeError) {
+func (c Context) CheckAgainst(expr ast.Expression, ty ast.TypeValue) (Context, error) {
 	c.debugSection("check", expr.String(), "<=", ty.FullString())
 	if !c.IsWellFormed(ty) {
 		return c, c.malformedError(ty)
@@ -14,49 +14,50 @@ func (c Context) CheckAgainst(expr ast.Expression, ty ast.TypeValue) (Context, *
 	switch vexpr := expr.(type) {
 	case *ast.UnitLiteral:
 		// Rule 1l
-		c.debugRule("1l")
+		c.debugRuleOut("1I")
 
 		if _, ok := ty.(*ast.UnitType); ok {
 			return c, nil
 		}
+
 	case *ast.BoolLiteral:
 		// Rule booll
-		c.debugRule("booll")
+		c.debugRuleOut("boolI")
 
 		if _, ok := ty.(*ast.BoolType); ok {
 			return c, nil
 		}
 	case *ast.FloatLiteral:
 		// Rule floatl
-		c.debugRule("floatl")
+		c.debugRuleOut("floatI")
 
 		if _, ok := ty.(*ast.FloatType); ok {
 			return c, nil
 		}
 	case *ast.ComplexLiteral:
 		// Rule complexl
-		c.debugRule("complexl")
+		c.debugRuleOut("complexI")
 
 		if _, ok := ty.(*ast.ComplexType); ok {
 			return c, nil
 		}
 	case *ast.IntegerLiteral:
 		// Rule intl
-		c.debugRule("intl")
+		c.debugRuleOut("intI")
 
 		if _, ok := ty.(*ast.IntegerType); ok {
 			return c, nil
 		}
 	case *ast.StringLiteral:
 		// Rule stringl
-		c.debugRule("stringl")
+		c.debugRuleOut("stringI")
 
 		if _, ok := ty.(*ast.StringType); ok {
 			return c, nil
 		}
 	case *ast.RuneLiteral:
 		// Rule runel
-		c.debugRule("runel")
+		c.debugRuleOut("runeI")
 
 		if _, ok := ty.(*ast.RuneType); ok {
 			return c, nil
@@ -83,14 +84,17 @@ func (c Context) CheckAgainst(expr ast.Expression, ty ast.TypeValue) (Context, *
 
 	if fty, ok := ty.(*ast.ForAllType); ok {
 		// Rule ∀l
-		c.debugRule("∀l")
+		c.debugRule("∀I")
 
 		uv := &UniversalVariable{Identifier: fty.Identifier}
 		nc := c.InsertHead(uv)
 		subcheck, err := nc.CheckAgainst(expr, fty.Type)
 		if err != nil {
+			c.debugRuleFail("∀I")
 			return c, err
 		}
+
+		c.debugRuleOut("∀I")
 		return subcheck.Drop(uv), nil
 	}
 	// Rule Sub
@@ -98,8 +102,12 @@ func (c Context) CheckAgainst(expr ast.Expression, ty ast.TypeValue) (Context, *
 
 	a, theta, err := c.SynthesizesTo(expr)
 	if err != nil {
+		c.debugRuleFail("Sub")
+
 		return c, err
 	}
+
+	c.debugRuleOut("Sub")
 	return theta.Subtype(theta.Apply(a), theta.Apply(ty))
 
 }

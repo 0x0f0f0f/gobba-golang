@@ -20,6 +20,19 @@ func CheckParserErrors(t *testing.T, p *Parser) {
 	t.FailNow()
 }
 
+func TestFailures(t *testing.T) {
+	tests := []string{
+		"4 32",
+		"9283c 9n8f29n3f890jn29083fn=-=-dpvp3;r=;2c./23.c",
+	}
+	for _, tt := range tests {
+		l := lexer.New(tt)
+		p := New(l)
+		_ = p.ParseProgram()
+		assert.NotEqual(t, 0, p.errors)
+	}
+}
+
 func TestOperatorPrecedenceParsing(t *testing.T) {
 	tests := []struct {
 		input    string
@@ -142,7 +155,7 @@ func TestOperatorPrecedenceParsing(t *testing.T) {
 	for _, tt := range tests {
 		l := lexer.New(tt.input)
 		p := New(l)
-		program := p.ParseExpression(LOWEST)
+		program := p.ParseProgram()
 		CheckParserErrors(t, p)
 		actual := program.String()
 		assert.Equal(t, tt.expected, actual)

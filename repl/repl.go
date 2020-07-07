@@ -53,7 +53,7 @@ func (r *Repl) executor(line string) {
 	p.TraceOnError = r.Options.DebugParser
 
 	pri := repr.New(os.Stdout, repr.Hide(token.Token{}))
-	program := p.ParseExpression(parser.LOWEST)
+	program := p.ParseProgram()
 
 	if r.Options.ShowAST {
 		pri.Println(program)
@@ -61,25 +61,22 @@ func (r *Repl) executor(line string) {
 
 	if len(p.Errors()) != 0 {
 		for _, err := range p.Errors() {
-			fmt.Printf("%s\n", err)
+			fmt.Fprintf(os.Stderr, "%s\n", err)
 		}
 		return
 	}
 
-	fmt.Println(program.String())
-
 	// Do alpha conversion on the program (generate unique identifiers)
 	alphaconv_program, err := alpha.ProgramAlphaConversion(program)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Fprintln(os.Stderr, err)
 		return
 	}
 
 	if r.Options.ShowAST {
 		pri.Println(alphaconv_program)
+		fmt.Println((*alphaconv_program).String())
 	}
-
-	fmt.Println(program.String())
 
 	// Typecheck
 	// TODO default context with primitives
@@ -88,11 +85,11 @@ func (r *Repl) executor(line string) {
 	ast.ResetUIDCounter()
 	ty, err := ctx.SynthExpr(*alphaconv_program)
 	if err != nil {
-		fmt.Println(err)
+		fmt.Fprintln(os.Stderr, err)
 		return
 	}
 
-	fmt.Printf("- : %s\n", ty)
+	fmt.Printf("- : %s\n", ty.FancyString(map[ast.UniqueIdentifier]int{}))
 
 	// TODO evaluation
 }

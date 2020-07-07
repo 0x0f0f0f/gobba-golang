@@ -13,7 +13,7 @@ func TestIdentifierExpression(t *testing.T) {
 
 	l := lexer.New(input)
 	p := New(l)
-	program := p.ParseExpression(LOWEST)
+	program := p.ParseProgram()
 	CheckParserErrors(t, p)
 	testUniqueIdentifier(t, program, ast.UniqueIdentifier{"foobar", 0})
 }
@@ -23,7 +23,7 @@ func TestBooleanExpression(t *testing.T) {
 
 	l := lexer.New(input)
 	p := New(l)
-	program := p.ParseExpression(LOWEST)
+	program := p.ParseProgram()
 	CheckParserErrors(t, p)
 
 	stmt, ok := program.(*ast.InfixExpression)
@@ -37,7 +37,7 @@ func TestIntegerLiteralExpression(t *testing.T) {
 
 	l := lexer.New(input)
 	p := New(l)
-	program := p.ParseExpression(LOWEST)
+	program := p.ParseProgram()
 	CheckParserErrors(t, p)
 
 	literal, ok := program.(*ast.IntegerLiteral)
@@ -59,7 +59,7 @@ func TestParsingPrefixExpressions(t *testing.T) {
 	for _, tt := range prefixTests {
 		l := lexer.New(tt.input)
 		p := New(l)
-		program := p.ParseExpression(LOWEST)
+		program := p.ParseProgram()
 		CheckParserErrors(t, p)
 
 		exp, ok := program.(*ast.PrefixExpression)
@@ -95,7 +95,7 @@ func TestParsingInfixExpressions(t *testing.T) {
 	for _, tt := range infixTests {
 		l := lexer.New(tt.input)
 		p := New(l)
-		program := p.ParseExpression(LOWEST)
+		program := p.ParseProgram()
 		CheckParserErrors(t, p)
 
 		testInfixExpression(t, program, tt.leftValue, tt.operator, tt.rightValue)
@@ -117,7 +117,7 @@ func TestLetExpression(t *testing.T) {
 		l := lexer.New(tt.input)
 		p := New(l)
 
-		program := p.ParseExpression(LOWEST)
+		program := p.ParseProgram()
 		CheckParserErrors(t, p)
 
 		actual := program.String()
