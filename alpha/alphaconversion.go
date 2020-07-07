@@ -69,7 +69,7 @@ func (a *AlphaEnvironment) IdentifierAlphaConversion(uid ast.UniqueIdentifier) a
 }
 
 func (a *AlphaEnvironment) ExpressionAlphaConversion(exp ast.Expression) (ast.Expression, error) {
-	fmt.Println("uniquifying", exp, "in", a.store)
+	// fmt.Println("uniquifying", exp, "in", a.store)
 
 	switch ve := exp.(type) {
 	case *ast.UnitLiteral:
