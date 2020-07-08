@@ -15,22 +15,27 @@ func (c Context) SynthesizesTo(exp ast.Expression) (ast.TypeValue, Context, erro
 		return &ast.UnitType{}, c, nil
 	case *ast.IntegerLiteral: // Rule intI=>
 		c.debugRuleOut("intI=>")
-		return &ast.IntegerType{}, c, nil
+		return ast.NewVariableType("int"), c, nil
 	case *ast.FloatLiteral: // Rule floatI=>
 		c.debugRuleOut("floatI=>")
-		return &ast.FloatType{}, c, nil
+		return ast.NewVariableType("float"), c, nil
+
 	case *ast.ComplexLiteral: // Rule complexI=>
 		c.debugRuleOut("complexI=>")
-		return &ast.ComplexType{}, c, nil
+		return ast.NewVariableType("complex"), c, nil
+
 	case *ast.BoolLiteral: // Rule boolI=>
 		c.debugRuleOut("boolI=>")
-		return &ast.BoolType{}, c, nil
+		return ast.NewVariableType("bool"), c, nil
+
 	case *ast.StringLiteral: // Rule stringI=>
 		c.debugRuleOut("stringI=>")
-		return &ast.StringType{}, c, nil
+		return ast.NewVariableType("string"), c, nil
+
 	case *ast.RuneLiteral: // Rule runeI=>
 		c.debugRuleOut("runeI=>")
-		return &ast.RuneType{}, c, nil
+		return ast.NewVariableType("rune"), c, nil
+
 	case *ast.IdentifierExpr:
 		// Rule Var
 		c.debugRuleOut("Var")
@@ -46,7 +51,7 @@ func (c Context) SynthesizesTo(exp ast.Expression) (ast.TypeValue, Context, erro
 		// 3 premises
 		c.debugRule("ifthen<:else=> or ifelse<:then=>")
 
-		gamma1, err := c.CheckAgainst(ve.Condition, &ast.BoolType{})
+		gamma1, err := c.CheckAgainst(ve.Condition, ast.NewVariableType("bool"))
 		if err != nil {
 			c.debugRuleFail("ifthen<:else=> or ifelse<:then=>")
 			return nil, c, err

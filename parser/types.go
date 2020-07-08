@@ -8,16 +8,17 @@ import (
 )
 
 // Default types map
-
-var defaultTypes = map[token.TokenType]ast.TypeValue{
-	token.TBOOL: &ast.BoolType{},
-	token.TINT:  &ast.IntegerType{},
+var defaultTypes = map[token.TokenType]string{
+	token.TBOOL: "bool",
+	token.TINT:  "int",
 }
 
 // Parse a type value
 func (p *Parser) parseTypeValue() ast.TypeValue {
-	if ty, ok := defaultTypes[p.curToken.Type]; ok {
-		return ty
+	if p.curTokenIs(token.IDENT) {
+		return &ast.VariableType{Identifier: ast.UniqueIdentifier{Value: p.curToken.Literal}}
+	} else if p.curTokenIs(token.UNIT) {
+		return &ast.UnitType{}
 	}
 	p.expectedType(p.curToken)
 	return nil

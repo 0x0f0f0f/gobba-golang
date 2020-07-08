@@ -10,6 +10,8 @@ require (
 	github.com/mattn/go-colorable v0.1.7 // indirect
 	github.com/mattn/go-runewidth v0.0.9 // indirect
 	github.com/mattn/go-tty v0.0.3 // indirect
+	github.com/peterh/liner v1.2.0
 	github.com/pkg/term v0.0.0-20200520122047-c3ffed290a03 // indirect
 	github.com/stretchr/testify v1.4.0
+	gonum.org/v1/plot v0.7.0 // indirect
 )

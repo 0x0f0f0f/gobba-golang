@@ -1,10 +1,10 @@
 # gobba 
-gobba is a purely functional interpreted programming
-language, heavily inspired from the OCaml, Haskell and Scheme languages. It
-is based on Professors Gianluigi Ferrari and Francesca Levi's minicaml
-interpreter example. At first, gobba was written in OCaml.
-Development of the OCaml version has dropped, and from now on 
-the reference implementation of gobba will be written in the Go programming language.
+gobba is a purely functional, statically typed programming language,
+heavily inspired from OCaml, Haskell, Go and Scheme languages. It is based
+on Professors Gianluigi Ferrari and Francesca Levi's minicaml interpreter
+example..  Development of the OCaml version has dropped, and from now on
+the reference implementation of gobba will be written in the Go programming
+language.
 
 
 The goal for gobba is to be a practical language with

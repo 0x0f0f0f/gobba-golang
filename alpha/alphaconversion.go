@@ -89,13 +89,11 @@ func (a *AlphaEnvironment) ExpressionAlphaConversion(exp ast.Expression) (ast.Ex
 	case *ast.PrefixExpression:
 		nright, err := a.ExpressionAlphaConversion(ve.Right)
 		if err != nil {
-			panic(err)
 			return nil, err
 		}
 		var nexpr ast.PrefixExpression
 		err = copier.Copy(&nexpr, ve)
 		if err != nil {
-			panic(err)
 			return nil, err
 		}
 
@@ -104,18 +102,15 @@ func (a *AlphaEnvironment) ExpressionAlphaConversion(exp ast.Expression) (ast.Ex
 	case *ast.InfixExpression:
 		nright, err := a.ExpressionAlphaConversion(ve.Right)
 		if err != nil {
-			panic(err)
 			return nil, err
 		}
 		nleft, err := a.ExpressionAlphaConversion(ve.Left)
 		if err != nil {
-			panic(err)
 			return nil, err
 		}
 		var nexpr ast.InfixExpression
 		err = copier.Copy(&nexpr, ve)
 		if err != nil {
-			panic(err)
 			return nil, err
 		}
 		nexpr.Left = nleft
@@ -125,13 +120,11 @@ func (a *AlphaEnvironment) ExpressionAlphaConversion(exp ast.Expression) (ast.Ex
 	case *ast.IdentifierExpr:
 		uid, err := a.Get(ve.Identifier.Value)
 		if err != nil {
-			panic(err)
 			return nil, err
 		}
 		var newexpr ast.IdentifierExpr
 		err = copier.Copy(&newexpr, ve)
 		if err != nil {
-			panic(err)
 			return nil, err
 		}
 		newexpr.Identifier = uid
@@ -142,14 +135,12 @@ func (a *AlphaEnvironment) ExpressionAlphaConversion(exp ast.Expression) (ast.Ex
 
 		nbody, err := na.ExpressionAlphaConversion(ve.Body)
 		if err != nil {
-			panic(err)
 			return nil, err
 		}
 
 		var newexpr ast.FunctionLiteral
 		err = copier.Copy(&newexpr, ve)
 		if err != nil {
-			panic(err)
 			return nil, err
 		}
 		newexpr.Param.Identifier = nid
@@ -161,14 +152,12 @@ func (a *AlphaEnvironment) ExpressionAlphaConversion(exp ast.Expression) (ast.Ex
 
 		nbody, err := na.ExpressionAlphaConversion(ve.Body)
 		if err != nil {
-			panic(err)
 			return nil, err
 		}
 
 		var newexpr ast.FixExpr
 		err = copier.Copy(&newexpr, ve)
 		if err != nil {
-			panic(err)
 			return nil, err
 		}
 		newexpr.Param.Identifier = nid
@@ -177,19 +166,16 @@ func (a *AlphaEnvironment) ExpressionAlphaConversion(exp ast.Expression) (ast.Ex
 	case *ast.ApplyExpr:
 		nfun, err := a.ExpressionAlphaConversion(ve.Function)
 		if err != nil {
-			panic(err)
 			return nil, err
 		}
 		narg, err := a.ExpressionAlphaConversion(ve.Arg)
 		if err != nil {
-			panic(err)
 			return nil, err
 		}
 
 		var nexpr ast.ApplyExpr
 		err = copier.Copy(&nexpr, ve)
 		if err != nil {
-			panic(err)
 			return nil, err
 		}
 		nexpr.Function = nfun
@@ -198,23 +184,19 @@ func (a *AlphaEnvironment) ExpressionAlphaConversion(exp ast.Expression) (ast.Ex
 	case *ast.IfExpression:
 		ncond, err := a.ExpressionAlphaConversion(ve.Condition)
 		if err != nil {
-			panic(err)
 			return nil, err
 		}
 		ntbr, err := a.ExpressionAlphaConversion(ve.Consequence)
 		if err != nil {
-			panic(err)
 			return nil, err
 		}
 		nfbr, err := a.ExpressionAlphaConversion(ve.Alternative)
 		if err != nil {
-			panic(err)
 			return nil, err
 		}
 		var nexpr ast.IfExpression
 		err = copier.Copy(&nexpr, ve)
 		if err != nil {
-			panic(err)
 			return nil, err
 		}
 		nexpr.Condition = ncond
@@ -225,13 +207,11 @@ func (a *AlphaEnvironment) ExpressionAlphaConversion(exp ast.Expression) (ast.Ex
 	case *ast.AnnotExpr:
 		nbody, err := a.ExpressionAlphaConversion(ve.Body)
 		if err != nil {
-			panic(err)
 			return nil, err
 		}
 		var nexpr ast.AnnotExpr
 		err = copier.Copy(&nexpr, ve)
 		if err != nil {
-			panic(err)
 			return nil, err
 		}
 		nexpr.Body = nbody

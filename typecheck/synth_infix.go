@@ -8,27 +8,27 @@ import (
 func (c Context) synthComparison(leftt, rightt ast.TypeValue) (ast.TypeValue, Context, error) {
 	// TODO, when interfaces are implemented, check if exp
 	// implements the `comparable` interface
-	theta, err := c.Subtype(leftt, rightt)
+	gamma1, err := c.Subtype(leftt, rightt)
 	if err != nil {
 		return nil, c, c.expectedSameTypeComparison(leftt, rightt)
 	}
 
-	theta1, err := theta.Subtype(rightt, leftt)
+	gamma2, err := gamma1.Subtype(rightt, leftt)
 	if err != nil {
 		return nil, c, c.expectedSameTypeComparison(leftt, rightt)
 	}
 
-	return &ast.BoolType{}, theta1, nil
+	return ast.NewVariableType("bool"), theta1, nil
 
 }
 
 func (c Context) synthInfixExpr(exp *ast.InfixExpression) (ast.TypeValue, Context, error) {
 	// Synthesize types for operands
-	leftt, gamma, err := c.SynthesizesTo(exp.Left)
+	leftt, gamma1, err := c.SynthesizesTo(exp.Left)
 	if err != nil {
 		return nil, c, err
 	}
-	rightt, gamma1, err := gamma.SynthesizesTo(exp.Right)
+	rightt, theta, err := gamma1.SynthesizesTo(exp.Right)
 	if err != nil {
 		return nil, c, err
 	}
@@ -59,39 +59,38 @@ func (c Context) synthInfixExpr(exp *ast.InfixExpression) (ast.TypeValue, Contex
 
 		// }
 
-		gamma1.debugRule("AAAAAAAAAAAAA" + leftt.FullString() + " " + rightt.FullString())
+		theta.debugRule("AAAAAAAAAAAAA" + leftt.FullString() + " " + rightt.FullString())
 
-		theta, err := gamma1.Subtype(leftt, &ast.NumberType{})
+		theta1, err := theta.Subtype(leftt, ast.NewVariableType("number"))
 		if err != nil {
 			return nil, c, err
 		}
 
-		theta1, err := theta.Subtype(rightt, &ast.NumberType{})
+		delta, err := theta1.Subtype(rightt, ast.NewVariableType("number"))
 		if err != nil {
 			return nil, c, err
 		}
 
-		var delta Context
-		leftapp := theta1.Apply(leftt)
-		rightapp := theta1.Apply(rightt)
+		leftapp := delta.Apply(leftt)
+		rightapp := delta.Apply(rightt)
 
-		theta1.debugRule("BBBBBBBBBBBB " + leftapp.FullString() + " " + rightapp.FullString())
+		delta.debugRule("BBBBBBBBBBBB " + leftapp.FullString() + " " + rightapp.FullString())
 
 		// Try to see if left <: right
-		delta, err = theta1.Subtype(leftapp, rightapp)
+		_, err = delta.Subtype(leftapp, rightapp)
 		if err != nil {
 			// Try the other way around
-			delta, err = theta1.Subtype(rightapp, leftapp)
+			_, err = delta.Subtype(rightapp, leftapp)
 			if err != nil {
 				return nil, c, err
 			}
 			// Rule ◦RSubL=>
 			c.debugRule("◦RSubL=>")
-			return leftt, delta, nil
+			return leftt, theta, nil
 		}
 		// Rule ◦LSubR=>
 		c.debugRule("◦LSubR=>")
-		return rightt, delta, nil
+		return rightt, theta, nil
 
 	default:
 		// TODO

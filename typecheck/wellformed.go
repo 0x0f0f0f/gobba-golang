@@ -10,7 +10,7 @@ func (c *Context) IsWellFormed(t ast.TypeValue) bool {
 	switch v := t.(type) {
 	// Rule UvarWF
 	case *ast.VariableType:
-		return c.HasUniversalVariable(v.Identifier)
+		return c.HasTypeVar(v.Identifier)
 	// Rule ArrowWF
 	case *ast.LambdaType:
 		return c.IsWellFormed(v.Domain) && c.IsWellFormed(v.Codomain)

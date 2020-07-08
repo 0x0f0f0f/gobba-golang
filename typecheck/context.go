@@ -178,7 +178,10 @@ func (c Context) Concat(rc Context) Context {
 }
 
 // True if the context contain the universal variable with the given identifier
-func (c Context) HasUniversalVariable(alpha ast.UniqueIdentifier) bool {
+func (c Context) HasTypeVar(alpha ast.UniqueIdentifier) bool {
+	if _, ok := ast.DefaultVariableTypes[alpha.Value]; ok {
+		return true
+	}
 	for _, c := range c.Contents {
 		if v, ok := c.(*UniversalVariable); ok {
 			if v.Identifier.Value == alpha.Value {

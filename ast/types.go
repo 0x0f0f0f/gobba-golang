@@ -17,14 +17,9 @@ type TypeValue interface {
 // Definitions of types of values that compose an algorithmic type context
 // ======================================================================
 
-type UnitType struct{}
-type IntegerType struct{}
-type FloatType struct{}
-type ComplexType struct{}
-type NumberType struct{}
-type BoolType struct{}
-type StringType struct{}
-type RuneType struct{}
+type UnitType struct {
+	Identifier UniqueIdentifier
+}
 
 // Denoted with α in the paper
 type VariableType struct {
@@ -49,29 +44,31 @@ type ExistsType struct {
 }
 
 func (u *UnitType) typeValue()     {}
-func (u *IntegerType) typeValue()  {}
-func (u *FloatType) typeValue()    {}
-func (u *ComplexType) typeValue()  {}
-func (u *NumberType) typeValue()   {}
-func (u *BoolType) typeValue()     {}
-func (u *StringType) typeValue()   {}
-func (u *RuneType) typeValue()     {}
 func (u *VariableType) typeValue() {}
 func (u *ForAllType) typeValue()   {}
 func (u *LambdaType) typeValue()   {}
 func (u *ExistsType) typeValue()   {}
 
 func (u *UnitType) IsMonotype() bool     { return true }
-func (u *IntegerType) IsMonotype() bool  { return true }
-func (u *FloatType) IsMonotype() bool    { return true }
-func (u *ComplexType) IsMonotype() bool  { return true }
-func (u *NumberType) IsMonotype() bool   { return true }
-func (u *BoolType) IsMonotype() bool     { return true }
-func (u *StringType) IsMonotype() bool   { return true }
-func (u *RuneType) IsMonotype() bool     { return true }
 func (u *VariableType) IsMonotype() bool { return true }
 func (u *ForAllType) IsMonotype() bool   { return false }
 func (u *ExistsType) IsMonotype() bool   { return true }
 func (u *LambdaType) IsMonotype() bool   { return u.Domain.IsMonotype() && u.Codomain.IsMonotype() }
 
 // TODO record types
+
+// Default variable types
+
+func NewVariableType(name string) *VariableType {
+	return &VariableType{Identifier: UniqueIdentifier{Value: name}}
+}
+
+var DefaultVariableTypes map[string]*VariableType = map[string]*VariableType{
+	"bool":    NewVariableType("bool"),
+	"int":     NewVariableType("int"),
+	"float":   NewVariableType("float"),
+	"complex": NewVariableType("complex"),
+	"number":  NewVariableType("number"),
+	"rune":    NewVariableType("rune"),
+	"string":  NewVariableType("string"),
+}

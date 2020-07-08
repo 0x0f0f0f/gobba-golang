@@ -26,94 +26,56 @@ func (c Context) Subtype(a, b ast.TypeValue) (Context, error) {
 		if _, ok := b.(*ast.UnitType); ok {
 			return c, nil
 		}
-	case *ast.BoolType:
-		// Rule <:bool
-		c.debugRule("<:bool")
+	case *ast.VariableType:
+		if vb, ok := b.(*ast.VariableType); ok {
+			if va.Identifier == vb.Identifier {
+				// Rule <:Var
+				c.debugRule("<:Var")
 
-		if _, ok := b.(*ast.BoolType); ok {
-			return c, nil
+				return c, nil
+			}
+			switch va.Identifier.Value {
+			case "int":
+				switch vb.Identifier.Value {
+				case "float":
+					// Rule int<:float
+					c.debugRule("int<:float")
+					return c, nil
+				case "complex":
+					// Rule int<:complex
+					c.debugRule("int<:complex")
+					return c, nil
+				case "number":
+					// Rule int<:number
+					c.debugRule("int<:number")
+					return c, nil
+
+				}
+			case "float":
+				switch vb.Identifier.Value {
+				case "complex":
+					// Rule float<:complex
+					c.debugRule("float<:complex")
+					return c, nil
+				case "number":
+					// Rule float<:number
+					c.debugRule("float<:number")
+					return c, nil
+				}
+
+			case "complex":
+				switch vb.Identifier.Value {
+				case "number":
+					// Rule complex<:number
+					c.debugRule("complex<:number")
+					return c, nil
+				}
+
+			}
 		}
-
-		// =============================================================
-		// Numerical Subtyping Rules
-		// =============================================================
-
-	case *ast.IntegerType:
-		switch b.(type) {
-		case *ast.IntegerType:
-			// Rule <:int
-			c.debugRule("<:int")
-			return c, nil
-		case *ast.FloatType:
-			// Rule int<:float
-			c.debugRule("int<:float")
-			return c, nil
-		case *ast.ComplexType:
-			// Rule int<:complex
-			c.debugRule("int<:complex")
-			return c, nil
-		case *ast.NumberType:
-			// Rule int<:number
-			c.debugRule("int<:number")
-			return c, nil
-
-		}
-	case *ast.FloatType:
-		switch b.(type) {
-		case *ast.FloatType:
-			// Rule <:float
-			c.debugRule("<:float")
-			return c, nil
-		case *ast.ComplexType:
-			// Rule float<:complex
-			c.debugRule("float<:complex")
-			return c, nil
-		case *ast.NumberType:
-			// Rule float<:number
-			c.debugRule("float<:number")
-			return c, nil
-		}
-	case *ast.ComplexType:
-		switch b.(type) {
-		case *ast.ComplexType:
-			// Rule <:complex
-			c.debugRule("<:complex")
-			return c, nil
-		case *ast.NumberType:
-			// Rule complex<:number
-			c.debugRule("complex<:number")
-			return c, nil
-
-		}
-	case *ast.NumberType:
-		switch b.(type) {
-		case *ast.NumberType:
-			// Rule <:number
-			c.debugRule("<:number")
-			return c, nil
-		}
-
 		// =============================================================
 		// Other Primitive Subtyping Rules
 		// =============================================================
-
-	case *ast.StringType:
-		switch b.(type) {
-		case *ast.StringType:
-			// Rule <:string
-			c.debugRule("<:string")
-			return c, nil
-		}
-
-	case *ast.VariableType:
-		if vb, ok := b.(*ast.VariableType); ok {
-			// Rule <:Var
-			c.debugRule("<:Var")
-
-			if va.Identifier == vb.Identifier {
-				return c, nil
-			}
-		}
 
 	case *ast.ExistsType:
 		if vb, ok := b.(*ast.ExistsType); ok {

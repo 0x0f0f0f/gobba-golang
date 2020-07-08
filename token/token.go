@@ -97,13 +97,13 @@ var keywords = map[string]TokenType{
 	"true":   TRUE,
 	"false":  FALSE,
 	// Keyword types
-	"bool":    TBOOL,
-	"int":     TINT,
-	"float":   TFLOAT,
-	"complex": TCOMPLEX,
-	"number":  TNUMBER,
-	"rune":    TRUNE,
-	"string":  TSTRING,
+	// "bool":    TBOOL,
+	// "int":     TINT,
+	// "float":   TFLOAT,
+	// "complex": TCOMPLEX,
+	// "number":  TNUMBER,
+	// "rune":    TRUNE,
+	// "string":  TSTRING,
 }
 
 // Check the keywords table to see whether the given

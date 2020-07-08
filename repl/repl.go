@@ -9,35 +9,86 @@ import (
 	"github.com/0x0f0f0f/gobba-golang/token"
 	"github.com/0x0f0f0f/gobba-golang/typecheck"
 	"github.com/alecthomas/repr"
-	"github.com/c-bata/go-prompt"
+	// "github.com/c-bata/go-prompt"
+	"github.com/peterh/liner"
 	"os"
+	"path/filepath"
 )
 
 type ReplOptions struct {
-	ShowAST      bool
-	ShowTok      bool
-	DebugParser  bool
-	PromptString string
+	ShowAST         bool
+	ShowTok         bool
+	DebugParser     bool
+	PromptString    string
+	HistoryFilename string
 }
 
 type Repl struct {
 	Options *ReplOptions
-	prompt  *prompt.Prompt
+	// prompt  *prompt.Prompt
+	line *liner.State
 }
 
 // TODO go-prompt live prefix
 
 func New(o *ReplOptions) *Repl {
 	r := &Repl{}
-	p := prompt.New(r.executor, r.completer)
-	r.prompt = p
-	r.Options = o
+	// p := prompt.New(r.executor, r.completer)
+	line := liner.NewLiner()
 
+	home, err := os.UserHomeDir()
+	if err != nil {
+		panic(err)
+	}
+	o.HistoryFilename = filepath.Join(home, ".gobba_history")
+
+	if f, err := os.Open(o.HistoryFilename); err == nil {
+		line.ReadHistory(f)
+		f.Close()
+	} else if os.IsNotExist(err) {
+		if f, err := os.Create(o.HistoryFilename); err == nil {
+			f.Close()
+		} else {
+			panic(err)
+
+		}
+	} else {
+		panic(err)
+	}
+
+	line.SetCtrlCAborts(true)
+
+	r.Options = o
+	r.line = line
 	return r
 }
 
 func (r *Repl) Start() {
-	r.prompt.Run()
+	run := true
+	for run {
+		if l, err := r.line.Prompt("> "); err == nil {
+			r.line.AppendHistory(l)
+			r.executor(l)
+		} else if err == liner.ErrPromptAborted {
+			fmt.Fprintln(os.Stderr, "Aborted")
+		} else if err.Error() == "EOF" {
+			run = false
+		} else {
+			repr.Println(err)
+			fmt.Fprintln(os.Stderr, "Error reading line: ", err)
+			run = false
+		}
+
+		if f, err := os.Create(r.Options.HistoryFilename); err != nil {
+			fmt.Fprintln(os.Stderr, "Error writing history file: ", err)
+			run = false
+		} else {
+			r.line.WriteHistory(f)
+			f.Close()
+		}
+
+	}
+	r.line.Close()
 }
 
 func (r *Repl) executor(line string) {
@@ -94,6 +145,6 @@ func (r *Repl) executor(line string) {
 	// TODO evaluation
 }
 
-func (r *Repl) completer(t prompt.Document) []prompt.Suggest {
-	return []prompt.Suggest{}
-}
+// func (r *Repl) completer(t prompt.Document) []prompt.Suggest {
+// return []prompt.Suggest{}
+// }

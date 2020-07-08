@@ -7,15 +7,8 @@ import (
 // This file contains string representation of type values
 
 func (u *UnitType) String() string     { return "unit" }
-func (u *IntegerType) String() string  { return "int" }
-func (u *FloatType) String() string    { return "float" }
-func (u *ComplexType) String() string  { return "complex" }
-func (u *NumberType) String() string   { return "number" }
-func (u *BoolType) String() string     { return "bool" }
-func (u *StringType) String() string   { return "string" }
-func (u *RuneType) String() string     { return "rune" }
 func (u *ExistsType) String() string   { return "∃'" + u.Identifier.String() }
-func (u *VariableType) String() string { return "'" + u.Identifier.String() }
+func (u *VariableType) String() string { return u.Identifier.String() }
 func (u *ForAllType) String() string {
 	return fmt.Sprintf("∀%s.%s", u.Identifier.String(), u.Type.String())
 }
@@ -25,14 +18,7 @@ func (u *LambdaType) String() string {
 }
 
 func (u *UnitType) FullString() string     { return u.String() }
-func (u *IntegerType) FullString() string  { return u.String() }
-func (u *FloatType) FullString() string    { return u.String() }
-func (u *ComplexType) FullString() string  { return u.String() }
-func (u *NumberType) FullString() string   { return u.String() }
-func (u *BoolType) FullString() string     { return u.String() }
-func (u *StringType) FullString() string   { return u.String() }
-func (u *RuneType) FullString() string     { return u.String() }
-func (u *VariableType) FullString() string { return "'" + u.Identifier.FullString() }
+func (u *VariableType) FullString() string { return u.Identifier.FullString() }
 func (u *ForAllType) FullString() string {
 	return fmt.Sprintf("∀%s.%s", u.Identifier.FullString(), u.Type.String())
 }
@@ -60,19 +46,12 @@ func genFancy(occ map[UniqueIdentifier]int, id UniqueIdentifier) string {
 
 }
 
-func (u *UnitType) FancyString(occ map[UniqueIdentifier]int) string    { return "unit" }
-func (u *IntegerType) FancyString(occ map[UniqueIdentifier]int) string { return "int" }
-func (u *FloatType) FancyString(occ map[UniqueIdentifier]int) string   { return "float" }
-func (u *ComplexType) FancyString(occ map[UniqueIdentifier]int) string { return "complex" }
-func (u *NumberType) FancyString(occ map[UniqueIdentifier]int) string  { return "number" }
-func (u *BoolType) FancyString(occ map[UniqueIdentifier]int) string    { return "bool" }
-func (u *StringType) FancyString(occ map[UniqueIdentifier]int) string  { return "string" }
-func (u *RuneType) FancyString(occ map[UniqueIdentifier]int) string    { return "rune" }
+func (u *UnitType) FancyString(occ map[UniqueIdentifier]int) string { return "unit" }
 func (u *ExistsType) FancyString(occ map[UniqueIdentifier]int) string {
 	return "'" + genFancy(occ, u.Identifier)
 }
 func (u *VariableType) FancyString(occ map[UniqueIdentifier]int) string {
-	return "'" + genFancy(occ, u.Identifier)
+	return u.String()
 }
 func (u *ForAllType) FancyString(occ map[UniqueIdentifier]int) string {
 	return fmt.Sprintf("∀%s.%s", genFancy(occ, u.Identifier), u.Type.FancyString(occ))

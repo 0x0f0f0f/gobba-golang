@@ -29,6 +29,10 @@ func TestSynthExpr(t *testing.T) {
 		"if true then 4 else 4.5":                "float",
 		"if true then true else false":           "bool",
 		"fun (x) {x()}(fun (y) {y})":             "unit",
+		// Stressing inference
+		"let swap = fun(x,y,f) {f(y,x)}; " +
+			"let firstid = fun(a,b) {a};" +
+			"swap(3,\"ciao\",firstid)": "string",
 		// Fixed point combinator
 		"let f = fun (x) {if x <= 1 then 1 else f(x)}; f":             "int -> int",
 		"let id = fun(a){a}; let id1 = fun(b){b}; let f = id(id1); f": "'a -> 'a",
