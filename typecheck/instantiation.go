@@ -5,7 +5,7 @@ import (
 )
 
 // Defined in the Instantiation paragraph:
-// α^ :=< B, instantiate α^ such that α^ <: B
+// α^ :=< A, instantiate α^ such that α^ <: A
 func (c Context) InstantiateL(alpha ast.UniqueIdentifier, ty ast.TypeValue) Context {
 	c.debugSection("InstantiateL", alpha.FullString(), ":=<", ty.FullString())
 	exv := &ExistentialVariable{alpha, nil}
@@ -18,7 +18,7 @@ func (c Context) InstantiateL(alpha ast.UniqueIdentifier, ty ast.TypeValue) Cont
 		solved := &ExistentialVariable{alpha, &ty}
 		c = c.Insert(exv, []ContextValue{solved})
 		c.debugRuleOut("InstLSolve")
-		return c
+		// return c
 	}
 
 	switch vty := ty.(type) {
@@ -85,8 +85,9 @@ func (c Context) InstantiateL(alpha ast.UniqueIdentifier, ty ast.TypeValue) Cont
 	return c
 }
 
-// A =<: α^, instantiate α^ such that α^ <: B
+// A =<: α^, instantiate α^ such that A <: α^
 func (c Context) InstantiateR(ty ast.TypeValue, alpha ast.UniqueIdentifier) Context {
+
 	exv := &ExistentialVariable{alpha, nil}
 	leftc, rightc := c.SplitAt(exv)
 	if ty.IsMonotype() && leftc.IsWellFormed(ty) {
@@ -96,7 +97,7 @@ func (c Context) InstantiateR(ty ast.TypeValue, alpha ast.UniqueIdentifier) Cont
 		solved := &ExistentialVariable{alpha, &ty}
 		c = c.Insert(exv, []ContextValue{solved})
 		c.debugRuleOut("InstRSolve")
-		return c
+		// return c
 	}
 
 	switch va := ty.(type) {

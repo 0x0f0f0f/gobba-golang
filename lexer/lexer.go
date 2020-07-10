@@ -233,6 +233,14 @@ func (l *Lexer) NextToken() token.Token {
 			ch := l.ch
 			l.readChar()
 			tok = l.newToken(token.CONCAT, string(ch)+string(l.ch))
+		} else if l.peekChar() == '.' {
+			ch := l.ch
+			l.readChar()
+			tok = l.newToken(token.FPLUS, string(ch)+string(l.ch))
+		} else if l.peekChar() == ':' {
+			ch := l.ch
+			l.readChar()
+			tok = l.newToken(token.CPLUS, string(ch)+string(l.ch))
 		} else {
 			tok = l.newToken(token.PLUS, string(l.ch))
 		}
@@ -241,6 +249,14 @@ func (l *Lexer) NextToken() token.Token {
 			ch := l.ch
 			l.readChar()
 			tok = l.newToken(token.RARROW, string(ch)+string(l.ch))
+		} else if l.peekChar() == '.' {
+			ch := l.ch
+			l.readChar()
+			tok = l.newToken(token.FMINUS, string(ch)+string(l.ch))
+		} else if l.peekChar() == ':' {
+			ch := l.ch
+			l.readChar()
+			tok = l.newToken(token.CMINUS, string(ch)+string(l.ch))
 		} else {
 			tok = l.newToken(token.MINUS, string(l.ch))
 		}
@@ -253,9 +269,31 @@ func (l *Lexer) NextToken() token.Token {
 	case '}':
 		tok = l.newToken(token.RBRACKET, string(l.ch))
 	case '*':
-		tok = l.newToken(token.TIMES, string(l.ch))
+		if l.peekChar() == '.' {
+			ch := l.ch
+			l.readChar()
+			tok = l.newToken(token.FTIMES, string(ch)+string(l.ch))
+		} else if l.peekChar() == ':' {
+			ch := l.ch
+			l.readChar()
+			tok = l.newToken(token.CTIMES, string(ch)+string(l.ch))
+		} else {
+			tok = l.newToken(token.TIMES, string(l.ch))
+		}
+
 	case '/':
-		tok = l.newToken(token.DIVIDE, string(l.ch))
+		if l.peekChar() == '.' {
+			ch := l.ch
+			l.readChar()
+			tok = l.newToken(token.FDIVIDE, string(ch)+string(l.ch))
+		} else if l.peekChar() == ':' {
+			ch := l.ch
+			l.readChar()
+			tok = l.newToken(token.CDIVIDE, string(ch)+string(l.ch))
+		} else {
+			tok = l.newToken(token.DIVIDE, string(l.ch))
+		}
+
 	case '^':
 		tok = l.newToken(token.TOPOW, string(l.ch))
 	case '=':

@@ -1,8 +1,9 @@
 package typecheck
 
 import (
-	"fmt"
+	// "fmt"
 	"github.com/0x0f0f0f/gobba-golang/ast"
+	"github.com/0x0f0f0f/gobba-golang/token"
 )
 
 func (c Context) synthComparison(leftt, rightt ast.TypeValue) (ast.TypeValue, Context, error) {
@@ -18,7 +19,7 @@ func (c Context) synthComparison(leftt, rightt ast.TypeValue) (ast.TypeValue, Co
 		return nil, c, c.expectedSameTypeComparison(leftt, rightt)
 	}
 
-	return ast.NewVariableType("bool"), theta1, nil
+	return ast.TBOOL, gamma2, nil
 
 }
 
@@ -33,69 +34,38 @@ func (c Context) synthInfixExpr(exp *ast.InfixExpression) (ast.TypeValue, Contex
 		return nil, c, err
 	}
 
+	if resultt, ok := ast.OperatorTypes[exp.Operator]; ok {
+		psi, err := theta.Subtype(leftt, resultt.Left)
+		if err != nil {
+			return nil, c, err
+		}
+
+		delta, err := psi.Subtype(rightt, resultt.Right)
+		if err != nil {
+			return nil, c, err
+		}
+
+		return resultt.Result, delta, err
+
+	}
+
 	switch exp.Operator {
 	// ======================================================================
 	// Comparison Operators
 	// ======================================================================
-	case "=":
+	case token.EQUALS:
 		return gamma1.synthComparison(leftt, rightt)
-	case ">":
+	case token.GREATER:
 		return gamma1.synthComparison(leftt, rightt)
-	case "<":
+	case token.LESS:
 		return gamma1.synthComparison(leftt, rightt)
-	case "<=":
+	case token.LESSEQ:
 		return gamma1.synthComparison(leftt, rightt)
-	case ">=":
+	case token.GREATEREQ:
 		return gamma1.synthComparison(leftt, rightt)
-
-	case "+":
-		// FIXME
-
-		fmt.Println("aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa", leftt.FullString())
-
-		// If the left operand is an existential variable
-
-		// if leftext, ok := leftt.(*ast.ExistsType); ok {
-
-		// }
-
-		theta.debugRule("AAAAAAAAAAAAA" + leftt.FullString() + " " + rightt.FullString())
-
-		theta1, err := theta.Subtype(leftt, ast.NewVariableType("number"))
-		if err != nil {
-			return nil, c, err
-		}
-
-		delta, err := theta1.Subtype(rightt, ast.NewVariableType("number"))
-		if err != nil {
-			return nil, c, err
-		}
-
-		leftapp := delta.Apply(leftt)
-		rightapp := delta.Apply(rightt)
-
-		delta.debugRule("BBBBBBBBBBBB " + leftapp.FullString() + " " + rightapp.FullString())
-
-		// Try to see if left <: right
-		_, err = delta.Subtype(leftapp, rightapp)
-		if err != nil {
-			// Try the other way around
-			_, err = delta.Subtype(rightapp, leftapp)
-			if err != nil {
-				return nil, c, err
-			}
-			// Rule ◦RSubL=>
-			c.debugRule("◦RSubL=>")
-			return leftt, theta, nil
-		}
-		// Rule ◦LSubR=>
-		c.debugRule("◦LSubR=>")
-		return rightt, theta, nil
-
 	default:
 		// TODO
-		panic("Type synthesis Not yet implemented for expression " + exp.String())
-
+		return nil, c, c.synthError(exp)
 	}
 
 	return nil, c, c.synthError(exp)

@@ -2,6 +2,7 @@ package typecheck
 
 import (
 	"github.com/0x0f0f0f/gobba-golang/ast"
+	"github.com/0x0f0f0f/gobba-golang/token"
 )
 
 // This file contains definitions for the Algorithmic Subtyping rules
@@ -27,7 +28,8 @@ func (c Context) Subtype(a, b ast.TypeValue) (Context, error) {
 			return c, nil
 		}
 	case *ast.VariableType:
-		if vb, ok := b.(*ast.VariableType); ok {
+		switch vb := b.(type) {
+		case *ast.VariableType:
 			if va.Identifier == vb.Identifier {
 				// Rule <:Var
 				c.debugRule("<:Var")
@@ -35,44 +37,29 @@ func (c Context) Subtype(a, b ast.TypeValue) (Context, error) {
 				return c, nil
 			}
 			switch va.Identifier.Value {
-			case "int":
+			case token.TINT:
 				switch vb.Identifier.Value {
-				case "float":
+				case token.TFLOAT:
 					// Rule int<:float
 					c.debugRule("int<:float")
 					return c, nil
-				case "complex":
+				case token.TCOMPLEX:
 					// Rule int<:complex
 					c.debugRule("int<:complex")
 					return c, nil
-				case "number":
-					// Rule int<:number
-					c.debugRule("int<:number")
-					return c, nil
 
 				}
-			case "float":
+			case token.TFLOAT:
 				switch vb.Identifier.Value {
-				case "complex":
+				case token.TCOMPLEX:
 					// Rule float<:complex
 					c.debugRule("float<:complex")
 					return c, nil
-				case "number":
-					// Rule float<:number
-					c.debugRule("float<:number")
-					return c, nil
 				}
-
-			case "complex":
-				switch vb.Identifier.Value {
-				case "number":
-					// Rule complex<:number
-					c.debugRule("complex<:number")
-					return c, nil
-				}
-
 			}
+
 		}
+
 		// =============================================================
 		// Other Primitive Subtyping Rules
 		// =============================================================
@@ -95,7 +82,8 @@ func (c Context) Subtype(a, b ast.TypeValue) (Context, error) {
 		}
 
 	case *ast.LambdaType:
-		if vb, ok := b.(*ast.LambdaType); ok {
+		switch vb := b.(type) {
+		case *ast.LambdaType:
 			// Rule <:->
 			c.debugRule("<:->")
 

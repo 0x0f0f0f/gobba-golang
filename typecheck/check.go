@@ -96,9 +96,9 @@ func (c Context) CheckAgainst(expr ast.Expression, ty ast.TypeValue) (Context, e
 				c.debugRuleFail("->l")
 				return c, err
 			}
-			outc := subcheck.Drop(typedvar)
+			// outc := subcheck.Drop(typedvar)
 			c.debugRuleOut("->l")
-			return outc, nil
+			return subcheck, nil
 		}
 
 	}

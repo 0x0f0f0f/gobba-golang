@@ -1,7 +1,6 @@
 package typecheck
 
 import (
-	"fmt"
 	"github.com/0x0f0f0f/gobba-golang/alpha"
 	"github.com/0x0f0f0f/gobba-golang/ast"
 	"github.com/0x0f0f0f/gobba-golang/lexer"
@@ -38,14 +37,38 @@ func TestSynthExpr(t *testing.T) {
 		"let id = fun(a){a}; let id1 = fun(b){b}; let f = id(id1); f": "'a -> 'a",
 		"let x = 4 and y = 3.2 and f = fun(x,y) {x}; f(y)":            "'a -> float",
 		// Arithmetic Operators
-		"4.5 + 4": "float",
+		"4.5 +. 4":     "float",
+		"4 +: 3+3i":    "complex",
+		"0 + 1":        "int",
+		"4.5 +: 3+14i": "complex",
+		// Left in binop is existential
+		"fun (x) {x+1}(3)":              "int",
+		"fun (x) {x +. 1.5}(3)":         "float",
+		"fun (x) {x +. 1.5}(3.5)":       "float",
+		"fun (x) {x +: 1.5+3i}(3)":      "complex",
+		"fun (x) {x +: 1.5+3i}(3.5)":    "complex",
+		"fun (x) {x +: 1.5+3i}(3.5+3i)": "complex",
+		"fun (x) {x-1}(3)":              "int",
+		"fun (x) {x -. 1.5}(3)":         "float",
+		"fun (x) {x -. 1.5}(3.5)":       "float",
+		"fun (x) {x -: 1.5-3i}(3)":      "complex",
+		"fun (x) {x -: 1.5-3i}(3.5)":    "complex",
+		"fun (x) {x -: 1.5-3i}(3.5-3i)": "complex",
+		// Right in binop is existential
+		"fun (x) {1 + x}(3)":            "int",
+		"fun (x) {1.5 +. x}(3)":         "float",
+		"fun (x) {1.5 +. x}(3.5)":       "float",
+		"fun (x) {1.5+3i +: x}(3)":      "complex",
+		"fun (x) {1.5+3i +: x}(3.5)":    "complex",
+		"fun (x) {1.5+3i +: x}(3.5+3i)": "complex",
+
 		// Type annotation functions
 		"fun (x: int, y: int) { if x = 2 then y else 0}": "int -> int -> int",
 		"fun (x: bool, y) {x = y}":                       "bool -> bool -> bool",
 	}
 
 	for input, expected := range tests {
-		fmt.Println("--- TEST CASE", input, "---")
+		t.Log("--- TEST CASE", input, "---")
 		l := lexer.New(input)
 		p := parser.New(l)
 		program := p.ParseProgram()
@@ -71,13 +94,22 @@ func TestSynthExprFail(t *testing.T) {
 		// Nonsensical programs
 		"2 + \"ciao\"",
 		"fun(x) {x+1}(\"ciao\")",
+		"fun(x) {1+x}(\"ciao\")",
+		"fun(x,y) {x+y}(\"ciao\")",
 		"fun (x) {x()}(fun (y) {y+1})",
 		// Impredicativeness
 		"fun (x) {x(x, ())}",
+		// Arithmetical imprecision
+		"fun (x) {x+1}(3.5)",
+		"fun (x) {x+1}(3.5+3i)",
+		"fun (x) {x+1.5}(3.5+3i)",
+		"fun (x) {1+x}(3.5)",
+		"fun (x) {1+x}(3.5+3i)",
+		"fun (x) {1.5+x}(3.5+3i)",
 	}
 
 	for _, input := range tests {
-		fmt.Println("--- TEST CASE", input, "---")
+		t.Log("--- TEST CASE", input, "---")
 		l := lexer.New(input)
 		p := parser.New(l)
 		program := p.ParseProgram()

@@ -217,6 +217,18 @@ func (c Context) GetSolvedVariable(alpha ast.UniqueIdentifier) *ast.TypeValue {
 	return nil
 }
 
+func (c Context) GetUnsolvedVariables() []ast.TypeValue {
+	res := []ast.TypeValue{}
+	for _, c := range c.Contents {
+		if v, ok := c.(*ExistentialVariable); ok {
+			if v.Value == nil {
+				res = append(res, &ast.ExistsType{Identifier: v.Identifier})
+			}
+		}
+	}
+	return res
+}
+
 // Return the type of a type annotation.
 func (c Context) GetAnnotation(alpha ast.UniqueIdentifier) *ast.TypeValue {
 	for _, c := range c.Contents {

@@ -124,6 +124,7 @@ func (c Context) SynthesizesTo(exp ast.Expression) (ast.TypeValue, Context, erro
 		deltadrop.debugRuleOut("->I=>")
 
 		return funtype, deltadrop, nil
+
 	case *ast.FixExpr:
 		// Rule fixI=>
 		c.debugRule("fixI=>")
@@ -160,6 +161,8 @@ func (c Context) SynthesizesTo(exp ast.Expression) (ast.TypeValue, Context, erro
 	case *ast.ApplyExpr:
 		// Rule ->E
 		c.debugRule("->E")
+
+		// _, gamma1, err := c.SynthesizesTo(ve.Arg)
 
 		a, theta, err := c.SynthesizesTo(ve.Function)
 		if err != nil {

@@ -44,10 +44,20 @@ var precedences = map[token.TokenType]int{
 	token.CONCAT:    CONS,
 	token.PLUS:      SUM,
 	token.MINUS:     SUM,
+	token.FPLUS:     SUM,
+	token.FMINUS:    SUM,
+	token.CPLUS:     SUM,
+	token.CMINUS:    SUM,
 	token.TIMES:     PRODUCT,
 	token.DIVIDE:    PRODUCT,
+	token.FTIMES:    PRODUCT,
+	token.FDIVIDE:   PRODUCT,
+	token.CTIMES:    PRODUCT,
+	token.CDIVIDE:   PRODUCT,
 	token.MODULO:    MODULO,
 	token.TOPOW:     POWER,
+	token.FTOPOW:    POWER,
+	token.CTOPOW:    POWER,
 	token.ACCESS:    ACCESS,
 	token.AT:        ACCESS,
 	// function application
@@ -123,12 +133,24 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.GREATER, p.parseInfixExpression)
 	p.registerInfix(token.GREATEREQ, p.parseInfixExpression)
 	p.registerInfix(token.CONCAT, p.parseInfixExpression)
+	// Arithmetical Operartors
 	p.registerInfix(token.PLUS, p.parseInfixExpression)
 	p.registerInfix(token.MINUS, p.parseInfixExpression)
 	p.registerInfix(token.TIMES, p.parseInfixExpression)
 	p.registerInfix(token.DIVIDE, p.parseInfixExpression)
 	p.registerInfix(token.MODULO, p.parseInfixExpression)
 	p.registerInfix(token.TOPOW, p.parseInfixExpression)
+	p.registerInfix(token.FPLUS, p.parseInfixExpression)
+	p.registerInfix(token.FMINUS, p.parseInfixExpression)
+	p.registerInfix(token.FTIMES, p.parseInfixExpression)
+	p.registerInfix(token.FDIVIDE, p.parseInfixExpression)
+	p.registerInfix(token.FTOPOW, p.parseInfixExpression)
+	p.registerInfix(token.CPLUS, p.parseInfixExpression)
+	p.registerInfix(token.CMINUS, p.parseInfixExpression)
+	p.registerInfix(token.CTIMES, p.parseInfixExpression)
+	p.registerInfix(token.CDIVIDE, p.parseInfixExpression)
+	p.registerInfix(token.CTOPOW, p.parseInfixExpression)
+
 	p.registerInfix(token.ACCESS, p.parseInfixExpression)
 	p.registerInfix(token.AT, p.parseInfixExpression)
 

@@ -52,7 +52,7 @@ func Substitution(a, b ast.TypeValue, alpha ast.UniqueIdentifier) ast.TypeValue 
 			Domain:   Substitution(va.Domain, b, alpha),
 			Codomain: Substitution(va.Codomain, b, alpha),
 		}
-	default: //Monotypes return themselves
+	default:
 		return a
 
 	}

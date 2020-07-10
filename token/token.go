@@ -21,17 +21,35 @@ const (
 	// Identifiers and literals
 	IDENT   = "identifier"
 	UNIT    = "()"
-	INT     = "integer"
-	FLOAT   = "float"
-	COMPLEX = "complex number" // Imaginary part
-	STRING  = "string"
+	INT     = "integer literal"
+	FLOAT   = "floating point literal"
+	COMPLEX = "complex number literal"
+	STRING  = "string literal"
 
-	// Operators
-	PLUS      = "+"
-	MINUS     = "-"
-	TIMES     = "*"
-	TOPOW     = "^"
-	DIVIDE    = "/"
+	// Arithmetical Operators
+	// Integer operators
+	PLUS   = "+"
+	MINUS  = "-"
+	TIMES  = "*"
+	TOPOW  = "^"
+	DIVIDE = "/"
+	MODULO = "%"
+
+	// Floating point operators
+	FPLUS   = "+."
+	FMINUS  = "-."
+	FTIMES  = "*."
+	FTOPOW  = "^."
+	FDIVIDE = "/."
+
+	// Complex operators
+	CPLUS   = "+:"
+	CMINUS  = "-:"
+	CTIMES  = "*:"
+	CTOPOW  = "^:"
+	CDIVIDE = "/:"
+
+	// Comparison Operators
 	EQUALS    = "="
 	DIFFERS   = "!="
 	NOT       = "!"
@@ -39,19 +57,19 @@ const (
 	GREATER   = ">"
 	LESSEQ    = "<="
 	GREATEREQ = ">="
-	RARROW    = "->"
-	SEQUENCE  = ">>"
-	COMPOSE   = "<=<"
-	PIPE      = ">=>"
-	MODULO    = "%"
-	CONCAT    = "++"
-	AT        = "@"
-	DOLLAR    = "$"
-	CONS      = "::"
-	ANNOT     = ":"
-	LAND      = "&&"
-	OR        = "||"
-	ACCESS    = "."
+
+	RARROW   = "->"
+	SEQUENCE = ">>"
+	COMPOSE  = "<=<"
+	PIPE     = ">=>"
+	CONCAT   = "++"
+	AT       = "@"
+	DOLLAR   = "$"
+	CONS     = "::"
+	ANNOT    = ":"
+	LAND     = "&&"
+	OR       = "||"
+	ACCESS   = "."
 
 	// Delimiters
 	COMMA       = ","
@@ -82,6 +100,7 @@ const (
 	TNUMBER  = "number"
 	TRUNE    = "rune"
 	TSTRING  = "string"
+	TUNIT    = "unit"
 )
 
 // Table of internal keywords

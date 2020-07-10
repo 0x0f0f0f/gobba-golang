@@ -17,6 +17,10 @@ func (u *LambdaType) String() string {
 	return fmt.Sprintf("%s -> %s", u.Domain.String(), u.Codomain.String())
 }
 
+// func (u *UnionType) String() string {
+// 	return fmt.Sprintf("%s U %s", u.Left.String(), u.Left.String())
+// }
+
 func (u *UnitType) FullString() string     { return u.String() }
 func (u *VariableType) FullString() string { return u.Identifier.FullString() }
 func (u *ForAllType) FullString() string {
@@ -25,6 +29,10 @@ func (u *ForAllType) FullString() string {
 func (u *LambdaType) FullString() string {
 	return fmt.Sprintf("%s -> %s", u.Domain.FullString(), u.Codomain.FullString())
 }
+
+// func (u *UnionType) FullString() string {
+// 	return fmt.Sprintf("%s U %s", u.Left.FullString(), u.Right.FullString())
+// }
 func (u *ExistsType) FullString() string { return "∃'" + u.Identifier.FullString() }
 
 // helper for generating fancy names
@@ -59,3 +67,7 @@ func (u *ForAllType) FancyString(occ map[UniqueIdentifier]int) string {
 func (u *LambdaType) FancyString(occ map[UniqueIdentifier]int) string {
 	return fmt.Sprintf("%s -> %s", u.Domain.FancyString(occ), u.Codomain.FancyString(occ))
 }
+
+// func (u *UnionType) FancyString(occ map[UniqueIdentifier]int) string {
+// 	return fmt.Sprintf("%s U %s", u.Left.FancyString(occ), u.Right.FancyString(occ))
+// }
