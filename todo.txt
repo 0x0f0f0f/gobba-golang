@@ -1,21 +1,24 @@
 (A) Parse type annotations
-(A) Parse ifthenelse test
 (A) Parse function application tests
 (A) AST tests 
-(A) uniquify/alpha convert AST
 (B) Parse lists and vectors
 (B) EBNF
+Move the - prefix operator to optional parsing
 DEFINE HOW YOU WANT TO HANDLE CLASS TYPING/ALGEBRAIC DATA TYPES: choose between structs/interfaces/typecasting or structs and sum ADTs
-DEFINE HOW YOU WANT TO HANDLE POLYMORPHISM
 DEFINE HOW YOU WANT TO HANDLE CONCURRENCY!
 Interpretation over execution
 Formalize operational semantics
-formalize type system numerical tower 
-implement type system numerical tower 
-lex/parse/typecheck explicit type annotations
-Basic type inference
+Formalize linear algebra in type system
+Formalize/Implement union and product types 
 Effect system: allow/deny effects
 OPTIONAL??? Policy (automata) based effect system based on the algebra of communicating processes. Paper degano giangi 
+x lex/parse/typecheck explicit type annotations
+x Basic type inference
+x (A) Parse ifthenelse test
+x (A) uniquify/alpha convert AST
+x DEFINE HOW YOU WANT TO HANDLE POLYMORPHISM
+x formalize type system numerical tower 
+x implement type system numerical tower 
 x (A) Parse function arguments tests
 x implement Type system
 x decent error handling for parser

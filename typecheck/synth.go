@@ -170,7 +170,6 @@ func (c Context) SynthesizesTo(exp ast.Expression) (ast.TypeValue, Context, erro
 		}
 		theta.debugRuleOut("->E")
 		return theta.ApplicationSynthesizesTo(theta.Apply(a), ve.Arg)
-		//TODO Rule Anno
 	case *ast.AnnotExpr:
 		if c.IsWellFormed(ve.Type) {
 			// Rule Anno
@@ -189,7 +188,6 @@ func (c Context) SynthesizesTo(exp ast.Expression) (ast.TypeValue, Context, erro
 	return nil, c, c.synthError(exp)
 }
 
-// TODO document
 func (c Context) ApplicationSynthesizesTo(
 	ty ast.TypeValue,
 	exp ast.Expression) (ast.TypeValue, Context, error) {
@@ -257,6 +255,7 @@ func (c Context) ApplicationSynthesizesTo(
 	return nil, c, c.synthError(exp)
 }
 
+// TODO add types to AST nodes
 func (c Context) SynthExpr(exp ast.Expression) (ast.TypeValue, error) {
 	t, nc, err := c.SynthesizesTo(exp)
 	if err != nil {

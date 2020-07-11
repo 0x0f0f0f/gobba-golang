@@ -63,8 +63,9 @@ func TestSynthExpr(t *testing.T) {
 		"fun (x) {1.5+3i +: x}(3.5+3i)": "complex",
 
 		// Type annotation functions
-		"fun (x: int, y: int) { if x = 2 then y else 0}": "int -> int -> int",
-		"fun (x: bool, y) {x = y}":                       "bool -> bool -> bool",
+		"fun (x: int, y: int) { if x = 2 then y else 0}":                     "int -> int -> int",
+		"fun (x: bool, y) {x = y}":                                           "bool -> bool -> bool",
+		"let fib = fun(n) { if n < 2 then n else fib(n-1) + fib(n-2) }; fib": "int -> int",
 	}
 
 	for input, expected := range tests {
