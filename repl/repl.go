@@ -38,11 +38,14 @@ func New(o *ReplOptions) *Repl {
 
 	home, err := os.UserHomeDir()
 	if err != nil {
-		panic(err)
+		o.HistoryFilename = ""
+	} else {
+		o.HistoryFilename = filepath.Join(home, ".gobba_history")
 	}
-	o.HistoryFilename = filepath.Join(home, ".gobba_history")
 
-	if f, err := os.Open(o.HistoryFilename); err == nil {
+	if o.HistoryFilename == "" {
+		fmt.Println("history file not found")
+	} else if f, err := os.Open(o.HistoryFilename); err == nil {
 		line.ReadHistory(f)
 		f.Close()
 	} else if os.IsNotExist(err) {

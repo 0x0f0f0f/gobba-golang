@@ -16,6 +16,7 @@ expr_statement = expr ;
 
 (* TODO directives *)
 (* TODO type annotation )
+
 primitive_type = identifier | "int" | "float" | "complex" | "rune" | "string" 
     | density, w, "matrix" | density, w, "cmatrix" (* float64 and complex128 matrices*)
     | "[", w, integer, w, "]", type (* Arrays *)
@@ -41,11 +42,12 @@ infix_op = compose_op | ">>" | "||" | "&&" | eq_op
     | comparison_op | "::" | sum_op | product_op | "%" | "^"
     | access_op ;
 
-compose_op = ">=>" | "<=<" ; function composition
-eq_op = "=" | "!=" ; equality
+compose_op = ">=>" | "<=<" 
+eq_op = "=" | "!=" 
 comparison_op = "<" | "<=" | ">" | ">=" ;
-sum_op = "+" | "-" ; 
-product_op = "*" | "/" ; 
+sum_op = "+" | "-" | "+." | "-." | "+:" | "-:" "; 
+product_op = "*" | "/" | "*." | "/." | "*:" | "/:"  ; 
+topow_op = "^" | "^." | "^:" ;
 acces_op = "@" | ":" ;
 
 prefixed = lowest | prefix_op prefixed
@@ -57,7 +59,7 @@ lowest = literal | "(", w, expr, w, ")" | "$", w, expr;
 literal = composite_literal | basic_literal ; 
 composite_literal = complex_literal | lambda_literal | record_literal ; 
 basic_literal = float | integer | imag | string | identifier ; 
-record_literal = "{", w, [ assignment, w, {",", w, assignments, w} ], w, "}" 
+record_literal = "{", w, [ assignment, w, {",", w, assignments, w} ], w, "}" ;
 
 (* The addition/subtraction operators are overloaded to correctly
 parse complex number literals without using additional operators, 
@@ -65,11 +67,12 @@ in the form a+bi or a-bi*)
 complex_literal = (float | integer), sum_op, (float | integer), "i";
 
 (* Function literals *)
-lambda_literal = ("fun" | "lambda"), w, param_list, w, "->", expr ;
-param_list = identifier, { w, identifier }
-
+lambda_literal = ("fun" | "lambda"), w, "(", w, param_list, w, ")", w, "{", w, expr, w, "}" ;
+param_list = identifier_or_annot, { w, identifier_or_annot }
+identifier_or_annot = identifier [w, ":", w, type ] ; 
 
 (* Basic literals *)
+type = "int" | "bool" | "float" | "rune" | "string" | "complex" | identifier
 string = '"', ? all possible characters ?, '"';
 rune = "'", ? an Unicode value ?, "'"
 imag = (float | integer), "i";

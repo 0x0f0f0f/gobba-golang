@@ -6,46 +6,46 @@ import (
 	"github.com/0x0f0f0f/gobba-golang/token"
 )
 
-func (c Context) synthComparison(leftt, rightt ast.TypeValue) (ast.TypeValue, Context, error) {
+func (Γ Context) synthComparison(leftt, rightt ast.TypeValue) (ast.TypeValue, Context, error) {
 	// TODO, when interfaces are implemented, check if exp
 	// implements the `comparable` interface
-	gamma1, err := c.Subtype(leftt, rightt)
+	Γ1, err := Γ.Subtype(leftt, rightt)
 	if err != nil {
-		return nil, c, c.expectedSameTypeComparison(leftt, rightt)
+		return nil, Γ, Γ.expectedSameTypeComparison(leftt, rightt)
 	}
 
-	gamma2, err := gamma1.Subtype(rightt, leftt)
+	Γ2, err := Γ1.Subtype(rightt, leftt)
 	if err != nil {
-		return nil, c, c.expectedSameTypeComparison(leftt, rightt)
+		return nil, Γ, Γ.expectedSameTypeComparison(leftt, rightt)
 	}
 
-	return ast.TBOOL, gamma2, nil
+	return ast.TBOOL, Γ2, nil
 
 }
 
-func (c Context) synthInfixExpr(exp *ast.InfixExpression) (ast.TypeValue, Context, error) {
+func (Γ Context) synthInfixExpr(exp *ast.InfixExpression) (ast.TypeValue, Context, error) {
 	// Synthesize types for operands
-	leftt, gamma1, err := c.SynthesizesTo(exp.Left)
+	leftt, Γ1, err := Γ.SynthesizesTo(exp.Left)
 	if err != nil {
-		return nil, c, err
+		return nil, Γ, err
 	}
-	rightt, theta, err := gamma1.SynthesizesTo(exp.Right)
+	rightt, Θ, err := Γ1.SynthesizesTo(exp.Right)
 	if err != nil {
-		return nil, c, err
+		return nil, Γ, err
 	}
 
-	if resultt, ok := ast.OperatorTypes[exp.Operator]; ok {
-		psi, err := theta.Subtype(leftt, resultt.Left)
+	if resultt, ok := ast.InfixOperatorTypes[exp.Operator]; ok {
+		Θ1, err := Θ.Subtype(leftt, resultt.Left)
 		if err != nil {
-			return nil, c, err
+			return nil, Γ, err
 		}
 
-		delta, err := psi.Subtype(rightt, resultt.Right)
+		Δ, err := Θ1.Subtype(rightt, resultt.Right)
 		if err != nil {
-			return nil, c, err
+			return nil, Γ, err
 		}
 
-		return resultt.Result, delta, err
+		return resultt.Result, Δ, err
 
 	}
 
@@ -54,19 +54,27 @@ func (c Context) synthInfixExpr(exp *ast.InfixExpression) (ast.TypeValue, Contex
 	// Comparison Operators
 	// ======================================================================
 	case token.EQUALS:
-		return gamma1.synthComparison(leftt, rightt)
+		return Γ1.synthComparison(leftt, rightt)
 	case token.GREATER:
-		return gamma1.synthComparison(leftt, rightt)
+		return Γ1.synthComparison(leftt, rightt)
 	case token.LESS:
-		return gamma1.synthComparison(leftt, rightt)
+		return Γ1.synthComparison(leftt, rightt)
 	case token.LESSEQ:
-		return gamma1.synthComparison(leftt, rightt)
+		return Γ1.synthComparison(leftt, rightt)
 	case token.GREATEREQ:
-		return gamma1.synthComparison(leftt, rightt)
-	default:
-		// TODO
-		return nil, c, c.synthError(exp)
+		return Γ1.synthComparison(leftt, rightt)
 	}
 
-	return nil, c, c.synthError(exp)
+	return nil, Γ, Γ.synthError(exp)
+}
+
+func (Γ Context) synthPrefixExpr(exp *ast.PrefixExpression) (ast.TypeValue, Context, error) {
+	if resultt, ok := ast.PrefixOperatorTypes[exp.Operator]; ok {
+		Δ, err := Γ.CheckAgainst(exp.Right, resultt.Right)
+		if err != nil {
+			return nil, Γ, err
+		}
+		return resultt.Result, Δ, err
+	}
+	return nil, Γ, Γ.synthError(exp)
 }

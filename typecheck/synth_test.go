@@ -62,6 +62,9 @@ func TestSynthExpr(t *testing.T) {
 		"fun (x) {1.5+3i +: x}(3.5)":    "complex",
 		"fun (x) {1.5+3i +: x}(3.5+3i)": "complex",
 
+		// Unary operators
+		"!true": "bool",
+
 		// Type annotation functions
 		"fun (x: int, y: int) { if x = 2 then y else 0}":                     "int -> int -> int",
 		"fun (x: bool, y) {x = y}":                                           "bool -> bool -> bool",

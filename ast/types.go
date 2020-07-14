@@ -1,9 +1,5 @@
 package ast
 
-import (
-	"github.com/0x0f0f0f/gobba-golang/token"
-)
-
 // This file contains definitions of types
 // See https://github.com/chrisnevers/bidirectional-typechecking/blob/master/lib/ast/type.ml
 
@@ -106,53 +102,4 @@ func CompareTypeValues(a, b TypeValue) bool {
 		return ok && CompareTypeValues(va.Domain, vb.Domain) && CompareTypeValues(va.Codomain, vb.Codomain)
 	}
 	return false
-}
-
-type OperatorType struct {
-	Left   TypeValue
-	Right  TypeValue
-	Result TypeValue
-}
-
-func NewOperatorType(left, right, result TypeValue) *OperatorType {
-	return &OperatorType{
-		Left:   left,
-		Right:  right,
-		Result: result,
-	}
-}
-
-var TINT = NewVariableType(token.TINT)
-var TFLOAT = NewVariableType(token.TFLOAT)
-var TCOMPLEX = NewVariableType(token.TCOMPLEX)
-var TBOOL = NewVariableType(token.TBOOL)
-var TRUNE = NewVariableType(token.TRUNE)
-var TSTRING = NewVariableType(token.TSTRING)
-
-var DefaultVariableTypes map[string]*VariableType = map[string]*VariableType{
-	token.TINT:     TINT,
-	token.TFLOAT:   TFLOAT,
-	token.TCOMPLEX: TCOMPLEX,
-	token.TBOOL:    TBOOL,
-	token.TRUNE:    TRUNE,
-	token.TSTRING:  TSTRING,
-}
-
-var OperatorTypes map[string]*OperatorType = map[string]*OperatorType{
-	token.PLUS:    NewOperatorType(TINT, TINT, TINT),
-	token.MINUS:   NewOperatorType(TINT, TINT, TINT),
-	token.TIMES:   NewOperatorType(TINT, TINT, TINT),
-	token.TOPOW:   NewOperatorType(TINT, TINT, TINT),
-	token.DIVIDE:  NewOperatorType(TINT, TINT, TINT),
-	token.MODULO:  NewOperatorType(TINT, TINT, TINT),
-	token.FPLUS:   NewOperatorType(TFLOAT, TFLOAT, TFLOAT),
-	token.FMINUS:  NewOperatorType(TFLOAT, TFLOAT, TFLOAT),
-	token.FTIMES:  NewOperatorType(TFLOAT, TFLOAT, TFLOAT),
-	token.FTOPOW:  NewOperatorType(TFLOAT, TFLOAT, TFLOAT),
-	token.FDIVIDE: NewOperatorType(TFLOAT, TFLOAT, TFLOAT),
-	token.CPLUS:   NewOperatorType(TCOMPLEX, TCOMPLEX, TCOMPLEX),
-	token.CMINUS:  NewOperatorType(TCOMPLEX, TCOMPLEX, TCOMPLEX),
-	token.CTIMES:  NewOperatorType(TCOMPLEX, TCOMPLEX, TCOMPLEX),
-	token.CTOPOW:  NewOperatorType(TCOMPLEX, TCOMPLEX, TCOMPLEX),
-	token.CDIVIDE: NewOperatorType(TCOMPLEX, TCOMPLEX, TCOMPLEX),
 }

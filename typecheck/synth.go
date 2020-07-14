@@ -90,6 +90,8 @@ func (c Context) SynthesizesTo(exp ast.Expression) (ast.TypeValue, Context, erro
 
 	case *ast.InfixExpression:
 		return c.synthInfixExpr(ve)
+	case *ast.PrefixExpression:
+		return c.synthPrefixExpr(ve)
 	case *ast.FunctionLiteral:
 		// Rule ->l=>
 		c.debugRule("->I=>")

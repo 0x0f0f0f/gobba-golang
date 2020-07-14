@@ -12,6 +12,8 @@ require (
 	github.com/mattn/go-tty v0.0.3 // indirect
 	github.com/peterh/liner v1.2.0
 	github.com/pkg/term v0.0.0-20200520122047-c3ffed290a03 // indirect
+	github.com/shurcooL/go v0.0.0-20200502201357-93f07166e636 // indirect
+	github.com/shurcooL/go-goon v0.0.0-20170922171312-37c2f522c041 // indirect
 	github.com/stretchr/testify v1.4.0
 	gonum.org/v1/plot v0.7.0 // indirect
 )
