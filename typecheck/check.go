@@ -81,7 +81,7 @@ func (c Context) CheckAgainst(expr ast.Expression, ty ast.TypeValue) (Context, e
 			return c, nil
 		}
 
-	case *ast.FunctionLiteral:
+	case *ast.ExprLambda:
 		// Rule ->l
 		c.debugRule("->l")
 

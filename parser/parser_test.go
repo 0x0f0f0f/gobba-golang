@@ -178,14 +178,14 @@ func TestFunctionParameterParsing(t *testing.T) {
 		CheckParserErrors(t, p)
 
 		assert.Len(t, p.Errors(), 0)
-		f, ok := program.(*ast.FunctionLiteral)
-		assert.True(t, ok, "casting to *ast.FunctionLiteral")
+		f, ok := program.(*ast.ExprLambda)
+		assert.True(t, ok, "casting to *ast.ExprLambda")
 
 		for i, par := range tt.expectedParams {
 			testLiteralExpression(t, f.Param, par)
 			if i != len(tt.expectedParams)-1 {
-				f, ok = f.Body.(*ast.FunctionLiteral)
-				assert.True(t, ok, "casting to *ast.FunctionLiteral")
+				f, ok = f.Body.(*ast.ExprLambda)
+				assert.True(t, ok, "casting to *ast.ExprLambda")
 			}
 		}
 	}

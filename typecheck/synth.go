@@ -36,7 +36,7 @@ func (c Context) SynthesizesTo(exp ast.Expression) (ast.TypeValue, Context, erro
 		c.debugRuleOut("runeI=>")
 		return ast.NewVariableType("rune"), c, nil
 
-	case *ast.IdentifierExpr:
+	case *ast.ExprIdentifier:
 		// Rule Var
 		c.debugRuleOut("Var")
 		annot := c.GetAnnotation(ve.Identifier)
@@ -46,7 +46,7 @@ func (c Context) SynthesizesTo(exp ast.Expression) (ast.TypeValue, Context, erro
 		}
 		c.debugRuleOut("Var")
 		return *annot, c, nil
-	case *ast.IfExpression:
+	case *ast.ExprIf:
 		// Rules ifthen<:else=> and ifelse<:then=> share the first
 		// 3 premises
 		c.debugRule("ifthen<:else=> or ifelse<:then=>")
@@ -88,11 +88,11 @@ func (c Context) SynthesizesTo(exp ast.Expression) (ast.TypeValue, Context, erro
 		delta.debugRuleOut("ifthen<:else=>")
 		return elset, delta, nil
 
-	case *ast.InfixExpression:
+	case *ast.ExprInfix:
 		return c.synthInfixExpr(ve)
-	case *ast.PrefixExpression:
+	case *ast.ExprPrefix:
 		return c.synthPrefixExpr(ve)
-	case *ast.FunctionLiteral:
+	case *ast.ExprLambda:
 		// Rule ->l=>
 		c.debugRule("->I=>")
 
@@ -127,7 +127,7 @@ func (c Context) SynthesizesTo(exp ast.Expression) (ast.TypeValue, Context, erro
 
 		return funtype, deltadrop, nil
 
-	case *ast.FixExpr:
+	case *ast.ExprFix:
 		// Rule fixI=>
 		c.debugRule("fixI=>")
 
@@ -160,7 +160,7 @@ func (c Context) SynthesizesTo(exp ast.Expression) (ast.TypeValue, Context, erro
 		deltadrop.debugRuleOut("fixI=>")
 
 		return betaext, deltadrop, nil
-	case *ast.ApplyExpr:
+	case *ast.ExprApply:
 		// Rule ->E
 		c.debugRule("->E")
 
@@ -172,7 +172,7 @@ func (c Context) SynthesizesTo(exp ast.Expression) (ast.TypeValue, Context, erro
 		}
 		theta.debugRuleOut("->E")
 		return theta.ApplicationSynthesizesTo(theta.Apply(a), ve.Arg)
-	case *ast.AnnotExpr:
+	case *ast.ExprAnnot:
 		if c.IsWellFormed(ve.Type) {
 			// Rule Anno
 			c.debugRule("Anno")

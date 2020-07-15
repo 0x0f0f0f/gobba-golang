@@ -26,8 +26,8 @@ func TestBooleanExpression(t *testing.T) {
 	program := p.ParseProgram()
 	CheckParserErrors(t, p)
 
-	stmt, ok := program.(*ast.InfixExpression)
-	assert.True(t, ok, "casting to *ast.InfixExpression")
+	stmt, ok := program.(*ast.ExprInfix)
+	assert.True(t, ok, "casting to *ast.ExprInfix")
 	testBoolLiteral(t, stmt.Left, true)
 	testBoolLiteral(t, stmt.Right, false)
 }
@@ -62,8 +62,8 @@ func TestParsingPrefixExpressions(t *testing.T) {
 		program := p.ParseProgram()
 		CheckParserErrors(t, p)
 
-		exp, ok := program.(*ast.PrefixExpression)
-		assert.True(t, ok, "casting to *ast.PrefixExpression")
+		exp, ok := program.(*ast.ExprPrefix)
+		assert.True(t, ok, "casting to *ast.ExprPrefix")
 
 		assert.Equal(t, exp.Operator, tt.operator)
 		testLiteralExpression(t, exp.Right, tt.value)
@@ -150,8 +150,8 @@ func testLiteralExpression(
 
 func testInfixExpression(t *testing.T, exp ast.Expression, left interface{},
 	operator string, right interface{}) bool {
-	opExp, ok := exp.(*ast.InfixExpression)
-	assert.True(t, ok, "casting to *ast.InfixExpression")
+	opExp, ok := exp.(*ast.ExprInfix)
+	assert.True(t, ok, "casting to *ast.ExprInfix")
 	testLiteralExpression(t, opExp.Left, left)
 	assert.Equal(t, opExp.Operator, operator)
 	testLiteralExpression(t, opExp.Right, right)
@@ -189,15 +189,15 @@ func testBoolLiteral(t *testing.T, il ast.Expression, value bool) bool {
 }
 
 func testIdentifier(t *testing.T, exp ast.Expression, value string) bool {
-	ident, ok := exp.(*ast.IdentifierExpr)
-	assert.True(t, ok, "casting to *ast.Identifier")
+	ident, ok := exp.(*ast.ExprIdentifier)
+	assert.True(t, ok, "casting to *ast.ExprIdentifier")
 	assert.Equal(t, value, ident.Identifier.Value)
 	return true
 }
 
 func testUniqueIdentifier(t *testing.T, exp ast.Expression, value ast.UniqueIdentifier) bool {
-	ident, ok := exp.(*ast.IdentifierExpr)
-	assert.True(t, ok, "casting to *ast.Identifier")
+	ident, ok := exp.(*ast.ExprIdentifier)
+	assert.True(t, ok, "casting to *ast.ExprIdentifier")
 	assert.Equal(t, value, ident.Identifier)
 	assert.Equal(t, value.Value, ident.TokenLiteral())
 	return true

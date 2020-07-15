@@ -86,12 +86,12 @@ func (a *AlphaEnvironment) ExpressionAlphaConversion(exp ast.Expression) (ast.Ex
 		return ve, nil
 	case *ast.RuneLiteral:
 		return ve, nil
-	case *ast.PrefixExpression:
+	case *ast.ExprPrefix:
 		nright, err := a.ExpressionAlphaConversion(ve.Right)
 		if err != nil {
 			return nil, err
 		}
-		var nexpr ast.PrefixExpression
+		var nexpr ast.ExprPrefix
 		err = copier.Copy(&nexpr, ve)
 		if err != nil {
 			return nil, err
@@ -99,7 +99,7 @@ func (a *AlphaEnvironment) ExpressionAlphaConversion(exp ast.Expression) (ast.Ex
 
 		nexpr.Right = nright
 		return &nexpr, nil
-	case *ast.InfixExpression:
+	case *ast.ExprInfix:
 		nright, err := a.ExpressionAlphaConversion(ve.Right)
 		if err != nil {
 			return nil, err
@@ -108,7 +108,7 @@ func (a *AlphaEnvironment) ExpressionAlphaConversion(exp ast.Expression) (ast.Ex
 		if err != nil {
 			return nil, err
 		}
-		var nexpr ast.InfixExpression
+		var nexpr ast.ExprInfix
 		err = copier.Copy(&nexpr, ve)
 		if err != nil {
 			return nil, err
@@ -117,19 +117,19 @@ func (a *AlphaEnvironment) ExpressionAlphaConversion(exp ast.Expression) (ast.Ex
 		nexpr.Right = nright
 		return &nexpr, nil
 
-	case *ast.IdentifierExpr:
+	case *ast.ExprIdentifier:
 		uid, err := a.Get(ve.Identifier.Value)
 		if err != nil {
 			return nil, err
 		}
-		var newexpr ast.IdentifierExpr
+		var newexpr ast.ExprIdentifier
 		err = copier.Copy(&newexpr, ve)
 		if err != nil {
 			return nil, err
 		}
 		newexpr.Identifier = uid
 		return &newexpr, nil
-	case *ast.FunctionLiteral:
+	case *ast.ExprLambda:
 		na := NewAlphaEnvironmentExtension(a)
 		nid := na.IdentifierAlphaConversion(ve.Param.Identifier)
 
@@ -138,7 +138,7 @@ func (a *AlphaEnvironment) ExpressionAlphaConversion(exp ast.Expression) (ast.Ex
 			return nil, err
 		}
 
-		var newexpr ast.FunctionLiteral
+		var newexpr ast.ExprLambda
 		err = copier.Copy(&newexpr, ve)
 		if err != nil {
 			return nil, err
@@ -146,7 +146,7 @@ func (a *AlphaEnvironment) ExpressionAlphaConversion(exp ast.Expression) (ast.Ex
 		newexpr.Param.Identifier = nid
 		newexpr.Body = nbody
 		return &newexpr, nil
-	case *ast.FixExpr:
+	case *ast.ExprFix:
 		na := NewAlphaEnvironmentExtension(a)
 		nid := na.IdentifierAlphaConversion(ve.Param.Identifier)
 
@@ -155,7 +155,7 @@ func (a *AlphaEnvironment) ExpressionAlphaConversion(exp ast.Expression) (ast.Ex
 			return nil, err
 		}
 
-		var newexpr ast.FixExpr
+		var newexpr ast.ExprFix
 		err = copier.Copy(&newexpr, ve)
 		if err != nil {
 			return nil, err
@@ -163,7 +163,7 @@ func (a *AlphaEnvironment) ExpressionAlphaConversion(exp ast.Expression) (ast.Ex
 		newexpr.Param.Identifier = nid
 		newexpr.Body = nbody
 		return &newexpr, nil
-	case *ast.ApplyExpr:
+	case *ast.ExprApply:
 		nfun, err := a.ExpressionAlphaConversion(ve.Function)
 		if err != nil {
 			return nil, err
@@ -173,7 +173,7 @@ func (a *AlphaEnvironment) ExpressionAlphaConversion(exp ast.Expression) (ast.Ex
 			return nil, err
 		}
 
-		var nexpr ast.ApplyExpr
+		var nexpr ast.ExprApply
 		err = copier.Copy(&nexpr, ve)
 		if err != nil {
 			return nil, err
@@ -181,7 +181,7 @@ func (a *AlphaEnvironment) ExpressionAlphaConversion(exp ast.Expression) (ast.Ex
 		nexpr.Function = nfun
 		nexpr.Arg = narg
 		return &nexpr, nil
-	case *ast.IfExpression:
+	case *ast.ExprIf:
 		ncond, err := a.ExpressionAlphaConversion(ve.Condition)
 		if err != nil {
 			return nil, err
@@ -194,7 +194,7 @@ func (a *AlphaEnvironment) ExpressionAlphaConversion(exp ast.Expression) (ast.Ex
 		if err != nil {
 			return nil, err
 		}
-		var nexpr ast.IfExpression
+		var nexpr ast.ExprIf
 		err = copier.Copy(&nexpr, ve)
 		if err != nil {
 			return nil, err
@@ -204,12 +204,12 @@ func (a *AlphaEnvironment) ExpressionAlphaConversion(exp ast.Expression) (ast.Ex
 		nexpr.Alternative = nfbr
 
 		return &nexpr, nil
-	case *ast.AnnotExpr:
+	case *ast.ExprAnnot:
 		nbody, err := a.ExpressionAlphaConversion(ve.Body)
 		if err != nil {
 			return nil, err
 		}
-		var nexpr ast.AnnotExpr
+		var nexpr ast.ExprAnnot
 		err = copier.Copy(&nexpr, ve)
 		if err != nil {
 			return nil, err

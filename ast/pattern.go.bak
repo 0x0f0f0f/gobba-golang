@@ -1,0 +1,9 @@
+// package ast // This interface is needed to distinguish which nodes
+// // can be patterns in pattern matching expressions
+
+// type Pattern interface {
+// 	patternNode()
+// }
+
+// func (i *IdentifierExpr) patternNode() {}
+// func (i *PairExpr) patternNode()       {}

@@ -117,7 +117,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerPrefix(token.LPAREN, p.parseGroupedExpression)
 	p.registerPrefix(token.DOLLAR, p.parseDollarExpression)
 	p.registerPrefix(token.IF, p.parseIfExpression)
-	p.registerPrefix(token.LAMBDA, p.parseFunctionLiteral)
+	p.registerPrefix(token.LAMBDA, p.parseExprLambda)
 	p.registerPrefix(token.LET, p.parseLetExpression)
 
 	// Registration of infix operators
@@ -159,7 +159,7 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.SEMI, p.parseInfixSequence)
 
 	// function application
-	p.registerInfix(token.LPAREN, p.parseApplyExpression)
+	p.registerInfix(token.LPAREN, p.parseExprApply)
 
 	// Read two tokens so that curToken and peekToken are both set
 	p.nextToken()
@@ -248,7 +248,7 @@ func (p *Parser) parseAssignment() *ast.Assignment {
 	}
 
 	ass := &ast.Assignment{Token: p.curToken}
-	ass.Name = &ast.IdentifierExpr{
+	ass.Name = &ast.ExprIdentifier{
 		Token: p.curToken,
 		Identifier: ast.UniqueIdentifier{
 			Value: p.curToken.Literal,
@@ -262,11 +262,11 @@ func (p *Parser) parseAssignment() *ast.Assignment {
 	p.nextToken()
 	ass.Value = p.ParseExpression(SEQUENCING)
 
-	if f, ok := ass.Value.(*ast.FunctionLiteral); ok {
+	if f, ok := ass.Value.(*ast.ExprLambda); ok {
 		// Combinator for recursion
-		fix := &ast.FixExpr{
+		fix := &ast.ExprLambda{
 			Token: f.Token,
-			Param: *ass.Name,
+			Param: ass.Name,
 			Body:  f,
 		}
 

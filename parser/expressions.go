@@ -28,9 +28,17 @@ func (p *Parser) ParseExpression(prec int) ast.Expression {
 	return leftExp
 }
 
+// ======================================================================
+// Infix and prefix expressions
+// ======================================================================
+
+// ======================================================================
+// Literals
+// ======================================================================
+
 // Parse a simple terminal symbol
 func (p *Parser) parseIdentifier() ast.Expression {
-	return &ast.IdentifierExpr{
+	return &ast.ExprIdentifier{
 		Token:      p.curToken,
 		Identifier: ast.UniqueIdentifier{Value: p.curToken.Literal},
 	}
@@ -94,7 +102,7 @@ func (p *Parser) parseBoolean() ast.Expression {
 
 // Parse an expression with a prefix operator
 func (p *Parser) parsePrefixExpression() ast.Expression {
-	exp := &ast.PrefixExpression{
+	exp := &ast.ExprPrefix{
 		Token:    p.curToken,
 		Operator: p.curToken.Literal,
 	}
@@ -107,7 +115,7 @@ func (p *Parser) parsePrefixExpression() ast.Expression {
 
 // Parse an infix expression given the left branch
 func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
-	exp := &ast.InfixExpression{}
+	exp := &ast.ExprInfix{}
 	exp.Token = p.curToken
 	exp.Operator = p.curToken.Literal
 	exp.Left = left
@@ -121,7 +129,7 @@ func (p *Parser) parseInfixExpression(left ast.Expression) ast.Expression {
 
 // Parse a sequencing expression
 func (p *Parser) parseInfixSequence(left ast.Expression) ast.Expression {
-	exp := &ast.InfixExpression{}
+	exp := &ast.ExprInfix{}
 	exp.Token = p.curToken
 	exp.Operator = p.curToken.Literal
 	exp.Left = left
@@ -140,7 +148,7 @@ func (p *Parser) parseInfixSequence(left ast.Expression) ast.Expression {
 
 // Parse a right-associative operator
 func (p *Parser) parseInfixRightAssocExpression(left ast.Expression) ast.Expression {
-	exp := &ast.InfixExpression{}
+	exp := &ast.ExprInfix{}
 	exp.Token = p.curToken
 	exp.Operator = p.curToken.Literal
 	exp.Left = left
@@ -193,7 +201,7 @@ func (p *Parser) parseDollarExpression() ast.Expression {
 }
 
 func (p *Parser) parseIfExpression() ast.Expression {
-	exp := &ast.IfExpression{Token: p.curToken}
+	exp := &ast.ExprIf{Token: p.curToken}
 
 	p.nextToken()
 
@@ -216,8 +224,8 @@ func (p *Parser) parseIfExpression() ast.Expression {
 	exp.Alternative = p.ParseExpression(LOWEST)
 	return exp
 }
-func (p *Parser) parseApplyExpression(f ast.Expression) ast.Expression {
-	inner_expr := &ast.ApplyExpr{Token: p.curToken, Function: f}
+func (p *Parser) parseExprApply(f ast.Expression) ast.Expression {
+	inner_expr := &ast.ExprApply{Token: p.curToken, Function: f}
 
 	args := p.parseApplyArguments()
 
@@ -230,7 +238,7 @@ func (p *Parser) parseApplyExpression(f ast.Expression) ast.Expression {
 	curr_expr.Arg = args[0]
 
 	for _, arg := range args[1:] {
-		outer_app := &ast.ApplyExpr{Token: inner_expr.Token, Function: curr_expr}
+		outer_app := &ast.ExprApply{Token: inner_expr.Token, Function: curr_expr}
 		outer_app.Arg = arg
 		curr_expr = outer_app
 	}
@@ -269,8 +277,8 @@ func (p *Parser) parseApplyArguments() []ast.Expression {
 // let x = 1 and y = 2 in x + y === (lambda y -> (lambda x -> x + y)(1))(2)
 func (p *Parser) parseLetExpression() ast.Expression {
 	// exp := &ast.LetExpression{Token: p.curToken}
-	inner_app := &ast.ApplyExpr{Token: p.curToken}
-	inner_fun := &ast.FunctionLiteral{Token: p.curToken}
+	inner_app := &ast.ExprApply{Token: p.curToken}
+	inner_fun := &ast.ExprLambda{Token: p.curToken}
 	inner_app.Function = inner_fun
 
 	// Parse the first assignment
@@ -290,12 +298,12 @@ func (p *Parser) parseLetExpression() ast.Expression {
 		if ass == nil {
 			return nil
 		}
-		curr_fun := &ast.FunctionLiteral{Token: p.curToken}
+		curr_fun := &ast.ExprLambda{Token: p.curToken}
 		curr_fun.Param = ass.Name
 		curr_fun.Body = curr_app
 
 		// Replace
-		curr_app = &ast.ApplyExpr{Token: p.curToken}
+		curr_app = &ast.ExprApply{Token: p.curToken}
 		curr_app.Function = curr_fun
 		curr_app.Arg = ass.Value
 

@@ -23,7 +23,7 @@ func (Γ Context) synthComparison(leftt, rightt ast.TypeValue) (ast.TypeValue, C
 
 }
 
-func (Γ Context) synthInfixExpr(exp *ast.InfixExpression) (ast.TypeValue, Context, error) {
+func (Γ Context) synthInfixExpr(exp *ast.ExprInfix) (ast.TypeValue, Context, error) {
 	// Synthesize types for operands
 	leftt, Γ1, err := Γ.SynthesizesTo(exp.Left)
 	if err != nil {
@@ -68,7 +68,7 @@ func (Γ Context) synthInfixExpr(exp *ast.InfixExpression) (ast.TypeValue, Conte
 	return nil, Γ, Γ.synthError(exp)
 }
 
-func (Γ Context) synthPrefixExpr(exp *ast.PrefixExpression) (ast.TypeValue, Context, error) {
+func (Γ Context) synthPrefixExpr(exp *ast.ExprPrefix) (ast.TypeValue, Context, error) {
 	if resultt, ok := ast.PrefixOperatorTypes[exp.Operator]; ok {
 		Δ, err := Γ.CheckAgainst(exp.Right, resultt.Right)
 		if err != nil {

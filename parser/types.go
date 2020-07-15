@@ -27,7 +27,7 @@ func (p *Parser) parseTypeValue() ast.TypeValue {
 // Parse a type annotation
 func (p *Parser) parseFunArgAnnot() ast.Expression {
 	name := p.parseIdentifier()
-	iid, ok := name.(*ast.IdentifierExpr)
+	iid, ok := name.(*ast.ExprIdentifier)
 	if !ok {
 		panic("fatal parsing error")
 	}
@@ -40,7 +40,7 @@ func (p *Parser) parseFunArgAnnot() ast.Expression {
 
 	ty := p.parseTypeValue()
 
-	return &ast.AnnotExpr{
+	return &ast.ExprAnnot{
 		Token: iid.Token,
 		Body:  iid,
 		Type:  ty,

@@ -3,7 +3,6 @@
 package ast
 
 import (
-	"bytes"
 	"fmt"
 	"github.com/0x0f0f0f/gobba-golang/token"
 )
@@ -23,66 +22,14 @@ type Node interface {
 type Expression interface {
 	Node
 	expressionNode()
+	isPattern() bool
 }
-
-// type Program struct {
-// 	Statements []Statement
-// }
-
-// Get the first literal from a program. This is needed
-// so that the Program struct implements the Node interface
-// func (p *Program) TokenLiteral() string {
-// 	if len(p.Statements) > 0 {
-// 		return p.Statements[0].TokenLiteral()
-// 	} else {
-// 		return ""
-// 	}
-// }
-// func (p *Program) String() string {
-// 	var b bytes.Buffer
-
-// 	for _, s := range p.Statements {
-// 		b.WriteString(s.String())
-// 	}
-
-// 	return b.String()
-// }
-
-// ======================================================================
-// AST nodes types definitions
-// ======================================================================
-
-// Contains a list of assignments without a body
-// type ExpressionStatement struct {
-// 	Token      token.Token
-// 	Expression Expression
-// }
-
-// func (es *ExpressionStatement) statementNode()       {}
-// func (es *ExpressionStatement) TokenLiteral() string { return es.Token.Literal }
-// func (es *ExpressionStatement) String() string {
-// 	if es.Expression != nil {
-// 		return es.Expression.String() + ";"
-// 	}
-// 	return ""
-// }
 
 // Represents a symbol-value pair in the AST.
 type Assignment struct {
 	Token token.Token
-	Name  *IdentifierExpr
+	Name  *ExprIdentifier
 	Value Expression
-}
-
-func (a *Assignment) expressionNode()      {}
-func (a *Assignment) TokenLiteral() string { return a.Token.Literal }
-func (a *Assignment) String() string {
-	var b bytes.Buffer
-
-	b.WriteString(a.Name.String() + " = ")
-	b.WriteString(a.Value.String())
-
-	return b.String()
 }
 
 // Contains a list of assignments without a body
@@ -91,187 +38,123 @@ type LetStatement struct {
 	Assignments []*Assignment
 }
 
-func (ls *LetStatement) statementNode()       {}
-func (ls *LetStatement) TokenLiteral() string { return ls.Token.Literal }
-func (ls *LetStatement) String() string {
-	var b bytes.Buffer
-
-	b.WriteString(ls.TokenLiteral() + " ")
-	for i, ass := range ls.Assignments {
-		b.WriteString(ass.String())
-		if i < len(ls.Assignments)-1 {
-			b.WriteString(" and ")
-		}
-	}
-	b.WriteString(";")
-
-	return b.String()
-}
-
 // Represents `let var = val in body`
-type LetExpression struct {
+type ExprLet struct {
 	Token      token.Token
 	Assignment Assignment
 	Body       Expression
 }
 
-func (le *LetExpression) expressionNode()      {}
-func (le *LetExpression) TokenLiteral() string { return le.Token.Literal }
-func (le *LetExpression) String() string {
-	var b bytes.Buffer
-
-	b.WriteString("(let ")
-	b.WriteString(le.Assignment.String())
-	b.WriteString("; ")
-	b.WriteString(le.Body.String())
-	b.WriteString(")")
-
-	return b.String()
-}
-
 // Represents an if-then-else expression
-type IfExpression struct {
+type ExprIf struct {
 	Token       token.Token
 	Condition   Expression
 	Consequence Expression
 	Alternative Expression
 }
 
-func (i *IfExpression) expressionNode()      {}
-func (i *IfExpression) TokenLiteral() string { return i.Token.Literal }
-func (i *IfExpression) String() string {
-	var b bytes.Buffer
-
-	b.WriteString("(if ")
-	b.WriteString(i.Condition.String())
-	b.WriteString(" then ")
-	b.WriteString(i.Consequence.String())
-	b.WriteString(" else ")
-	b.WriteString(i.Alternative.String())
-	b.WriteString(")")
-
-	return b.String()
-}
-
 // Represents a function definition literal
-type FunctionLiteral struct {
+type ExprLambda struct {
 	Token token.Token
-	Param *IdentifierExpr
+	Param *ExprIdentifier
 	Body  Expression
 }
 
-func (f *FunctionLiteral) expressionNode()      {}
-func (f *FunctionLiteral) TokenLiteral() string { return f.Token.Literal }
-func (f *FunctionLiteral) String() string {
-	var b bytes.Buffer
-
-	b.WriteString("(λ ")
-	b.WriteString(f.Param.String())
-	b.WriteString(" . ")
-	b.WriteString(f.Body.String())
-	b.WriteString(")")
-
-	return b.String()
-}
-
 // Represent a function application
-type ApplyExpr struct {
+type ExprApply struct {
 	Token    token.Token
 	Function Expression
 	Arg      Expression
 }
 
-func (f *ApplyExpr) expressionNode()      {}
-func (f *ApplyExpr) TokenLiteral() string { return f.Token.Literal }
-func (f *ApplyExpr) String() string {
-	var b bytes.Buffer
-
-	b.WriteString(f.Function.String())
-	b.WriteString("(")
-	b.WriteString(f.Arg.String())
-	b.WriteString(")")
-
-	return b.String()
-}
-
 // Represents a prefix Expression
-type PrefixExpression struct {
+type ExprPrefix struct {
 	Token    token.Token
 	Operator string
 	Right    Expression
 }
 
-func (p *PrefixExpression) expressionNode()      {}
-func (p *PrefixExpression) TokenLiteral() string { return p.Token.Literal }
-func (p *PrefixExpression) String() string {
-	var b bytes.Buffer
-	b.WriteString("(")
-	b.WriteString(p.Operator)
-	b.WriteString(p.Right.String())
-	b.WriteString(")")
-	return b.String()
-}
-
 // Represents an infix expression
-type InfixExpression struct {
+type ExprInfix struct {
 	Token    token.Token
 	Left     Expression
 	Operator string
 	Right    Expression
 }
 
-func (p *InfixExpression) expressionNode()      {}
-func (p *InfixExpression) TokenLiteral() string { return p.Token.Literal }
-func (p *InfixExpression) String() string {
-	var b bytes.Buffer
-	b.WriteString("(")
-	b.WriteString(p.Left.String())
-	b.WriteString(" " + p.Operator + " ")
-	b.WriteString(p.Right.String())
-	b.WriteString(")")
-	return b.String()
-}
-
 // Represents a symbol or an identifier
-type IdentifierExpr struct {
+type ExprIdentifier struct {
 	Token      token.Token
 	Identifier UniqueIdentifier
 }
 
-func (i *IdentifierExpr) expressionNode()      {}
-func (i *IdentifierExpr) TokenLiteral() string { return i.Token.Literal }
-func (i *IdentifierExpr) String() string {
-	return i.Identifier.String()
-}
-
 // Represents a type annotation
-type AnnotExpr struct {
+type ExprAnnot struct {
 	Token token.Token
 	Body  Expression
 	Type  TypeValue
 }
 
-func (i *AnnotExpr) expressionNode()      {}
-func (i *AnnotExpr) TokenLiteral() string { return i.Token.Literal }
-func (i *AnnotExpr) String() string {
-	if i.Type == nil {
-		return i.Body.String()
-	}
-	return "(" + i.Body.String() + ": " + i.Type.String() + ")"
-}
-
 // Represents a fixed point combinator
-type FixExpr struct {
+type ExprFix struct {
 	Token token.Token
-	Param IdentifierExpr
+	Param ExprIdentifier
 	Body  Expression
 }
 
-func (i *FixExpr) expressionNode()      {}
-func (i *FixExpr) TokenLiteral() string { return i.Token.Literal }
-func (i *FixExpr) String() string {
-	return "(fix" + i.Param.String() + " . " + i.Body.String() + ")"
+type ExprPair struct {
+	Token token.Token
+	Left  Expression
+	Right Expression
 }
+
+type ExprInj struct {
+	Token   token.Token
+	IsRight bool
+	Expr    Expression
+}
+
+// Pattern matching branch
+// type Branch {}
+
+func (a *Assignment) expressionNode()     {}
+func (ls *LetStatement) statementNode()   {}
+func (le *ExprLet) expressionNode()       {}
+func (i *ExprIf) expressionNode()         {}
+func (f *ExprLambda) expressionNode()     {}
+func (f *ExprApply) expressionNode()      {}
+func (p *ExprPrefix) expressionNode()     {}
+func (p *ExprInfix) expressionNode()      {}
+func (i *ExprIdentifier) expressionNode() {}
+func (i *ExprAnnot) expressionNode()      {}
+func (i *ExprFix) expressionNode()        {}
+func (i *ExprPair) expressionNode()       {}
+func (i *ExprInj) expressionNode()        {}
+
+func (a *Assignment) isPattern() bool     { return false }
+func (le *ExprLet) isPattern() bool       { return false }
+func (i *ExprIf) isPattern() bool         { return false }
+func (f *ExprLambda) isPattern() bool     { return false }
+func (f *ExprApply) isPattern() bool      { return false }
+func (p *ExprPrefix) isPattern() bool     { return false }
+func (p *ExprInfix) isPattern() bool      { return false }
+func (i *ExprIdentifier) isPattern() bool { return true }
+func (i *ExprAnnot) isPattern() bool      { return false }
+func (i *ExprFix) isPattern() bool        { return false }
+func (i *ExprPair) isPattern() bool       { return i.Left.isPattern() && i.Right.isPattern() }
+func (i *ExprInj) isPattern() bool        { return i.Expr.isPattern() }
+
+func (a *Assignment) TokenLiteral() string     { return a.Token.Literal }
+func (ls *LetStatement) TokenLiteral() string  { return ls.Token.Literal }
+func (le *ExprLet) TokenLiteral() string       { return le.Token.Literal }
+func (i *ExprIf) TokenLiteral() string         { return i.Token.Literal }
+func (f *ExprLambda) TokenLiteral() string     { return f.Token.Literal }
+func (f *ExprApply) TokenLiteral() string      { return f.Token.Literal }
+func (p *ExprPrefix) TokenLiteral() string     { return p.Token.Literal }
+func (p *ExprInfix) TokenLiteral() string      { return p.Token.Literal }
+func (i *ExprIdentifier) TokenLiteral() string { return i.Token.Literal }
+func (i *ExprAnnot) TokenLiteral() string      { return i.Token.Literal }
+func (i *ExprFix) TokenLiteral() string        { return i.Token.Literal }
 
 // ======================================================================
 // Terminal values: literals
@@ -283,30 +166,16 @@ type IntegerLiteral struct {
 	Value int64
 }
 
-func (i *IntegerLiteral) expressionNode()      {}
-func (i *IntegerLiteral) TokenLiteral() string { return i.Token.Literal }
-func (i *IntegerLiteral) String() string       { return i.Token.Literal }
-
 // Represents a floating point literal
 type FloatLiteral struct {
 	Token token.Token
 	Value float64
 }
 
-func (f *FloatLiteral) expressionNode()      {}
-func (f *FloatLiteral) TokenLiteral() string { return f.Token.Literal }
-func (f *FloatLiteral) String() string       { return f.Token.Literal }
-
 // Represents a complex number literal
 type ComplexLiteral struct {
 	Token token.Token
 	Value complex128
-}
-
-func (c *ComplexLiteral) expressionNode()      {}
-func (c *ComplexLiteral) TokenLiteral() string { return c.Token.Literal }
-func (c *ComplexLiteral) String() string {
-	return fmt.Sprintf("%g", c.Value)
 }
 
 // Represents a boolean value
@@ -315,18 +184,10 @@ type BoolLiteral struct {
 	Value bool
 }
 
-func (c *BoolLiteral) expressionNode()      {}
-func (c *BoolLiteral) TokenLiteral() string { return c.Token.Literal }
-func (c *BoolLiteral) String() string       { return c.Token.Literal }
-
 // Represents an unit value
 type UnitLiteral struct {
 	Token token.Token
 }
-
-func (c *UnitLiteral) expressionNode()      {}
-func (c *UnitLiteral) TokenLiteral() string { return c.Token.Literal }
-func (c *UnitLiteral) String() string       { return "()" }
 
 // Represents a string value
 type StringLiteral struct {
@@ -334,16 +195,42 @@ type StringLiteral struct {
 	Value string
 }
 
-func (c *StringLiteral) expressionNode()      {}
-func (c *StringLiteral) TokenLiteral() string { return c.Token.Literal }
-func (c *StringLiteral) String() string       { return c.Token.Literal }
-
 // Represents an Unicode character value
 type RuneLiteral struct {
 	Token token.Token
 	Value string
 }
 
-func (c *RuneLiteral) expressionNode()      {}
-func (c *RuneLiteral) TokenLiteral() string { return c.Token.Literal }
-func (c *RuneLiteral) String() string       { return c.Token.Literal }
+func (i *IntegerLiteral) expressionNode() {}
+func (f *FloatLiteral) expressionNode()   {}
+func (c *ComplexLiteral) expressionNode() {}
+func (c *BoolLiteral) expressionNode()    {}
+func (c *UnitLiteral) expressionNode()    {}
+func (c *StringLiteral) expressionNode()  {}
+func (c *RuneLiteral) expressionNode()    {}
+
+func (i *IntegerLiteral) isPattern() bool { return true }
+func (f *FloatLiteral) isPattern() bool   { return true }
+func (c *ComplexLiteral) isPattern() bool { return true }
+func (c *BoolLiteral) isPattern() bool    { return true }
+func (c *UnitLiteral) isPattern() bool    { return true }
+func (c *StringLiteral) isPattern() bool  { return true }
+func (c *RuneLiteral) isPattern() bool    { return true }
+
+func (i *IntegerLiteral) TokenLiteral() string { return i.Token.Literal }
+func (f *FloatLiteral) TokenLiteral() string   { return f.Token.Literal }
+func (c *ComplexLiteral) TokenLiteral() string { return c.Token.Literal }
+func (c *BoolLiteral) TokenLiteral() string    { return c.Token.Literal }
+func (c *UnitLiteral) TokenLiteral() string    { return c.Token.Literal }
+func (c *StringLiteral) TokenLiteral() string  { return c.Token.Literal }
+func (c *RuneLiteral) TokenLiteral() string    { return c.Token.Literal }
+
+func (i *IntegerLiteral) String() string { return i.Token.Literal }
+func (f *FloatLiteral) String() string   { return f.Token.Literal }
+func (c *ComplexLiteral) String() string {
+	return fmt.Sprintf("%g", c.Value)
+}
+func (c *BoolLiteral) String() string   { return c.Token.Literal }
+func (c *UnitLiteral) String() string   { return "()" }
+func (c *StringLiteral) String() string { return c.Token.Literal }
+func (c *RuneLiteral) String() string   { return c.Token.Literal }
