@@ -264,9 +264,9 @@ func (p *Parser) parseAssignment() *ast.Assignment {
 
 	if f, ok := ass.Value.(*ast.ExprLambda); ok {
 		// Combinator for recursion
-		fix := &ast.ExprLambda{
+		fix := &ast.ExprFix{
 			Token: f.Token,
-			Param: ass.Name,
+			Param: *ass.Name,
 			Body:  f,
 		}
 
