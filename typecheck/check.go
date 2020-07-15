@@ -8,7 +8,7 @@ import (
 // Helper functions that checks if a VariableType has a given
 // identifier name
 func (c Context) checkVariable(ty ast.TypeValue, name string) bool {
-	vty, ok := ty.(*ast.VariableType)
+	vty, ok := ty.(*ast.TyUnVar)
 	return ok && vty.Identifier.Value == name
 }
 
@@ -24,7 +24,7 @@ func (c Context) CheckAgainst(expr ast.Expression, ty ast.TypeValue) (Context, e
 		// Rule 1l
 		c.debugRule("1I")
 
-		if _, ok := ty.(*ast.UnitType); ok {
+		if _, ok := ty.(*ast.TyUnit); ok {
 			c.debugRuleOut("1I")
 			return c, nil
 		}
@@ -85,7 +85,7 @@ func (c Context) CheckAgainst(expr ast.Expression, ty ast.TypeValue) (Context, e
 		// Rule ->l
 		c.debugRule("->l")
 
-		if lty, ok := ty.(*ast.LambdaType); ok {
+		if lty, ok := ty.(*ast.TyLambda); ok {
 			typedvar := &TypeAnnotation{
 				Identifier: vexpr.Param.Identifier,
 				Value:      lty.Domain,
@@ -103,7 +103,7 @@ func (c Context) CheckAgainst(expr ast.Expression, ty ast.TypeValue) (Context, e
 
 	}
 
-	if fty, ok := ty.(*ast.ForAllType); ok {
+	if fty, ok := ty.(*ast.TyForAll); ok {
 		// Rule ∀l
 		c.debugRule("∀I")
 

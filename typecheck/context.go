@@ -2,6 +2,7 @@ package typecheck
 
 import (
 	"bytes"
+
 	"github.com/0x0f0f0f/gobba-golang/ast"
 	// "reflect"
 )
@@ -222,7 +223,7 @@ func (c Context) GetUnsolvedVariables() []ast.TypeValue {
 	for _, c := range c.Contents {
 		if v, ok := c.(*ExistentialVariable); ok {
 			if v.Value == nil {
-				res = append(res, &ast.ExistsType{Identifier: v.Identifier})
+				res = append(res, &ast.TyExVar{Identifier: v.Identifier})
 			}
 		}
 	}

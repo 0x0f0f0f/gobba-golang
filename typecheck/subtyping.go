@@ -20,16 +20,16 @@ func (c Context) Subtype(a, b ast.TypeValue) (Context, error) {
 	}
 
 	switch va := a.(type) {
-	case *ast.UnitType:
+	case *ast.TyUnit:
 		// Rule <:Unit
 		c.debugRule("<:Unit")
 
-		if _, ok := b.(*ast.UnitType); ok {
+		if _, ok := b.(*ast.TyUnit); ok {
 			return c, nil
 		}
-	case *ast.VariableType:
+	case *ast.TyUnVar:
 		switch vb := b.(type) {
-		case *ast.VariableType:
+		case *ast.TyUnVar:
 			if va.Identifier == vb.Identifier {
 				// Rule <:Var
 				c.debugRule("<:Var")
@@ -64,8 +64,8 @@ func (c Context) Subtype(a, b ast.TypeValue) (Context, error) {
 		// Other Primitive Subtyping Rules
 		// =============================================================
 
-	case *ast.ExistsType:
-		if vb, ok := b.(*ast.ExistsType); ok {
+	case *ast.TyExVar:
+		if vb, ok := b.(*ast.TyExVar); ok {
 			if va.Identifier == vb.Identifier {
 				// Rule <:Exvar
 				c.debugRule("<:Exvar")
@@ -81,9 +81,9 @@ func (c Context) Subtype(a, b ast.TypeValue) (Context, error) {
 			return res, nil
 		}
 
-	case *ast.LambdaType:
+	case *ast.TyLambda:
 		switch vb := b.(type) {
-		case *ast.LambdaType:
+		case *ast.TyLambda:
 			// Rule <:->
 			c.debugRule("<:->")
 
@@ -95,14 +95,14 @@ func (c Context) Subtype(a, b ast.TypeValue) (Context, error) {
 				theta.Apply(vb.Codomain))
 		}
 
-	case *ast.ForAllType:
+	case *ast.TyForAll:
 		// Rule <:∀L
 		c.debugRule("<:∀L")
 
 		r1 := ast.GenUID("α")
 		marker := &Marker{r1}
 		exv := &ExistentialVariable{r1, nil}
-		ext := &ast.ExistsType{Identifier: r1}
+		ext := &ast.TyExVar{Identifier: r1}
 		gamma := c.InsertHead(exv).InsertHead(marker)
 		sub_a := Substitution(va.Type, ext, va.Identifier)
 		delta, err := gamma.Subtype(sub_a, b)
@@ -113,7 +113,7 @@ func (c Context) Subtype(a, b ast.TypeValue) (Context, error) {
 
 	}
 
-	if vb, ok := b.(*ast.ExistsType); ok {
+	if vb, ok := b.(*ast.TyExVar); ok {
 		if !OccursIn(vb.Identifier, a) {
 			// Rule <:InstantiateR
 			c.debugRule("<:InstantiateR")
@@ -124,7 +124,7 @@ func (c Context) Subtype(a, b ast.TypeValue) (Context, error) {
 
 	}
 
-	if vb, ok := b.(*ast.ForAllType); ok {
+	if vb, ok := b.(*ast.TyForAll); ok {
 		// Rule <:∀R
 		c.debugRule("<:∀R")
 

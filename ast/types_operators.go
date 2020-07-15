@@ -30,14 +30,14 @@ func NewPrefixOperatorType(right, result TypeValue) *PrefixOperatorType {
 	}
 }
 
-var TINT = NewVariableType(token.TINT)
-var TFLOAT = NewVariableType(token.TFLOAT)
-var TCOMPLEX = NewVariableType(token.TCOMPLEX)
-var TBOOL = NewVariableType(token.TBOOL)
-var TRUNE = NewVariableType(token.TRUNE)
-var TSTRING = NewVariableType(token.TSTRING)
+var TINT = NewTyUnVar(token.TINT)
+var TFLOAT = NewTyUnVar(token.TFLOAT)
+var TCOMPLEX = NewTyUnVar(token.TCOMPLEX)
+var TBOOL = NewTyUnVar(token.TBOOL)
+var TRUNE = NewTyUnVar(token.TRUNE)
+var TSTRING = NewTyUnVar(token.TSTRING)
 
-var DefaultVariableTypes map[string]*VariableType = map[string]*VariableType{
+var DefaultVariableTypes map[string]*TyUnVar = map[string]*TyUnVar{
 	token.TINT:     TINT,
 	token.TFLOAT:   TFLOAT,
 	token.TCOMPLEX: TCOMPLEX,

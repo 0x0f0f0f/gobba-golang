@@ -9,17 +9,17 @@ import (
 func (c *Context) IsWellFormed(t ast.TypeValue) bool {
 	switch v := t.(type) {
 	// Rule UvarWF
-	case *ast.VariableType:
+	case *ast.TyUnVar:
 		return c.HasTypeVar(v.Identifier)
 	// Rule ArrowWF
-	case *ast.LambdaType:
+	case *ast.TyLambda:
 		return c.IsWellFormed(v.Domain) && c.IsWellFormed(v.Codomain)
 	// Rule ForallWF
-	case *ast.ForAllType:
+	case *ast.TyForAll:
 		nc := c.InsertHead(&UniversalVariable{v.Identifier})
 		return nc.IsWellFormed(v.Type)
 	// Rules EvarWF and SolvedEvarWF
-	case *ast.ExistsType:
+	case *ast.TyExVar:
 		return c.HasExistentialVariable(v.Identifier) || nil != c.GetSolvedVariable(v.Identifier)
 	default:
 		// Primitive types are well formed, rules UnitWF

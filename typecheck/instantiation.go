@@ -22,16 +22,16 @@ func (c Context) InstantiateL(alpha ast.UniqueIdentifier, ty ast.TypeValue) Cont
 	}
 
 	switch vty := ty.(type) {
-	case *ast.LambdaType:
+	case *ast.TyLambda:
 		// Rule InstLArr
 		c.debugRule("InstLArr")
 
 		alpha1 := ast.GenUID("α")
 		alpha2 := ast.GenUID("α")
 
-		var arrow ast.TypeValue = &ast.LambdaType{
-			Domain:   &ast.ExistsType{Identifier: alpha1},
-			Codomain: &ast.ExistsType{Identifier: alpha2},
+		var arrow ast.TypeValue = &ast.TyLambda{
+			Domain:   &ast.TyExVar{Identifier: alpha1},
+			Codomain: &ast.TyExVar{Identifier: alpha2},
 		}
 
 		// First premise
@@ -51,7 +51,7 @@ func (c Context) InstantiateL(alpha ast.UniqueIdentifier, ty ast.TypeValue) Cont
 		delta.debugRuleOut("InstLArr")
 		return delta
 
-	case *ast.ForAllType:
+	case *ast.TyForAll:
 		// Rule InstLAllR
 		c.debugRule("InstLAllR")
 
@@ -61,7 +61,7 @@ func (c Context) InstantiateL(alpha ast.UniqueIdentifier, ty ast.TypeValue) Cont
 		delta.debugRuleOut("InstLAllR")
 		return delta.Drop(unv)
 
-	case *ast.ExistsType:
+	case *ast.TyExVar:
 		// Rule InstLReach
 		c.debugRule("InstLReach")
 
@@ -69,7 +69,7 @@ func (c Context) InstantiateL(alpha ast.UniqueIdentifier, ty ast.TypeValue) Cont
 
 		if rightc.IsWellFormed(ty) {
 			exv := &ExistentialVariable{beta, nil}
-			var vt ast.TypeValue = &ast.ExistsType{Identifier: alpha}
+			var vt ast.TypeValue = &ast.TyExVar{Identifier: alpha}
 
 			outc := c.Insert(exv, []ContextValue{
 				&ExistentialVariable{
@@ -101,16 +101,16 @@ func (c Context) InstantiateR(ty ast.TypeValue, alpha ast.UniqueIdentifier) Cont
 	}
 
 	switch va := ty.(type) {
-	case *ast.LambdaType:
+	case *ast.TyLambda:
 		// Rule InstRArr
 		c.debugRule("InstRArr")
 
 		alpha1 := ast.GenUID("α")
 		alpha2 := ast.GenUID("α")
 
-		var arrow ast.TypeValue = &ast.LambdaType{
-			Domain:   &ast.ExistsType{Identifier: alpha1},
-			Codomain: &ast.ExistsType{Identifier: alpha2},
+		var arrow ast.TypeValue = &ast.TyLambda{
+			Domain:   &ast.TyExVar{Identifier: alpha1},
+			Codomain: &ast.TyExVar{Identifier: alpha2},
 		}
 
 		gamma := c.InsertHead(&ExistentialVariable{
@@ -126,7 +126,7 @@ func (c Context) InstantiateR(ty ast.TypeValue, alpha ast.UniqueIdentifier) Cont
 		delta := theta.InstantiateR(theta.Apply(va.Codomain), alpha2)
 		delta.debugRuleOut("InstRArr")
 		return delta
-	case *ast.ForAllType:
+	case *ast.TyForAll:
 		// Rule InstRAllL
 		c.debugRule("InstRAllL")
 
@@ -135,7 +135,7 @@ func (c Context) InstantiateR(ty ast.TypeValue, alpha ast.UniqueIdentifier) Cont
 		beta1exv := &ExistentialVariable{
 			Identifier: beta1,
 		}
-		ext := &ast.ExistsType{
+		ext := &ast.TyExVar{
 			Identifier: beta1,
 		}
 
@@ -145,11 +145,11 @@ func (c Context) InstantiateR(ty ast.TypeValue, alpha ast.UniqueIdentifier) Cont
 		delta.debugRuleOut("InstRAllL")
 		return delta.Drop(marker)
 
-	case *ast.ExistsType:
+	case *ast.TyExVar:
 		// Rule InstRReach
 		c.debugRule("InstRReach")
 
-		var exv ast.TypeValue = &ast.ExistsType{Identifier: alpha}
+		var exv ast.TypeValue = &ast.TyExVar{Identifier: alpha}
 		if rightc.IsWellFormed(ty) {
 			outc := c.InsertHead(&ExistentialVariable{
 				Identifier: va.Identifier,

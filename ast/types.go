@@ -17,88 +17,87 @@ type TypeValue interface {
 // Definitions of types of values that compose an algorithmic type context
 // ======================================================================
 
-type UnitType struct {
+type TyUnit struct {
 	Identifier UniqueIdentifier
 }
 
-// Denoted with α in the paper
-type VariableType struct {
+// Denoted with α in the paper. Universal variable
+type TyUnVar struct {
 	Identifier UniqueIdentifier
 }
 
 // Denoted with ∀α. A in the paper
-type ForAllType struct {
+type TyForAll struct {
 	Identifier UniqueIdentifier
 	Type       TypeValue
 }
 
+// Denoted with α^ in the paper
+type TyExVar struct {
+	Identifier UniqueIdentifier
+}
+
 // Denoted with A → B in the paper
-type LambdaType struct {
+type TyLambda struct {
 	Domain   TypeValue
 	Codomain TypeValue
 }
 
-// ADDITION: encoded with A U B
-// type UnionType struct {
-// 	Left  TypeValue
-// 	Right TypeValue
-// }
-
-// Denoted with α^ in the paper
-type ExistsType struct {
-	Identifier UniqueIdentifier
+// Sum type: encoded with A + B
+type TySum struct {
+	Left  TypeValue
+	Right TypeValue
 }
 
-func (u *UnitType) typeValue()     {}
-func (u *VariableType) typeValue() {}
-func (u *ForAllType) typeValue()   {}
-func (u *LambdaType) typeValue()   {}
+// Product type: encoded with A + B
+type TyProduct struct {
+	Left  TypeValue
+	Right TypeValue
+}
 
-// func (u *UnionType) typeValue()    {}
-func (u *ExistsType) typeValue() {}
+func (u *TyUnit) typeValue()    {}
+func (u *TyUnVar) typeValue()   {}
+func (u *TyForAll) typeValue()  {}
+func (u *TyLambda) typeValue()  {}
+func (u *TyExVar) typeValue()   {}
+func (u *TySum) typeValue()     {}
+func (u *TyProduct) typeValue() {}
 
-func (u *UnitType) IsMonotype() bool     { return true }
-func (u *VariableType) IsMonotype() bool { return true }
-func (u *ForAllType) IsMonotype() bool   { return false }
-func (u *ExistsType) IsMonotype() bool   { return true }
-func (u *LambdaType) IsMonotype() bool   { return u.Domain.IsMonotype() && u.Codomain.IsMonotype() }
-
-// func (u *UnionType) IsMonotype() bool    { return u.Left.IsMonotype() && u.Right.IsMonotype() }
+func (u *TyUnit) IsMonotype() bool    { return true }
+func (u *TyUnVar) IsMonotype() bool   { return true }
+func (u *TyForAll) IsMonotype() bool  { return false }
+func (u *TyExVar) IsMonotype() bool   { return true }
+func (u *TyLambda) IsMonotype() bool  { return u.Domain.IsMonotype() && u.Codomain.IsMonotype() }
+func (u *TySum) IsMonotype() bool     { return u.Left.IsMonotype() && u.Right.IsMonotype() }
+func (u *TyProduct) IsMonotype() bool { return u.Left.IsMonotype() && u.Right.IsMonotype() }
 
 // TODO record types
 
 // Default variable types
 
-func NewVariableType(name string) *VariableType {
-	return &VariableType{Identifier: UniqueIdentifier{Value: name}}
+func NewTyUnVar(name string) *TyUnVar {
+	return &TyUnVar{Identifier: UniqueIdentifier{Value: name}}
 }
-
-// func NewUnionType(left, right TypeValue) TypeValue {
-// 	if CompareTypeValues(left, right) {
-// 		return left
-// 	}
-// 	return &UnionType{Left: left, Right: right}
-// }
 
 func CompareTypeValues(a, b TypeValue) bool {
 	switch va := a.(type) {
-	case *UnitType:
-		_, ok := b.(*UnitType)
+	case *TyUnit:
+		_, ok := b.(*TyUnit)
 		return ok
-	case *VariableType:
-		vb, ok := b.(*VariableType)
+	case *TyUnVar:
+		vb, ok := b.(*TyUnVar)
 		return ok && va.Identifier == vb.Identifier
-	case *ExistsType:
-		vb, ok := b.(*ExistsType)
+	case *TyExVar:
+		vb, ok := b.(*TyExVar)
 		return ok && va.Identifier == vb.Identifier
-	case *ForAllType:
-		vb, ok := b.(*ForAllType)
+	case *TyForAll:
+		vb, ok := b.(*TyForAll)
 		return ok && va.Identifier == vb.Identifier && CompareTypeValues(va.Type, vb.Type)
-	// case *UnionType:
-	// 	vb, ok := b.(*UnionType)
-	// 	return ok && CompareTypeValues(va.Left, vb.Left) && CompareTypeValues(va.Right, vb.Right)
-	case *LambdaType:
-		vb, ok := b.(*LambdaType)
+	case *TySum:
+		vb, ok := b.(*TySum)
+		return ok && CompareTypeValues(va.Left, vb.Left) && CompareTypeValues(va.Right, vb.Right)
+	case *TyLambda:
+		vb, ok := b.(*TyLambda)
 		return ok && CompareTypeValues(va.Domain, vb.Domain) && CompareTypeValues(va.Codomain, vb.Codomain)
 	}
 	return false

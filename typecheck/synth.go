@@ -12,29 +12,29 @@ func (c Context) SynthesizesTo(exp ast.Expression) (ast.TypeValue, Context, erro
 	switch ve := exp.(type) {
 	case *ast.UnitLiteral: // Rule 1I=>
 		c.debugRuleOut("1I=>")
-		return &ast.UnitType{}, c, nil
+		return &ast.TyUnit{}, c, nil
 	case *ast.IntegerLiteral: // Rule intI=>
 		c.debugRuleOut("intI=>")
-		return ast.NewVariableType("int"), c, nil
+		return ast.NewTyUnVar("int"), c, nil
 	case *ast.FloatLiteral: // Rule floatI=>
 		c.debugRuleOut("floatI=>")
-		return ast.NewVariableType("float"), c, nil
+		return ast.NewTyUnVar("float"), c, nil
 
 	case *ast.ComplexLiteral: // Rule complexI=>
 		c.debugRuleOut("complexI=>")
-		return ast.NewVariableType("complex"), c, nil
+		return ast.NewTyUnVar("complex"), c, nil
 
 	case *ast.BoolLiteral: // Rule boolI=>
 		c.debugRuleOut("boolI=>")
-		return ast.NewVariableType("bool"), c, nil
+		return ast.NewTyUnVar("bool"), c, nil
 
 	case *ast.StringLiteral: // Rule stringI=>
 		c.debugRuleOut("stringI=>")
-		return ast.NewVariableType("string"), c, nil
+		return ast.NewTyUnVar("string"), c, nil
 
 	case *ast.RuneLiteral: // Rule runeI=>
 		c.debugRuleOut("runeI=>")
-		return ast.NewVariableType("rune"), c, nil
+		return ast.NewTyUnVar("rune"), c, nil
 
 	case *ast.ExprIdentifier:
 		// Rule Var
@@ -51,7 +51,7 @@ func (c Context) SynthesizesTo(exp ast.Expression) (ast.TypeValue, Context, erro
 		// 3 premises
 		c.debugRule("ifthen<:else=> or ifelse<:then=>")
 
-		gamma1, err := c.CheckAgainst(ve.Condition, ast.NewVariableType("bool"))
+		gamma1, err := c.CheckAgainst(ve.Condition, ast.NewTyUnVar("bool"))
 		if err != nil {
 			c.debugRuleFail("ifthen<:else=> or ifelse<:then=>")
 			return nil, c, err
@@ -98,10 +98,10 @@ func (c Context) SynthesizesTo(exp ast.Expression) (ast.TypeValue, Context, erro
 
 		alpha := ast.GenUID("α")
 		beta := ast.GenUID("β")
-		alphaext := &ast.ExistsType{
+		alphaext := &ast.TyExVar{
 			Identifier: alpha,
 		}
-		betaext := &ast.ExistsType{
+		betaext := &ast.TyExVar{
 			Identifier: beta,
 		}
 		alphaexv := &ExistentialVariable{
@@ -121,7 +121,7 @@ func (c Context) SynthesizesTo(exp ast.Expression) (ast.TypeValue, Context, erro
 			return nil, c, err
 		}
 
-		funtype := &ast.LambdaType{Domain: alphaext, Codomain: betaext}
+		funtype := &ast.TyLambda{Domain: alphaext, Codomain: betaext}
 		deltadrop := delta.Drop(annot)
 		deltadrop.debugRuleOut("->I=>")
 
@@ -133,10 +133,10 @@ func (c Context) SynthesizesTo(exp ast.Expression) (ast.TypeValue, Context, erro
 
 		alpha := ast.GenUID("α")
 		beta := ast.GenUID("β")
-		alphaext := &ast.ExistsType{
+		alphaext := &ast.TyExVar{
 			Identifier: alpha,
 		}
-		betaext := &ast.ExistsType{
+		betaext := &ast.TyExVar{
 			Identifier: beta,
 		}
 		alphaexv := &ExistentialVariable{
@@ -195,7 +195,7 @@ func (c Context) ApplicationSynthesizesTo(
 	exp ast.Expression) (ast.TypeValue, Context, error) {
 
 	switch vty := ty.(type) {
-	case *ast.ExistsType:
+	case *ast.TyExVar:
 		// Rule α^App
 		c.debugRule("α^App")
 
@@ -204,10 +204,10 @@ func (c Context) ApplicationSynthesizesTo(
 		alpha2 := ast.GenUID("α")
 		alpha1exv := &ExistentialVariable{Identifier: alpha1}
 		alpha2exv := &ExistentialVariable{Identifier: alpha2}
-		alpha1ext := &ast.ExistsType{Identifier: alpha1}
-		alpha2ext := &ast.ExistsType{Identifier: alpha2}
+		alpha1ext := &ast.TyExVar{Identifier: alpha1}
+		alpha2ext := &ast.TyExVar{Identifier: alpha2}
 
-		var funt ast.TypeValue = &ast.LambdaType{
+		var funt ast.TypeValue = &ast.TyLambda{
 			Domain:   alpha1ext,
 			Codomain: alpha2ext,
 		}
@@ -230,19 +230,19 @@ func (c Context) ApplicationSynthesizesTo(
 
 		delta.debugRuleOut("α^App")
 		return alpha2ext, delta, nil
-	case *ast.ForAllType:
+	case *ast.TyForAll:
 		// Rule ∀App
 		c.debugRule("∀App")
 
 		alpha := ast.GenUID("α")
 		alphaexv := &ExistentialVariable{Identifier: alpha}
-		alphaext := &ast.ExistsType{Identifier: alpha}
+		alphaext := &ast.TyExVar{Identifier: alpha}
 		gamma := c.InsertHead(alphaexv)
 		sub_a := Substitution(vty.Type, alphaext, vty.Identifier)
 
 		gamma.debugRuleOut("∀App")
 		return gamma.ApplicationSynthesizesTo(sub_a, exp)
-	case *ast.LambdaType:
+	case *ast.TyLambda:
 		// Rule ->App
 		c.debugRule("->App")
 

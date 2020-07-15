@@ -16,9 +16,9 @@ var defaultTypes = map[token.TokenType]string{
 // Parse a type value
 func (p *Parser) parseTypeValue() ast.TypeValue {
 	if p.curTokenIs(token.IDENT) {
-		return &ast.VariableType{Identifier: ast.UniqueIdentifier{Value: p.curToken.Literal}}
+		return &ast.TyUnVar{Identifier: ast.UniqueIdentifier{Value: p.curToken.Literal}}
 	} else if p.curTokenIs(token.UNIT) {
-		return &ast.UnitType{}
+		return &ast.TyUnit{}
 	}
 	p.expectedType(p.curToken)
 	return nil
