@@ -30,10 +30,10 @@ func NewPrefixOperatorType(right, result TypeValue) *PrefixOperatorType {
 	}
 }
 
+var TBOOL = NewTyUnVar(token.TBOOL)
 var TINT = NewTyUnVar(token.TINT)
 var TFLOAT = NewTyUnVar(token.TFLOAT)
 var TCOMPLEX = NewTyUnVar(token.TCOMPLEX)
-var TBOOL = NewTyUnVar(token.TBOOL)
 var TRUNE = NewTyUnVar(token.TRUNE)
 var TSTRING = NewTyUnVar(token.TSTRING)
 

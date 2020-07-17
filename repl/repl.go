@@ -2,17 +2,18 @@ package repl
 
 import (
 	"fmt"
+
 	"github.com/0x0f0f0f/gobba-golang/alpha"
-	"github.com/0x0f0f0f/gobba-golang/ast"
 	"github.com/0x0f0f0f/gobba-golang/lexer"
 	"github.com/0x0f0f0f/gobba-golang/parser"
 	"github.com/0x0f0f0f/gobba-golang/token"
-	"github.com/0x0f0f0f/gobba-golang/typecheck"
 	"github.com/alecthomas/repr"
+
 	// "github.com/c-bata/go-prompt"
-	"github.com/peterh/liner"
 	"os"
 	"path/filepath"
+
+	"github.com/peterh/liner"
 )
 
 type ReplOptions struct {
@@ -135,15 +136,14 @@ func (r *Repl) executor(line string) {
 	// Typecheck
 	// TODO default context with primitives
 	// TODO preserve context between statements in the repl
-	ctx := typecheck.NewContext()
-	ast.ResetUIDCounter()
-	ty, err := ctx.SynthExpr(*alphaconv_program)
-	if err != nil {
-		fmt.Fprintln(os.Stderr, err)
-		return
-	}
-
-	fmt.Printf("- : %s\n", ty.FancyString(map[ast.UniqueIdentifier]int{}))
+	//ctx := typecheck.NewContext()
+	//ast.ResetUIDCounter()
+	//ty, err := ctx.SynthExpr(*alphaconv_program)
+	//if err != nil {
+	//	fmt.Fprintln(os.Stderr, err)
+	//	return
+	//}
+	//fmt.Printf("- : %s\n", ty.FancyString(map[ast.UniqueIdentifier]int{}))
 
 	// TODO evaluation
 }

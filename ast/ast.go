@@ -3,7 +3,6 @@
 package ast
 
 import (
-	"fmt"
 	"github.com/0x0f0f0f/gobba-golang/token"
 )
 
@@ -25,7 +24,7 @@ type Expression interface {
 	isPattern() bool
 }
 
-// Represents a symbol-value pair in the AST.
+// Represents e symbol-value pair in the AST.
 type Assignment struct {
 	Token token.Token
 	Name  *ExprIdentifier
@@ -61,24 +60,41 @@ type ExprLambda struct {
 }
 
 // Represent a function application
-type ExprApply struct {
+//type ExprApply struct {
+//	Token    token.Token
+//	Function Expression
+//	Arg      Expression
+//}
+
+// Spines are lists of arguments passed to a function application.
+// passed to functions and are needed for the DK16 typechecker
+type ExprApplySpine struct {
 	Token    token.Token
 	Function Expression
-	Arg      Expression
+	Spine    []Expression
 }
 
 // Represents a prefix Expression
 type ExprPrefix struct {
 	Token    token.Token
-	Operator string
+	Operator Operator
 	Right    Expression
+}
+
+type Operator struct {
+	IsPattern bool // True if the operator is allowed in patterns
+	Kind      string
+}
+
+func (o Operator) String() string {
+	return string(o.Kind)
 }
 
 // Represents an infix expression
 type ExprInfix struct {
 	Token    token.Token
 	Left     Expression
-	Operator string
+	Operator Operator
 	Right    Expression
 }
 
@@ -96,9 +112,9 @@ type ExprAnnot struct {
 }
 
 // Represents a fixed point combinator
-type ExprFix struct {
+type ExprRec struct {
 	Token token.Token
-	Param ExprIdentifier
+	Name  ExprIdentifier
 	Body  Expression
 }
 
@@ -108,129 +124,75 @@ type ExprPair struct {
 	Right Expression
 }
 
+// Sum type injections inj_l : A -> A + B, inj_r : B -> A + B
 type ExprInj struct {
 	Token   token.Token
 	IsRight bool
 	Expr    Expression
 }
 
-// Pattern matching branch
-// type Branch {}
-
-func (a *Assignment) expressionNode()     {}
-func (ls *LetStatement) statementNode()   {}
-func (le *ExprLet) expressionNode()       {}
-func (i *ExprIf) expressionNode()         {}
-func (f *ExprLambda) expressionNode()     {}
-func (f *ExprApply) expressionNode()      {}
-func (p *ExprPrefix) expressionNode()     {}
-func (p *ExprInfix) expressionNode()      {}
-func (i *ExprIdentifier) expressionNode() {}
-func (i *ExprAnnot) expressionNode()      {}
-func (i *ExprFix) expressionNode()        {}
-func (i *ExprPair) expressionNode()       {}
-func (i *ExprInj) expressionNode()        {}
-
-func (a *Assignment) isPattern() bool     { return false }
-func (le *ExprLet) isPattern() bool       { return false }
-func (i *ExprIf) isPattern() bool         { return false }
-func (f *ExprLambda) isPattern() bool     { return false }
-func (f *ExprApply) isPattern() bool      { return false }
-func (p *ExprPrefix) isPattern() bool     { return false }
-func (p *ExprInfix) isPattern() bool      { return false }
-func (i *ExprIdentifier) isPattern() bool { return true }
-func (i *ExprAnnot) isPattern() bool      { return false }
-func (i *ExprFix) isPattern() bool        { return false }
-func (i *ExprPair) isPattern() bool       { return i.Left.isPattern() && i.Right.isPattern() }
-func (i *ExprInj) isPattern() bool        { return i.Expr.isPattern() }
-
-func (a *Assignment) TokenLiteral() string     { return a.Token.Literal }
-func (ls *LetStatement) TokenLiteral() string  { return ls.Token.Literal }
-func (le *ExprLet) TokenLiteral() string       { return le.Token.Literal }
-func (i *ExprIf) TokenLiteral() string         { return i.Token.Literal }
-func (f *ExprLambda) TokenLiteral() string     { return f.Token.Literal }
-func (f *ExprApply) TokenLiteral() string      { return f.Token.Literal }
-func (p *ExprPrefix) TokenLiteral() string     { return p.Token.Literal }
-func (p *ExprInfix) TokenLiteral() string      { return p.Token.Literal }
-func (i *ExprIdentifier) TokenLiteral() string { return i.Token.Literal }
-func (i *ExprAnnot) TokenLiteral() string      { return i.Token.Literal }
-func (i *ExprFix) TokenLiteral() string        { return i.Token.Literal }
-
-// ======================================================================
-// Terminal values: literals
-// ======================================================================
-
-// Represents an integer literal
-type IntegerLiteral struct {
-	Token token.Token
-	Value int64
+// Pattern Matching branch
+type MatchBranch struct {
+	Patterns []Expression // TODO check that foreach isPattern() == true
+	Body     Expression
 }
 
-// Represents a floating point literal
-type FloatLiteral struct {
-	Token token.Token
-	Value float64
+// Pattern matching expression
+type ExprMatch struct {
+	Token    token.Token
+	Expr     Expression
+	Branches []MatchBranch
 }
 
-// Represents a complex number literal
-type ComplexLiteral struct {
-	Token token.Token
-	Value complex128
+func (e *Assignment) expressionNode()     {}
+func (e *LetStatement) statementNode()    {}
+func (e *ExprLet) expressionNode()        {}
+func (e *ExprIf) expressionNode()         {}
+func (e *ExprLambda) expressionNode()     {}
+func (e *ExprApplySpine) expressionNode() {}
+func (e *ExprPrefix) expressionNode()     {}
+func (e *ExprInfix) expressionNode()      {}
+func (e *ExprIdentifier) expressionNode() {}
+func (e *ExprAnnot) expressionNode()      {}
+func (e *ExprRec) expressionNode()        {}
+func (e *ExprPair) expressionNode()       {}
+func (e *ExprInj) expressionNode()        {}
+func (e *ExprMatch) expressionNode()      {}
+
+func (e *ExprIdentifier) isPattern() bool { return true }
+func (e *ExprPair) isPattern() bool       { return e.Left.isPattern() && e.Right.isPattern() }
+func (e *ExprInj) isPattern() bool        { return e.Expr.isPattern() }
+func (e *Assignment) isPattern() bool     { return false }
+func (e *ExprLet) isPattern() bool        { return false }
+func (e *ExprIf) isPattern() bool         { return false }
+func (e *ExprLambda) isPattern() bool     { return false }
+func (e *ExprApplySpine) isPattern() bool { return false }
+func (e *ExprPrefix) isPattern() bool {
+	if e.Operator.IsPattern {
+		return e.Right.isPattern()
+	}
+	return false
 }
-
-// Represents a boolean value
-type BoolLiteral struct {
-	Token token.Token
-	Value bool
+func (e *ExprInfix) isPattern() bool {
+	if e.Operator.IsPattern {
+		return e.Left.isPattern() && e.Right.isPattern()
+	}
+	return false
 }
+func (e *ExprAnnot) isPattern() bool { return false }
+func (e *ExprRec) isPattern() bool   { return false }
+func (e *ExprMatch) isPattern() bool { return false }
 
-// Represents an unit value
-type UnitLiteral struct {
-	Token token.Token
-}
-
-// Represents a string value
-type StringLiteral struct {
-	Token token.Token
-	Value string
-}
-
-// Represents an Unicode character value
-type RuneLiteral struct {
-	Token token.Token
-	Value string
-}
-
-func (i *IntegerLiteral) expressionNode() {}
-func (f *FloatLiteral) expressionNode()   {}
-func (c *ComplexLiteral) expressionNode() {}
-func (c *BoolLiteral) expressionNode()    {}
-func (c *UnitLiteral) expressionNode()    {}
-func (c *StringLiteral) expressionNode()  {}
-func (c *RuneLiteral) expressionNode()    {}
-
-func (i *IntegerLiteral) isPattern() bool { return true }
-func (f *FloatLiteral) isPattern() bool   { return true }
-func (c *ComplexLiteral) isPattern() bool { return true }
-func (c *BoolLiteral) isPattern() bool    { return true }
-func (c *UnitLiteral) isPattern() bool    { return true }
-func (c *StringLiteral) isPattern() bool  { return true }
-func (c *RuneLiteral) isPattern() bool    { return true }
-
-func (i *IntegerLiteral) TokenLiteral() string { return i.Token.Literal }
-func (f *FloatLiteral) TokenLiteral() string   { return f.Token.Literal }
-func (c *ComplexLiteral) TokenLiteral() string { return c.Token.Literal }
-func (c *BoolLiteral) TokenLiteral() string    { return c.Token.Literal }
-func (c *UnitLiteral) TokenLiteral() string    { return c.Token.Literal }
-func (c *StringLiteral) TokenLiteral() string  { return c.Token.Literal }
-func (c *RuneLiteral) TokenLiteral() string    { return c.Token.Literal }
-
-func (i *IntegerLiteral) String() string { return i.Token.Literal }
-func (f *FloatLiteral) String() string   { return f.Token.Literal }
-func (c *ComplexLiteral) String() string {
-	return fmt.Sprintf("%g", c.Value)
-}
-func (c *BoolLiteral) String() string   { return c.Token.Literal }
-func (c *UnitLiteral) String() string   { return "()" }
-func (c *StringLiteral) String() string { return c.Token.Literal }
-func (c *RuneLiteral) String() string   { return c.Token.Literal }
+func (e *Assignment) TokenLiteral() string     { return e.Token.Literal }
+func (e *LetStatement) TokenLiteral() string   { return e.Token.Literal }
+func (e *ExprLet) TokenLiteral() string        { return e.Token.Literal }
+func (e *ExprIf) TokenLiteral() string         { return e.Token.Literal }
+func (e *ExprLambda) TokenLiteral() string     { return e.Token.Literal }
+func (e *ExprApplySpine) TokenLiteral() string { return e.Token.Literal }
+func (e *ExprPrefix) TokenLiteral() string     { return e.Token.Literal }
+func (e *ExprInfix) TokenLiteral() string      { return e.Token.Literal }
+func (e *ExprIdentifier) TokenLiteral() string { return e.Token.Literal }
+func (e *ExprAnnot) TokenLiteral() string      { return e.Token.Literal }
+func (e *ExprRec) TokenLiteral() string        { return e.Token.Literal }
+func (e *ExprInj) TokenLiteral() string        { return e.Token.Literal }
+func (e *ExprMatch) TokenLiteral() string      { return e.Token.Literal }

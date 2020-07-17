@@ -8,15 +8,15 @@ import (
 // α^ :=< A, instantiate α^ such that α^ <: A
 func (c Context) InstantiateL(alpha ast.UniqueIdentifier, ty ast.TypeValue) Context {
 	c.debugSection("InstantiateL", alpha.FullString(), ":=<", ty.FullString())
-	exv := &ExistentialVariable{alpha, nil}
+	exv := &CtxExSort{alpha, nil}
 	leftc, rightc := c.SplitAt(exv)
 
 	if ty.IsMonotype() && leftc.IsWellFormed(ty) {
 		// Rule InstLSolve
 		c.debugRule("InstLSolve")
 
-		solved := &ExistentialVariable{alpha, &ty}
-		c = c.Insert(exv, []ContextValue{solved})
+		solved := &CtxExSort{alpha, &ty}
+		c = c.Insert(exv, []CtxValue{solved})
 		c.debugRuleOut("InstLSolve")
 		// return c
 	}
@@ -35,11 +35,11 @@ func (c Context) InstantiateL(alpha ast.UniqueIdentifier, ty ast.TypeValue) Cont
 		}
 
 		// First premise
-		exv := &ExistentialVariable{alpha, nil}
-		gamma := c.Insert(exv, []ContextValue{
-			&ExistentialVariable{alpha2, nil},
-			&ExistentialVariable{alpha1, nil},
-			&ExistentialVariable{
+		exv := &CtxExSort{alpha, nil}
+		gamma := c.Insert(exv, []CtxValue{
+			&CtxExSort{alpha2, nil},
+			&CtxExSort{alpha1, nil},
+			&CtxExSort{
 				Identifier: alpha,
 				Value:      &arrow,
 			},
@@ -55,7 +55,7 @@ func (c Context) InstantiateL(alpha ast.UniqueIdentifier, ty ast.TypeValue) Cont
 		// Rule InstLAllR
 		c.debugRule("InstLAllR")
 
-		unv := &UniversalVariable{vty.Identifier}
+		unv := &CtxUnVar{vty.Identifier}
 		delta := c.InsertHead(unv).InstantiateL(alpha, vty.Type)
 
 		delta.debugRuleOut("InstLAllR")
@@ -68,11 +68,11 @@ func (c Context) InstantiateL(alpha ast.UniqueIdentifier, ty ast.TypeValue) Cont
 		beta := vty.Identifier
 
 		if rightc.IsWellFormed(ty) {
-			exv := &ExistentialVariable{beta, nil}
+			exv := &CtxExSort{beta, nil}
 			var vt ast.TypeValue = &ast.TyExVar{Identifier: alpha}
 
-			outc := c.Insert(exv, []ContextValue{
-				&ExistentialVariable{
+			outc := c.Insert(exv, []CtxValue{
+				&CtxExSort{
 					Identifier: vty.Identifier,
 					Value:      &vt,
 				},
@@ -88,14 +88,14 @@ func (c Context) InstantiateL(alpha ast.UniqueIdentifier, ty ast.TypeValue) Cont
 // A =<: α^, instantiate α^ such that A <: α^
 func (c Context) InstantiateR(ty ast.TypeValue, alpha ast.UniqueIdentifier) Context {
 
-	exv := &ExistentialVariable{alpha, nil}
+	exv := &CtxExSort{alpha, nil}
 	leftc, rightc := c.SplitAt(exv)
 	if ty.IsMonotype() && leftc.IsWellFormed(ty) {
 		// Rule InstRSolve
 		c.debugRule("InstRSolve")
 
-		solved := &ExistentialVariable{alpha, &ty}
-		c = c.Insert(exv, []ContextValue{solved})
+		solved := &CtxExSort{alpha, &ty}
+		c = c.Insert(exv, []CtxValue{solved})
 		c.debugRuleOut("InstRSolve")
 		// return c
 	}
@@ -113,12 +113,12 @@ func (c Context) InstantiateR(ty ast.TypeValue, alpha ast.UniqueIdentifier) Cont
 			Codomain: &ast.TyExVar{Identifier: alpha2},
 		}
 
-		gamma := c.InsertHead(&ExistentialVariable{
+		gamma := c.InsertHead(&CtxExSort{
 			Identifier: alpha,
 			Value:      &arrow,
-		}).InsertHead(&ExistentialVariable{
+		}).InsertHead(&CtxExSort{
 			Identifier: alpha1,
-		}).InsertHead(&ExistentialVariable{
+		}).InsertHead(&CtxExSort{
 			Identifier: alpha2,
 		})
 
@@ -131,8 +131,8 @@ func (c Context) InstantiateR(ty ast.TypeValue, alpha ast.UniqueIdentifier) Cont
 		c.debugRule("InstRAllL")
 
 		beta1 := ast.GenUID("β")
-		marker := &Marker{Identifier: beta1}
-		beta1exv := &ExistentialVariable{
+		marker := &CtxMarker{Identifier: beta1}
+		beta1exv := &CtxExSort{
 			Identifier: beta1,
 		}
 		ext := &ast.TyExVar{
@@ -151,7 +151,7 @@ func (c Context) InstantiateR(ty ast.TypeValue, alpha ast.UniqueIdentifier) Cont
 
 		var exv ast.TypeValue = &ast.TyExVar{Identifier: alpha}
 		if rightc.IsWellFormed(ty) {
-			outc := c.InsertHead(&ExistentialVariable{
+			outc := c.InsertHead(&CtxExSort{
 				Identifier: va.Identifier,
 				Value:      &exv,
 			})

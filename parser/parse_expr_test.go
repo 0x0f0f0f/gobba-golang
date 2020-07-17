@@ -2,10 +2,11 @@ package parser
 
 import (
 	"fmt"
+	"testing"
+
 	"github.com/0x0f0f0f/gobba-golang/ast"
 	"github.com/0x0f0f0f/gobba-golang/lexer"
 	"github.com/stretchr/testify/assert"
-	"testing"
 )
 
 func TestIdentifierExpression(t *testing.T) {
@@ -15,7 +16,7 @@ func TestIdentifierExpression(t *testing.T) {
 	p := New(l)
 	program := p.ParseProgram()
 	CheckParserErrors(t, p)
-	testUniqueIdentifier(t, program, ast.UniqueIdentifier{"foobar", 0})
+	testUniqueIdentifier(t, program, ast.UniqueIdentifier{Value: "foobar", Id: 0})
 }
 
 func TestBooleanExpression(t *testing.T) {
@@ -65,7 +66,7 @@ func TestParsingPrefixExpressions(t *testing.T) {
 		exp, ok := program.(*ast.ExprPrefix)
 		assert.True(t, ok, "casting to *ast.ExprPrefix")
 
-		assert.Equal(t, exp.Operator, tt.operator)
+		assert.Equal(t, exp.Operator.Kind, tt.operator)
 		testLiteralExpression(t, exp.Right, tt.value)
 	}
 }
@@ -108,9 +109,7 @@ func TestLetExpression(t *testing.T) {
 		expected string
 	}{
 		{"let x = 5; x", "(λ x . x)(5)"},
-		// {"let x = 5 and y = 4;", []string{"x", "y"}, []interface{}{5, 4}},
-		// {"let y = true;", []string{"y"}, []interface{}{true}},
-		// {"let foobar = y;", []string{"foobar"}, []interface{}{"y"}},
+		{"let foo = 5 and bar = 4; foo + bar", "(λ foo . (λ bar . (foo + bar)))(5, 4)"},
 	}
 
 	for _, tt := range tests {
@@ -153,7 +152,7 @@ func testInfixExpression(t *testing.T, exp ast.Expression, left interface{},
 	opExp, ok := exp.(*ast.ExprInfix)
 	assert.True(t, ok, "casting to *ast.ExprInfix")
 	testLiteralExpression(t, opExp.Left, left)
-	assert.Equal(t, opExp.Operator, operator)
+	assert.Equal(t, opExp.Operator.Kind, operator)
 	testLiteralExpression(t, opExp.Right, right)
 	return true
 }

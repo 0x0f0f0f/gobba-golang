@@ -40,7 +40,11 @@ func Substitution(a, b ast.TypeValue, alpha ast.UniqueIdentifier) ast.TypeValue 
 		}
 	case *ast.TyForAll:
 		if va.Identifier == alpha {
-			return &ast.TyForAll{va.Identifier, b}
+			return &ast.TyForAll{
+				Identifier: va.Identifier,
+				Sort:       va.Sort,
+				Type:       b,
+			}
 		} else {
 			return &ast.TyForAll{
 				Identifier: va.Identifier,
@@ -57,36 +61,4 @@ func Substitution(a, b ast.TypeValue, alpha ast.UniqueIdentifier) ast.TypeValue 
 
 	}
 
-}
-
-// Apply a context as a substitution to a value
-func (c *Context) Apply(a ast.TypeValue) ast.TypeValue {
-	switch va := a.(type) {
-	case *ast.TyExVar:
-		tau := c.GetSolvedVariable(va.Identifier)
-		if tau == nil {
-			c.debugSection("apply", a.FullString(), "=", a.FullString())
-			return a
-		} else {
-			ret := c.Apply(*tau)
-			c.debugSection("apply", a.FullString(), "=", ret.FullString())
-			return ret
-		}
-	case *ast.TyLambda:
-		ret := &ast.TyLambda{
-			Domain:   c.Apply(va.Domain),
-			Codomain: c.Apply(va.Codomain),
-		}
-		c.debugSection("apply", a.FullString(), "=", ret.FullString())
-		return ret
-	case *ast.TyForAll:
-		ret := &ast.TyForAll{
-			Identifier: va.Identifier,
-			Type:       c.Apply(va.Type),
-		}
-		c.debugSection("apply", a.FullString(), "=", ret.FullString())
-		return ret
-	}
-	c.debugSection("apply", a.FullString(), "=", a.FullString())
-	return a
 }

@@ -151,15 +151,16 @@ func New(l *lexer.Lexer) *Parser {
 	p.registerInfix(token.CDIVIDE, p.parseInfixExpression)
 	p.registerInfix(token.CTOPOW, p.parseInfixExpression)
 
+	// Other operators
 	p.registerInfix(token.ACCESS, p.parseInfixExpression)
 	p.registerInfix(token.AT, p.parseInfixExpression)
-
 	p.registerInfix(token.CONS, p.parseInfixRightAssocExpression)
 
+	// Sequencing operator
 	p.registerInfix(token.SEMI, p.parseInfixSequence)
 
 	// function application
-	p.registerInfix(token.LPAREN, p.parseExprApply)
+	p.registerInfix(token.LPAREN, p.parseExprApplySpine)
 
 	// Read two tokens so that curToken and peekToken are both set
 	p.nextToken()
@@ -264,9 +265,9 @@ func (p *Parser) parseAssignment() *ast.Assignment {
 
 	if f, ok := ass.Value.(*ast.ExprLambda); ok {
 		// Combinator for recursion
-		fix := &ast.ExprFix{
+		fix := &ast.ExprRec{
 			Token: f.Token,
-			Param: *ass.Name,
+			Name:  *ass.Name,
 			Body:  f,
 		}
 

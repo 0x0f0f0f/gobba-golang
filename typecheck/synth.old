@@ -104,10 +104,10 @@ func (c Context) SynthesizesTo(exp ast.Expression) (ast.TypeValue, Context, erro
 		betaext := &ast.TyExVar{
 			Identifier: beta,
 		}
-		alphaexv := &ExistentialVariable{
+		alphaexv := &CtxExSort{
 			Identifier: alpha,
 		}
-		betaexv := &ExistentialVariable{
+		betaexv := &CtxExSort{
 			Identifier: beta,
 		}
 		annot := &TypeAnnotation{
@@ -127,7 +127,7 @@ func (c Context) SynthesizesTo(exp ast.Expression) (ast.TypeValue, Context, erro
 
 		return funtype, deltadrop, nil
 
-	case *ast.ExprFix:
+	case *ast.ExprRec:
 		// Rule fixI=>
 		c.debugRule("fixI=>")
 
@@ -139,14 +139,14 @@ func (c Context) SynthesizesTo(exp ast.Expression) (ast.TypeValue, Context, erro
 		betaext := &ast.TyExVar{
 			Identifier: beta,
 		}
-		alphaexv := &ExistentialVariable{
+		alphaexv := &CtxExSort{
 			Identifier: alpha,
 		}
-		betaexv := &ExistentialVariable{
+		betaexv := &CtxExSort{
 			Identifier: beta,
 		}
 		annot := &TypeAnnotation{
-			Identifier: ve.Param.Identifier,
+			Identifier: ve.Name.Identifier,
 			Value:      alphaext,
 		}
 		gamma := c.InsertHead(annot).InsertHead(betaexv).InsertHead(alphaexv)
@@ -199,11 +199,11 @@ func (c Context) ApplicationSynthesizesTo(
 		// Rule α^App
 		c.debugRule("α^App")
 
-		idexv := &ExistentialVariable{Identifier: vty.Identifier}
+		idexv := &CtxExSort{Identifier: vty.Identifier}
 		alpha1 := ast.GenUID("α")
 		alpha2 := ast.GenUID("α")
-		alpha1exv := &ExistentialVariable{Identifier: alpha1}
-		alpha2exv := &ExistentialVariable{Identifier: alpha2}
+		alpha1exv := &CtxExSort{Identifier: alpha1}
+		alpha2exv := &CtxExSort{Identifier: alpha2}
 		alpha1ext := &ast.TyExVar{Identifier: alpha1}
 		alpha2ext := &ast.TyExVar{Identifier: alpha2}
 
@@ -211,12 +211,12 @@ func (c Context) ApplicationSynthesizesTo(
 			Domain:   alpha1ext,
 			Codomain: alpha2ext,
 		}
-		solvedexv := &ExistentialVariable{
+		solvedexv := &CtxExSort{
 			Identifier: vty.Identifier,
 			Value:      &funt,
 		}
 
-		gamma := c.Insert(idexv, []ContextValue{
+		gamma := c.Insert(idexv, []CtxValue{
 			alpha2exv,
 			alpha1exv,
 			solvedexv,
@@ -235,7 +235,7 @@ func (c Context) ApplicationSynthesizesTo(
 		c.debugRule("∀App")
 
 		alpha := ast.GenUID("α")
-		alphaexv := &ExistentialVariable{Identifier: alpha}
+		alphaexv := &CtxExSort{Identifier: alpha}
 		alphaext := &ast.TyExVar{Identifier: alpha}
 		gamma := c.InsertHead(alphaexv)
 		sub_a := Substitution(vty.Type, alphaext, vty.Identifier)

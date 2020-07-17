@@ -64,20 +64,37 @@ func (f *ExprLambda) String() string {
 	return b.String()
 }
 
-func (f *ExprApply) String() string {
+// func (f *ExprApply) String() string {
+// 	var b bytes.Buffer
+
+// 	b.WriteString(f.Function.String())
+// 	b.WriteString("(")
+// 	b.WriteString(f.Arg.String())
+// 	b.WriteString(")")
+
+// 	return b.String()
+// }
+
+func (f *ExprApplySpine) String() string {
 	var b bytes.Buffer
 
 	b.WriteString(f.Function.String())
 	b.WriteString("(")
-	b.WriteString(f.Arg.String())
+	for i, curr := range f.Spine {
+		b.WriteString(curr.String())
+		if i < len(f.Spine)-1 {
+			b.WriteString(", ")
+		}
+	}
 	b.WriteString(")")
 
 	return b.String()
 }
+
 func (p *ExprPrefix) String() string {
 	var b bytes.Buffer
 	b.WriteString("(")
-	b.WriteString(p.Operator)
+	b.WriteString(p.Operator.String())
 	b.WriteString(p.Right.String())
 	b.WriteString(")")
 	return b.String()
@@ -86,11 +103,12 @@ func (p *ExprInfix) String() string {
 	var b bytes.Buffer
 	b.WriteString("(")
 	b.WriteString(p.Left.String())
-	b.WriteString(" " + p.Operator + " ")
+	b.WriteString(" " + p.Operator.String() + " ")
 	b.WriteString(p.Right.String())
 	b.WriteString(")")
 	return b.String()
 }
+
 func (i *ExprIdentifier) String() string {
 	return i.Identifier.String()
 }
@@ -102,6 +120,45 @@ func (i *ExprAnnot) String() string {
 	return "(" + i.Body.String() + ": " + i.Type.String() + ")"
 }
 
-func (i *ExprFix) String() string {
-	return "(fix" + i.Param.String() + " . " + i.Body.String() + ")"
+func (i *ExprRec) String() string {
+	return "(rec " + i.Name.String() + " . " + i.Body.String() + ")"
+}
+
+func (i *ExprInj) String() string {
+	dir := "1"
+	if i.IsRight {
+		dir = "2"
+	}
+	return "(inj" + dir + " " + i.Expr.String() + ")"
+}
+
+func (m *MatchBranch) String() string {
+	var b bytes.Buffer
+
+	for i, p := range m.Patterns {
+		b.WriteString(p.String())
+		if i != len(m.Patterns)-1 {
+			b.WriteString(", ")
+		}
+	}
+	b.WriteString(" => ")
+	b.WriteString(m.Body.String())
+	return b.String()
+}
+
+func (e *ExprMatch) String() string {
+	var b bytes.Buffer
+
+	b.WriteString("match ")
+	b.WriteString(e.Expr.String())
+	b.WriteString(" {")
+	for i, br := range e.Branches {
+		b.WriteString(br.String())
+		if i != len(e.Branches)-1 {
+			b.WriteString("| ")
+		}
+	}
+
+	b.WriteString("} ")
+	return b.String()
 }

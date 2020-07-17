@@ -12,7 +12,7 @@ import (
 // https://www.cl.cam.ac.uk/~nk480/bidir.pdf
 // https://github.com/chrisnevers/bidirectional-typechecking/blob/master/lib/ast/context.ml
 
-type ContextValue interface {
+type CtxValue interface {
 	contextValue()
 	String() string
 }
@@ -21,77 +21,110 @@ type ContextValue interface {
 // Definitions of types of values that compose an algorithmic type context
 // ======================================================================
 
-// Denoted with α in the paper
-type UniversalVariable struct {
+// Universal variable sort. Denoted with α:κ in the paper
+type CtxUnSort struct {
 	Identifier ast.UniqueIdentifier
+	Sort       ast.Sort
 }
 
-func (v *UniversalVariable) contextValue() {}
-func (v *UniversalVariable) String() string {
-	return v.Identifier.FullString()
-}
-
-// Unsolved existential variable α^
-// solved when Value is not nil
-type ExistentialVariable struct {
+// Existential variable sort. α^:κ
+type CtxExSort struct {
 	Identifier ast.UniqueIdentifier
-	Value      *ast.TypeValue
+	Sort       ast.Sort
 }
 
-func (v *ExistentialVariable) contextValue() {}
-func (v *ExistentialVariable) solved() bool {
-	return v.Value != nil
-}
-func (v *ExistentialVariable) String() string {
-	var b bytes.Buffer
-
-	b.WriteString(v.Identifier.FullString())
-
-	if v.Value != nil {
-		b.WriteString("=")
-		b.WriteString((*v.Value).FullString())
-	}
-	return b.String()
-}
-
-// Denoted with |>α^ in the paper
-type Marker struct {
+// Universal variable equality judgment α = t
+type CtxUnEq struct {
 	Identifier ast.UniqueIdentifier
+	Term       ast.TypeValue
 }
 
-func (v *Marker) contextValue() {}
-func (v *Marker) String() string {
-	return "►" + v.Identifier.FullString()
-}
-
-// Denoted with x : A in the paper
-type TypeAnnotation struct {
+// Existential variable equality. α^:κ = τ
+type CtxExEq struct {
 	Identifier ast.UniqueIdentifier
+	Sort       ast.Sort
 	Value      ast.TypeValue
 }
 
-func (v *TypeAnnotation) contextValue() {}
-func (v *TypeAnnotation) String() string {
-	return v.Identifier.FullString() + ": " + v.Value.FullString()
+// Denoted with |>α in the paper
+type CtxUnMarker struct {
+	Identifier ast.UniqueIdentifier
+}
+
+// Denoted with |>α^ in the paper
+type CtxExMarker struct {
+	Identifier ast.UniqueIdentifier
+}
+
+// Expressions variable typings. x:Ap
+type CtxVarType struct {
+	Identifier   ast.UniqueIdentifier
+	Type         ast.TypeValue
+	Principality ast.Principality
+}
+
+func (v *CtxUnSort) contextValue()   {}
+func (v *CtxExSort) contextValue()   {}
+func (v *CtxUnEq) contextValue()     {}
+func (v *CtxExEq) contextValue()     {}
+func (v *CtxUnMarker) contextValue() {}
+func (v *CtxExMarker) contextValue() {}
+func (v *CtxVarType) contextValue()  {}
+
+func (v *CtxUnSort) String() string {
+	return v.Identifier.FullString() + ": " + v.Sort.String()
+}
+func (v *CtxExSort) String() string {
+	return v.Identifier.FullString() + "^: " + v.Sort.String()
+}
+
+func (v *CtxUnEq) String() string {
+	return v.Identifier.FullString() + "= " + v.Term.String()
+}
+func (v *CtxExEq) String() string {
+	return v.Identifier.FullString() + "^: " + v.Sort.String() + "= " + v.Value.String()
+}
+
+func (v *CtxUnMarker) String() string {
+	return "►" + v.Identifier.FullString()
+}
+func (v *CtxExMarker) String() string {
+	return "►" + v.Identifier.FullString() + "^"
+}
+
+func (v *CtxVarType) String() string {
+	return v.Identifier.FullString() + ": " + v.Type.FullString() + v.Principality.String()
 }
 
 // Returns true if two values implementing ContextValue are equal
-func CompareContextValues(a, b ContextValue) bool {
+func CompareContextValues(a, b CtxValue) bool {
 	switch va := a.(type) {
-	case *UniversalVariable:
-		if vb, ok := b.(*UniversalVariable); ok {
+	case *CtxUnSort:
+		if vb, ok := b.(*CtxUnSort); ok {
 			return *va == *vb
 		}
-	case *ExistentialVariable:
-		if vb, ok := b.(*ExistentialVariable); ok {
+	case *CtxExSort:
+		if vb, ok := b.(*CtxExSort); ok {
 			return *va == *vb
 		}
-	case *Marker:
-		if vb, ok := b.(*Marker); ok {
+	case *CtxUnEq:
+		if vb, ok := b.(*CtxUnEq); ok {
 			return *va == *vb
 		}
-	case *TypeAnnotation:
-		if vb, ok := b.(*TypeAnnotation); ok {
+	case *CtxExEq:
+		if vb, ok := b.(*CtxExEq); ok {
+			return *va == *vb
+		}
+	case *CtxUnMarker:
+		if vb, ok := b.(*CtxUnMarker); ok {
+			return *va == *vb
+		}
+	case *CtxExMarker:
+		if vb, ok := b.(*CtxExMarker); ok {
+			return *va == *vb
+		}
+	case *CtxVarType:
+		if vb, ok := b.(*CtxVarType); ok {
 			return *va == *vb
 		}
 
@@ -106,13 +139,13 @@ func CompareContextValues(a, b ContextValue) bool {
 // ======================================================================
 
 type Context struct {
-	Contents []ContextValue
+	Contents []CtxValue
 }
 
 // Creates a new empty context
 func NewContext() *Context {
 	c := &Context{}
-	c.Contents = make([]ContextValue, 0)
+	c.Contents = make([]CtxValue, 0)
 	return c
 }
 
@@ -129,40 +162,44 @@ func (c Context) String() string {
 	return b.String()
 }
 
-// Sorted insertion after element el in the context
+// ======================================================================
+// Algorithmic contex insertion and deletion
+// ======================================================================
+
+// Sorted insertion in place of  element el in the context
 // Return a new context after insertion
-func (c Context) Insert(el ContextValue, values []ContextValue) Context {
+func (Γ Context) Insert(el CtxValue, values []CtxValue) Context {
 	nc := NewContext()
 
-	i := len(c.Contents)
-	for j, s := range c.Contents {
+	i := len(Γ.Contents)
+	for j, s := range Γ.Contents {
 		if CompareContextValues(s, el) {
 			i = j
 			break
 		}
 	}
 
-	nc.Contents = append(nc.Contents, c.Contents[:i]...)
+	nc.Contents = append(nc.Contents, Γ.Contents[:i]...)
 	nc.Contents = append(nc.Contents, values...)
-	if i < len(c.Contents) {
-		nc.Contents = append(nc.Contents, c.Contents[i+1:]...)
+	if i < len(Γ.Contents) {
+		nc.Contents = append(nc.Contents, Γ.Contents[i+1:]...)
 	}
 
 	return *nc
 }
 
 // Insert at head and return a new context
-func (c Context) InsertHead(el ContextValue) Context {
+func (Γ Context) InsertHead(el CtxValue) Context {
 	nc := NewContext()
 	nc.Contents = append(nc.Contents, el)
-	nc.Contents = append(nc.Contents, c.Contents...)
+	nc.Contents = append(nc.Contents, Γ.Contents...)
 	return *nc
 }
 
 // Remove an element from a context and return a new one
-func (c Context) Drop(el ContextValue) Context {
+func (Γ Context) Drop(el CtxValue) Context {
 	nc := NewContext()
-	for _, old := range c.Contents {
+	for _, old := range Γ.Contents {
 		if !CompareContextValues(old, el) {
 			nc.Contents = append(nc.Contents, old)
 		}
@@ -170,84 +207,20 @@ func (c Context) Drop(el ContextValue) Context {
 	return *nc
 }
 
-func (c Context) Concat(rc Context) Context {
+func (Γ Context) Concat(rc Context) Context {
 	nc := NewContext()
-	copy(nc.Contents, c.Contents)
+	copy(nc.Contents, Γ.Contents)
 	nc.Contents = append(nc.Contents, rc.Contents...)
 
 	return *nc
 }
 
-// True if the context contain the universal variable with the given identifier
-func (c Context) HasTypeVar(alpha ast.UniqueIdentifier) bool {
-	if _, ok := ast.DefaultVariableTypes[alpha.Value]; ok {
-		return true
-	}
-	for _, c := range c.Contents {
-		if v, ok := c.(*UniversalVariable); ok {
-			if v.Identifier.Value == alpha.Value {
-				return true
-			}
-		}
-	}
-	return false
-}
-
-// True if the context contains an unsolved universal variable with the given identifier
-func (c Context) HasExistentialVariable(alpha ast.UniqueIdentifier) bool {
-	for _, c := range c.Contents {
-		if v, ok := c.(*ExistentialVariable); ok {
-			if v.Identifier == alpha {
-				return !v.solved()
-			}
-		}
-	}
-	return false
-}
-
-// If the context contains a solved universal variable with the given identifier
-// just return the corresponding monotype
-func (c Context) GetSolvedVariable(alpha ast.UniqueIdentifier) *ast.TypeValue {
-	for _, c := range c.Contents {
-		if v, ok := c.(*ExistentialVariable); ok {
-			if v.Identifier == alpha && v.solved() {
-				return v.Value
-			}
-		}
-	}
-	return nil
-}
-
-func (c Context) GetUnsolvedVariables() []ast.TypeValue {
-	res := []ast.TypeValue{}
-	for _, c := range c.Contents {
-		if v, ok := c.(*ExistentialVariable); ok {
-			if v.Value == nil {
-				res = append(res, &ast.TyExVar{Identifier: v.Identifier})
-			}
-		}
-	}
-	return res
-}
-
-// Return the type of a type annotation.
-func (c Context) GetAnnotation(alpha ast.UniqueIdentifier) *ast.TypeValue {
-	for _, c := range c.Contents {
-		if v, ok := c.(*TypeAnnotation); ok {
-			if v.Identifier == alpha {
-				return &v.Value
-			}
-		}
-	}
-	return nil
-}
-
 // Split a context in two left and right context when a value is encountered
-func (c Context) SplitAt(el ContextValue) (Context, Context) {
+func (Γ Context) SplitAt(el CtxValue) (Context, Context) {
 	left := NewContext()
 	right := NewContext()
 	found := false
-	for _, old := range c.Contents {
+	for _, old := range Γ.Contents {
 		if CompareContextValues(old, el) {
 			found = true
 		}
@@ -260,4 +233,77 @@ func (c Context) SplitAt(el ContextValue) (Context, Context) {
 		left.Contents = append(left.Contents, old)
 	}
 	return *left, *right
+}
+
+// ======================================================================
+// Retrieving values from a Context
+// ======================================================================
+
+// Used in [Γ]α
+func (Γ Context) GetUnEq(α ast.UniqueIdentifier) ast.TypeValue {
+	for _, el := range Γ.Contents {
+		if uneq, ok := el.(*CtxUnEq); ok {
+			if uneq.Identifier == α {
+				return uneq.Term
+			}
+		}
+	}
+	return nil
+}
+
+// ======================================================================
+// Context as a substitution
+// ======================================================================
+
+// Apply a context as a substitution to a solved existential variable.
+func (Γ Context) ApplyTypeValue(α ast.TypeValue) ast.TypeValue {
+	Γ.debugSection("apply", α.FullString(), "=", α.FullString())
+	switch va := α.(type) {
+	// [Γ]α
+	case *ast.TyUnVar:
+		if τ := Γ.GetUnEq(va.Identifier); τ != nil {
+			return τ
+		} else {
+			return α
+		}
+	// [Γ](P ⊃ A)
+	case *ast.TyGuarded:
+		return &ast.TyGuarded{
+			Type:  Γ.ApplyTypeValue(va.Type),
+			Guard: Γ.ApplyProp(va.Guard),
+		}
+	// [Γ](A ∧ P)
+	case *ast.TyAsserting:
+		return &ast.TyAsserting{
+			Type:  Γ.ApplyTypeValue(va.Type),
+			Guard: Γ.ApplyProp(va.Guard),
+		}
+	// [Γ](A -> B)
+	case *ast.TyLambda:
+		return &ast.TyLambda{
+			Domain:   Γ.ApplyTypeValue(va.Domain),
+			Codomain: Γ.ApplyTypeValue(va.Codomain),
+		}
+	// [Γ](A + B)
+	case *ast.TySum:
+		return &ast.TySum{
+			Left:  Γ.ApplyTypeValue(va.Left),
+			Right: Γ.ApplyTypeValue(va.Right),
+		}
+	// [Γ](A * B)
+	case *ast.TyProduct:
+		return &ast.TyProduct{
+			Left:  Γ.ApplyTypeValue(va.Left),
+			Right: Γ.ApplyTypeValue(va.Right),
+		}
+		// TODO case vec
+	}
+	return α
+}
+
+func (Γ Context) ApplyProp(p ast.Prop) ast.Prop {
+	return ast.Prop{
+		Left:  Γ.ApplyTypeValue(p.Left),
+		Right: Γ.ApplyTypeValue(p.Left),
+	}
 }

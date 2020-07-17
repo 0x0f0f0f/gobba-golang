@@ -19,12 +19,13 @@ const (
 	EOF     = "EOF"
 
 	// Identifiers and literals
-	IDENT   = "identifier"
-	UNIT    = "()"
-	INT     = "integer literal"
-	FLOAT   = "floating point literal"
-	COMPLEX = "complex number literal"
-	STRING  = "string literal"
+	IDENT    = "identifier"
+	UNIT     = "()"
+	EMPTYVEC = "[]"
+	INT      = "integer literal"
+	FLOAT    = "floating point literal"
+	COMPLEX  = "complex number literal"
+	STRING   = "string literal"
 
 	// Arithmetical Operators
 	// Integer operators
@@ -58,18 +59,21 @@ const (
 	LESSEQ    = "<="
 	GREATEREQ = ">="
 
+	// Control flow operators
+	COMPOSE = "<=<"
+	PIPE    = ">=>"
+	CONCAT  = "++"
+	AT      = "@"
+	DOLLAR  = "$"
+	CONS    = "::"
+	ANNOT   = ":"
+	LAND    = "&&"
+	OR      = "||"
+	ACCESS  = "."
+
+	// Other operators
 	RARROW   = "->"
 	SEQUENCE = ">>"
-	COMPOSE  = "<=<"
-	PIPE     = ">=>"
-	CONCAT   = "++"
-	AT       = "@"
-	DOLLAR   = "$"
-	CONS     = "::"
-	ANNOT    = ":"
-	LAND     = "&&"
-	OR       = "||"
-	ACCESS   = "."
 
 	// Delimiters
 	COMMA       = ","

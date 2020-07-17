@@ -4,8 +4,9 @@ import (
 	"github.com/0x0f0f0f/gobba-golang/ast"
 	// "github.com/0x0f0f0f/gobba-golang/lexer"
 	// "github.com/0x0f0f0f/gobba-golang/parser"
-	"github.com/stretchr/testify/assert"
 	"testing"
+
+	"github.com/stretchr/testify/assert"
 )
 
 var alphaid ast.UniqueIdentifier = ast.GenUID("alpha")
@@ -14,40 +15,40 @@ var gammaid ast.UniqueIdentifier = ast.GenUID("gamma")
 var deltaid ast.UniqueIdentifier = ast.GenUID("delta")
 var epsilonid ast.UniqueIdentifier = ast.GenUID("epsilon")
 
-var alphaext ContextValue = &ExistentialVariable{
+var alphaext CtxValue = &CtxExSort{
 	Identifier: alphaid,
 }
-var betaext ContextValue = &ExistentialVariable{
+var betaext CtxValue = &CtxExSort{
 	Identifier: betaid,
 }
-var gammaext ContextValue = &ExistentialVariable{
+var gammaext CtxValue = &CtxExSort{
 	Identifier: gammaid,
 }
-var deltaext ContextValue = &ExistentialVariable{
+var deltaext CtxValue = &CtxExSort{
 	Identifier: deltaid,
 }
-var epsilonext ContextValue = &ExistentialVariable{
+var epsilonext CtxValue = &CtxExSort{
 	Identifier: epsilonid,
 }
 
-var alphauniv ContextValue = &UniversalVariable{
+var alphauniv CtxValue = &CtxUnVar{
 	Identifier: alphaid,
 }
-var betauniv ContextValue = &UniversalVariable{
+var betauniv CtxValue = &CtxUnVar{
 	Identifier: betaid,
 }
-var gammauniv ContextValue = &UniversalVariable{
+var gammauniv CtxValue = &CtxUnVar{
 	Identifier: gammaid,
 }
-var deltauniv ContextValue = &UniversalVariable{
+var deltauniv CtxValue = &CtxUnVar{
 	Identifier: deltaid,
 }
-var epsilonuniv ContextValue = &UniversalVariable{
+var epsilonuniv CtxValue = &CtxUnVar{
 	Identifier: epsilonid,
 }
 
 var SampleContext1 Context = Context{
-	Contents: []ContextValue{
+	Contents: []CtxValue{
 		alphaext,
 		betaext,
 		gammauniv,
@@ -57,17 +58,17 @@ var SampleContext1 Context = Context{
 func TestInsert(t *testing.T) {
 	tests := []struct {
 		Cont    Context
-		El      ContextValue
-		Inserts []ContextValue
+		El      CtxValue
+		Inserts []CtxValue
 		Result  Context
 	}{
-		{SampleContext1, betaext, []ContextValue{epsilonext, deltaext},
+		{SampleContext1, betaext, []CtxValue{epsilonext, deltaext},
 			Context{
-				Contents: []ContextValue{alphaext, epsilonext, deltaext, gammauniv},
+				Contents: []CtxValue{alphaext, epsilonext, deltaext, gammauniv},
 			}},
-		{SampleContext1, gammaext, []ContextValue{epsilonext, deltaext},
+		{SampleContext1, gammaext, []CtxValue{epsilonext, deltaext},
 			Context{
-				Contents: []ContextValue{alphaext, betaext, gammauniv, epsilonext, deltaext},
+				Contents: []CtxValue{alphaext, betaext, gammauniv, epsilonext, deltaext},
 			}},
 	}
 
@@ -81,20 +82,20 @@ func TestInsert(t *testing.T) {
 func TestDrop(t *testing.T) {
 	tests := []struct {
 		Cont   Context
-		El     ContextValue
+		El     CtxValue
 		Result Context
 	}{
 		{SampleContext1, betaext,
 			Context{
-				Contents: []ContextValue{alphaext, gammauniv},
+				Contents: []CtxValue{alphaext, gammauniv},
 			}},
 		{SampleContext1, gammauniv,
 			Context{
-				Contents: []ContextValue{alphaext, betaext},
+				Contents: []CtxValue{alphaext, betaext},
 			}},
 		{SampleContext1, deltaext,
 			Context{
-				Contents: []ContextValue{alphaext, betaext, gammauniv},
+				Contents: []CtxValue{alphaext, betaext, gammauniv},
 			}},
 	}
 

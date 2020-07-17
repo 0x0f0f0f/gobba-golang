@@ -4,6 +4,7 @@ package alpha
 
 import (
 	"fmt"
+
 	"github.com/0x0f0f0f/gobba-golang/ast"
 	"github.com/jinzhu/copier"
 )
@@ -146,40 +147,46 @@ func (a *AlphaEnvironment) ExpressionAlphaConversion(exp ast.Expression) (ast.Ex
 		newexpr.Param.Identifier = nid
 		newexpr.Body = nbody
 		return &newexpr, nil
-	case *ast.ExprFix:
+	case *ast.ExprRec:
 		na := NewAlphaEnvironmentExtension(a)
-		nid := na.IdentifierAlphaConversion(ve.Param.Identifier)
+		nid := na.IdentifierAlphaConversion(ve.Name.Identifier)
 
 		nbody, err := na.ExpressionAlphaConversion(ve.Body)
 		if err != nil {
 			return nil, err
 		}
 
-		var newexpr ast.ExprFix
+		var newexpr ast.ExprRec
 		err = copier.Copy(&newexpr, ve)
 		if err != nil {
 			return nil, err
 		}
-		newexpr.Param.Identifier = nid
+		newexpr.Name.Identifier = nid
 		newexpr.Body = nbody
 		return &newexpr, nil
-	case *ast.ExprApply:
+	case *ast.ExprApplySpine:
 		nfun, err := a.ExpressionAlphaConversion(ve.Function)
 		if err != nil {
 			return nil, err
 		}
-		narg, err := a.ExpressionAlphaConversion(ve.Arg)
-		if err != nil {
-			return nil, err
+
+		nspine := []ast.Expression{}
+
+		for _, arg := range ve.Spine {
+			narg, err := a.ExpressionAlphaConversion(arg)
+			if err != nil {
+				return nil, err
+			}
+			nspine = append(nspine, narg)
 		}
 
-		var nexpr ast.ExprApply
+		var nexpr ast.ExprApplySpine
 		err = copier.Copy(&nexpr, ve)
 		if err != nil {
 			return nil, err
 		}
 		nexpr.Function = nfun
-		nexpr.Arg = narg
+		nexpr.Spine = nspine
 		return &nexpr, nil
 	case *ast.ExprIf:
 		ncond, err := a.ExpressionAlphaConversion(ve.Condition)

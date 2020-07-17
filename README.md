@@ -1,8 +1,8 @@
 # gobba 
 gobba is a purely functional, statically typed programming language,
-heavily inspired from OCaml, Haskell, Go and Scheme languages. It is based
+heavily inspired from the OCaml, Haskell, Go and Scheme languages. It is based
 on Professors Gianluigi Ferrari and Francesca Levi's minicaml interpreter
-example..  Development of the OCaml version has dropped, and from now on
+example. Development of the OCaml version has dropped, and from now on
 the reference implementation of gobba will be written in the Go programming
 language.
 
@@ -11,12 +11,13 @@ The goal for gobba is to be a practical language with
 built in support for scientific computing, solving some of the problems
 that exist in other commonly used interpreted languages like Python and
 Javascript. A primary goal is also to offer a compromise between solidity,
-ease of learning and the ability to express ideas quickly in the language.
+ease of learning and the ability to express ideas quickly and idiomatically.
 
 ## Goals/Roadmap
 - [x] Lexer
 - [x] Top Down Operator Precedence (Pratt) parser
-- [ ] Formalization of type system
+- [X] Implementation of the [DK13](https://www.cl.cam.ac.uk/~nk480/bidir.pdf) type system
+- [ ] Implementation of the [DK18](https://arxiv.org/abs/1601.05106) type system
 - [ ] Formalization of operational semantics
 - [ ] Formalization of effect system 
 - [ ] First class support for linear algebra data types and operations, 

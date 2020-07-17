@@ -100,8 +100,8 @@ func (c Context) Subtype(a, b ast.TypeValue) (Context, error) {
 		c.debugRule("<:∀L")
 
 		r1 := ast.GenUID("α")
-		marker := &Marker{r1}
-		exv := &ExistentialVariable{r1, nil}
+		marker := &CtxMarker{r1}
+		exv := &CtxExSort{r1, nil}
 		ext := &ast.TyExVar{Identifier: r1}
 		gamma := c.InsertHead(exv).InsertHead(marker)
 		sub_a := Substitution(va.Type, ext, va.Identifier)
@@ -128,7 +128,7 @@ func (c Context) Subtype(a, b ast.TypeValue) (Context, error) {
 		// Rule <:∀R
 		c.debugRule("<:∀R")
 
-		u := &UniversalVariable{vb.Identifier}
+		u := &CtxUnVar{vb.Identifier}
 		theta := c.InsertHead(u)
 		delta, err := theta.Subtype(a, vb)
 		if err != nil {

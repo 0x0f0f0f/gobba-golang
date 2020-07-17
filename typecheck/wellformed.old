@@ -16,7 +16,7 @@ func (c *Context) IsWellFormed(t ast.TypeValue) bool {
 		return c.IsWellFormed(v.Domain) && c.IsWellFormed(v.Codomain)
 	// Rule ForallWF
 	case *ast.TyForAll:
-		nc := c.InsertHead(&UniversalVariable{v.Identifier})
+		nc := c.InsertHead(&CtxUnVar{v.Identifier})
 		return nc.IsWellFormed(v.Type)
 	// Rules EvarWF and SolvedEvarWF
 	case *ast.TyExVar:

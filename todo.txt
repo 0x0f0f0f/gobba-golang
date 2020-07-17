@@ -1,17 +1,16 @@
-(A) Parse type annotations
-(A) Parse function application tests
 (A) AST tests 
+(A) Formalize/Implement union and product types 
+(A) DK16 type system with GADTS
 (B) Parse lists and vectors
 (B) EBNF
-Move the - prefix operator to optional parsing
-DEFINE HOW YOU WANT TO HANDLE CLASS TYPING/ALGEBRAIC DATA TYPES: choose between structs/interfaces/typecasting or structs and sum ADTs
 DEFINE HOW YOU WANT TO HANDLE CONCURRENCY!
 Interpretation over execution
 Formalize operational semantics
 Formalize linear algebra in type system
-Formalize/Implement union and product types 
 Effect system: allow/deny effects
 OPTIONAL??? Policy (automata) based effect system based on the algebra of communicating processes. Paper degano giangi 
+x DK13 type system
+x Parse function application tests
 x lex/parse/typecheck explicit type annotations
 x Basic type inference
 x (A) Parse ifthenelse test
@@ -26,3 +25,5 @@ x (A) Parse function literals
 x Lex floats (https://github.com/abs-lang/abs/blob/master/lexer/lexer.go) 
 x Lex complex numbers (4.1232 + 3i) !!
 x Parse if statements
+x DEFINE HOW YOU WANT TO HANDLE CLASS TYPING/ALGEBRAIC DATA TYPES: choose between structs/interfaces/typecasting or structs and sum ADTs
+x Parse type annotations
